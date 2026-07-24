@@ -300,8 +300,13 @@ def start_admin_job(title: str, redirect_url: str, work) -> AdminJob:
     with JOBS_LOCK:
         JOBS[job.id] = job
 
-    thread = Thread(target=run_admin_job, args=(app, job.id, work), daemon=True)
-    thread.start()
+    if current_app.config.get("INLINE_ADMIN_JOBS", False):
+        # PythonAnywhere does not support background threads in web workers.
+        # Running inline keeps these infrequent admin imports reliable there.
+        run_admin_job(app, job.id, work)
+    else:
+        thread = Thread(target=run_admin_job, args=(app, job.id, work), daemon=True)
+        thread.start()
     return job
 
 

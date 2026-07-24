@@ -5,9 +5,15 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
+
+
+def env_bool(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 class Config:
@@ -17,6 +23,12 @@ class Config:
         f"sqlite:///{BASE_DIR / 'instance' / 'tour_femmes.sqlite3'}",
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+        "pool_recycle": 280,
+    }
+    AUTO_CREATE_SCHEMA = env_bool("AUTO_CREATE_SCHEMA", True)
+    INLINE_ADMIN_JOBS = env_bool("INLINE_ADMIN_JOBS", False)
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin")
     PCS_BASE_URL = os.getenv("PCS_BASE_URL", "https://www.procyclingstats.com").rstrip("/")
     PCS_REQUEST_DELAY_SECONDS = float(os.getenv("PCS_REQUEST_DELAY_SECONDS", "4"))

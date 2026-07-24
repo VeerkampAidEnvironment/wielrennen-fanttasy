@@ -28,7 +28,8 @@ def create_app(config_object: str | None = None) -> Flask:
 
     db.init_app(app)
     login_manager.init_app(app)
-    _ensure_schema(app)
+    if app.config.get("AUTO_CREATE_SCHEMA", True):
+        _ensure_schema(app)
 
     from tour_femmes.models import User
 
@@ -90,10 +91,15 @@ def _ensure_schema(app: Flask) -> None:
 
         db.create_all()
         inspector = inspect(db.engine)
-        if not inspector.has_table("team"):
-            return
+        if inspector.has_table("team"):
+            team_columns = {column["name"] for column in inspector.get_columns("team")}
+            if "image_url" not in team_columns:
+                db.session.execute(text("ALTER TABLE team ADD COLUMN image_url VARCHAR(500)"))
+                db.session.commit()
 
-        team_columns = {column["name"] for column in inspector.get_columns("team")}
-        if "image_url" not in team_columns:
-            db.session.execute(text("ALTER TABLE team ADD COLUMN image_url VARCHAR(500)"))
-            db.session.commit()
+        # PythonAnywhere forks its web workers after importing the WSGI app.
+        # Do not leave a connection opened during application startup.
+        db.session.remove()
+        # Disposing an in-memory SQLite engine deletes the test database.
+        if db.engine.dialect.name != "sqlite":
+            db.engine.dispose()

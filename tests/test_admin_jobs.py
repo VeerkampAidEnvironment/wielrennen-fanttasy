@@ -83,3 +83,21 @@ def test_admin_job_status_reports_completed_count():
     assert payload["current"] == 5
     assert payload["total"] == 5
     assert payload["message"] == "Klaar."
+
+
+def test_admin_job_can_run_inline_for_pythonanywhere():
+    app, _event_id = make_admin_app()
+    app.config["INLINE_ADMIN_JOBS"] = True
+    with JOBS_LOCK:
+        JOBS.clear()
+
+    with app.app_context():
+        job = start_admin_job(
+            "Etappes laden",
+            "/admin/events/1",
+            lambda progress: "Inline klaar.",
+        )
+
+    assert job.status == "done"
+    assert job.ok is True
+    assert job.message == "Inline klaar."

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import click
 from flask import Flask
+from sqlalchemy import create_engine, func, select
+from sqlalchemy.engine import Engine
 from werkzeug.security import generate_password_hash
 
 from tour_femmes import db
@@ -24,6 +27,49 @@ def register_cli(app: Flask) -> None:
         """Maak databasetabellen aan."""
         db.create_all()
         click.echo("Database geinitialiseerd.")
+
+    @app.cli.command("db-stats")
+    def db_stats() -> None:
+        """Toon aantallen per databasetabel."""
+        for table in db.metadata.sorted_tables:
+            count = db.session.execute(select(func.count()).select_from(table)).scalar_one()
+            click.echo(f"{table.name}: {count}")
+
+    @app.cli.command("import-sqlite")
+    @click.option(
+        "--source",
+        type=click.Path(exists=True, dir_okay=False, path_type=Path),
+        required=True,
+        help="Pad naar de bestaande SQLite-database.",
+    )
+    @click.option("--yes", is_flag=True, help="Sla de bevestigingsvraag over.")
+    def import_sqlite(source: Path, yes: bool) -> None:
+        """Kopieer een bestaande SQLite-database naar de geconfigureerde database."""
+        source = source.resolve()
+        source_engine = create_engine(f"sqlite:///{source.as_posix()}")
+        target_engine = db.engine
+
+        if target_engine.url.get_backend_name() == "sqlite":
+            target_path = target_engine.url.database
+            if target_path and Path(target_path).resolve() == source:
+                raise click.ClickException("Bron en doel verwijzen naar dezelfde database.")
+
+        if not yes:
+            click.confirm(
+                f"Importeer {source} naar {target_engine.url.render_as_string(hide_password=True)}?",
+                abort=True,
+            )
+
+        try:
+            copied = copy_database(source_engine, target_engine)
+        except ValueError as exc:
+            raise click.ClickException(str(exc)) from exc
+        finally:
+            source_engine.dispose()
+
+        click.echo("Database-import voltooid:")
+        for table_name, count in copied.items():
+            click.echo(f"{table_name}: {count}")
 
     @app.cli.command("seed-demo")
     def seed_demo() -> None:
@@ -103,3 +149,27 @@ def register_cli(app: Flask) -> None:
         db.session.add_all([EventEntry(user=user, event=event), EventEntry(user=adminish, event=event)])
         db.session.commit()
         click.echo("Demodata aangemaakt. Log in met demo/demo.")
+
+
+def copy_database(source_engine: Engine, target_engine: Engine) -> dict[str, int]:
+    """Copy all application tables into an empty target database."""
+    db.metadata.create_all(target_engine)
+
+    with target_engine.connect() as target:
+        non_empty = [
+            table.name
+            for table in db.metadata.sorted_tables
+            if target.execute(select(func.count()).select_from(table)).scalar_one()
+        ]
+    if non_empty:
+        names = ", ".join(non_empty)
+        raise ValueError(f"Doeldatabase is niet leeg ({names}); import afgebroken.")
+
+    copied: dict[str, int] = {}
+    with source_engine.connect() as source, target_engine.begin() as target:
+        for table in db.metadata.sorted_tables:
+            rows = [dict(row) for row in source.execute(select(table)).mappings()]
+            if rows:
+                target.execute(table.insert(), rows)
+            copied[table.name] = len(rows)
+    return copied

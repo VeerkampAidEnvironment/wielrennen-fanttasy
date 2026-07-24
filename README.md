@@ -52,6 +52,11 @@ flask --app run.py run --debug
 
 Open `http://127.0.0.1:5000`.
 
+## PythonAnywhere deployment
+
+For the production MySQL setup, WSGI configuration, and update procedure, see
+[`PYTHONANYWHERE.md`](PYTHONANYWHERE.md).
+
 ## Admin Flow
 
 1. Visit `/admin/login` and use `ADMIN_PASSWORD`.
