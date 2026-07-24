@@ -1,0 +1,483 @@
+from __future__ import annotations
+
+from collections import defaultdict
+from dataclasses import dataclass
+from datetime import datetime
+
+from sqlalchemy import func
+
+from tour_femmes import db
+from tour_femmes.models import (
+    Award,
+    Event,
+    EventEntry,
+    EventRider,
+    Stage,
+    StageLineup,
+    StageLineupRider,
+    StageResult,
+    TeamSelection,
+    TeamSelectionRider,
+    User,
+    UserStageRiderScore,
+    UserStageScore,
+    utcnow,
+)
+from tour_femmes.scoring import points_for_result, score_lineup_from_results
+
+
+@dataclass(frozen=True)
+class SelectionValidation:
+    ok: bool
+    message: str
+    selected_riders: list[EventRider]
+    total_price: int
+
+
+@dataclass(frozen=True)
+class LeaderboardRow:
+    user: User
+    total_score: int
+    latest_stage_score: int
+    stage_scores: dict[int, int]
+    stage_wins: int
+    stage_win_numbers: frozenset[int]
+    yellow_stage_numbers: frozenset[int]
+    is_yellow: bool
+
+
+@dataclass(frozen=True)
+class StageLineupRiderView:
+    event_rider: EventRider
+    is_captain: bool
+    points: int
+    rank_label: str
+
+
+@dataclass(frozen=True)
+class StageLeaderboardRow:
+    user: User
+    score: int
+    has_score: bool
+    captain_bonus: int
+    lineup_riders: tuple[StageLineupRiderView, ...]
+    is_stage_winner: bool
+    is_yellow_after_stage: bool
+
+
+@dataclass(frozen=True)
+class RiderStageHistoryItem:
+    stage_number: int
+    stage_name: str
+    rank_label: str
+    points: int
+
+
+@dataclass(frozen=True)
+class RiderStageHistory:
+    event_rider_id: int
+    total_points: int
+    results: list[RiderStageHistoryItem]
+
+
+def get_or_create_entry(user: User, event: Event) -> EventEntry:
+    entry = EventEntry.query.filter_by(user_id=user.id, event_id=event.id).first()
+    if entry:
+        return entry
+    entry = EventEntry(user=user, event=event)
+    db.session.add(entry)
+    return entry
+
+
+def get_team_selection(user: User, event: Event) -> TeamSelection | None:
+    return TeamSelection.query.filter_by(user_id=user.id, event_id=event.id).first()
+
+
+def validate_team_selection(event: Event, rider_ids: list[int], require_exact: bool = True) -> SelectionValidation:
+    try:
+        unique_ids = sorted({int(rider_id) for rider_id in rider_ids})
+    except ValueError:
+        return SelectionValidation(False, "Een of meer gekozen renners zijn ongeldig.", [], 0)
+
+    selected = (
+        EventRider.query.filter(
+            EventRider.event_id == event.id,
+            EventRider.id.in_(unique_ids) if unique_ids else False,
+        )
+        .order_by(EventRider.id)
+        .all()
+    )
+
+    if require_exact and len(unique_ids) != event.team_size:
+        return SelectionValidation(
+            False,
+            f"Kies precies {event.team_size} renners.",
+            selected,
+            sum(rider.price or 0 for rider in selected),
+        )
+    if not require_exact and len(unique_ids) > event.team_size:
+        return SelectionValidation(
+            False,
+            f"Kies maximaal {event.team_size} renners.",
+            selected,
+            sum(rider.price or 0 for rider in selected),
+        )
+
+    if len(selected) != len(unique_ids) or any(not rider.selectable for rider in selected):
+        return SelectionValidation(False, "Een of meer gekozen renners zijn niet beschikbaar.", selected, 0)
+
+    total = sum(rider.price or 0 for rider in selected)
+    if total > event.budget:
+        return SelectionValidation(False, f"Budget overschreden: {total} / {event.budget}.", selected, total)
+
+    if len(unique_ids) == event.team_size:
+        return SelectionValidation(True, "Teamselectie opgeslagen.", selected, total)
+    return SelectionValidation(True, f"Concept opgeslagen: {len(unique_ids)} / {event.team_size} renners.", selected, total)
+
+
+def save_team_selection(user: User, event: Event, selected_riders: list[EventRider], total_price: int) -> TeamSelection:
+    get_or_create_entry(user, event)
+    selection = get_team_selection(user, event)
+    if not selection:
+        selection = TeamSelection(user=user, event=event)
+        db.session.add(selection)
+
+    selection.submitted_at = utcnow()
+    selection.total_price = total_price
+    selection.riders.clear()
+    db.session.flush()
+    for event_rider in selected_riders:
+        selection.riders.append(TeamSelectionRider(event_rider=event_rider))
+    return selection
+
+
+def lineup_status(user: User, stage: Stage) -> str:
+    lineup = StageLineup.query.filter_by(user_id=user.id, stage_id=stage.id).first()
+    if not lineup:
+        return "Ontbreekt"
+    if len(lineup.riders) != stage.event.lineup_size:
+        return "Niet compleet"
+    return "Compleet"
+
+
+def save_stage_lineup(
+    user: User,
+    stage: Stage,
+    rider_ids: list[int | str],
+    captain_id: int,
+    require_exact: bool = True,
+) -> tuple[bool, str]:
+    event = stage.event
+    selection = get_team_selection(user, event)
+    if not selection or len(selection.riders) != event.team_size:
+        return False, "Maak eerst je teamselectie compleet."
+
+    try:
+        unique_ids = sorted({int(rider_id) for rider_id in rider_ids})
+    except (TypeError, ValueError):
+        return False, "Een of meer gekozen renners zijn ongeldig."
+
+    selection_ids = selection.rider_ids()
+    if require_exact and len(unique_ids) != event.lineup_size:
+        return False, f"Kies precies {event.lineup_size} renners voor deze etappe."
+    if not require_exact and len(unique_ids) > event.lineup_size:
+        return False, f"Kies maximaal {event.lineup_size} renners voor deze etappe."
+    if not set(unique_ids).issubset(selection_ids):
+        return False, "Etapperenners moeten uit je koersselectie komen."
+
+    lineup = StageLineup.query.filter_by(user_id=user.id, stage_id=stage.id).first()
+    if not unique_ids:
+        if lineup:
+            db.session.delete(lineup)
+        return True, f"Concept opgeslagen: 0 / {event.lineup_size} renners."
+
+    if captain_id not in unique_ids:
+        if require_exact:
+            return False, "De kopman moet in je etappeselectie zitten."
+        captain_id = unique_ids[0]
+
+    if not lineup:
+        lineup = StageLineup(user=user, stage=stage, captain_event_rider_id=captain_id)
+        db.session.add(lineup)
+
+    lineup.captain_event_rider_id = captain_id
+    lineup.submitted_at = utcnow()
+    lineup.riders.clear()
+    db.session.flush()
+    for event_rider_id in unique_ids:
+        lineup.riders.append(StageLineupRider(event_rider_id=event_rider_id))
+    if len(unique_ids) == event.lineup_size:
+        return True, "Etappeselectie opgeslagen."
+    return True, f"Concept opgeslagen: {len(unique_ids)} / {event.lineup_size} renners."
+
+
+def recalculate_stage_scores(stage: Stage) -> None:
+    results_by_rider = {result.event_rider_id: result for result in stage.results}
+    for result in stage.results:
+        result.base_points = points_for_result(result.rank, result.status)
+
+    for lineup in stage.lineups:
+        lineup_ids = lineup.rider_ids()
+        if len(lineup_ids) == stage.event.lineup_size and lineup.captain_event_rider_id in lineup_ids:
+            total, captain_bonus, rider_scores = score_lineup_from_results(
+                lineup_ids,
+                lineup.captain_event_rider_id,
+                results_by_rider,
+            )
+        else:
+            total = 0
+            captain_bonus = 0
+            rider_scores = []
+        score = UserStageScore.query.filter_by(user_id=lineup.user_id, stage_id=stage.id).first()
+        if not score:
+            score = UserStageScore(user_id=lineup.user_id, stage_id=stage.id)
+            db.session.add(score)
+        score.score = total
+        score.captain_bonus = captain_bonus
+        score.calculated_at = utcnow()
+        score.rider_scores.clear()
+        db.session.flush()
+        for rider_score in rider_scores:
+            result = results_by_rider.get(rider_score.event_rider_id)
+            db.session.add(
+                UserStageRiderScore(
+                    score=score,
+                    event_rider_id=rider_score.event_rider_id,
+                    rank=rider_score.rank,
+                    status=(rider_score.status if result else "Geen uitslag"),
+                    base_points=rider_score.base_points,
+                    captain_bonus=rider_score.captain_bonus,
+                    total_points=rider_score.total_points,
+                )
+            )
+
+    stage.is_finished = stage.has_ranked_result()
+    stage.results_imported_at = utcnow()
+    recalculate_event_awards(stage.event)
+
+
+def recalculate_event_awards(event: Event) -> None:
+    Award.query.filter_by(event_id=event.id).delete()
+    finished_stages = [stage for stage in event.stages if stage.has_ranked_result()]
+
+    running_totals: dict[int, int] = defaultdict(int)
+    for stage in finished_stages:
+        scores = UserStageScore.query.filter_by(stage_id=stage.id).all()
+        if scores:
+            max_stage_score = max(score.score for score in scores)
+            for score in scores:
+                running_totals[score.user_id] += score.score
+                if max_stage_score > 0 and score.score == max_stage_score:
+                    db.session.add(
+                        Award(
+                            event_id=event.id,
+                            stage_id=stage.id,
+                            user_id=score.user_id,
+                            award_type="stage_win",
+                        )
+                    )
+        if running_totals:
+            yellow_score = max(running_totals.values())
+            for user_id, total in running_totals.items():
+                if yellow_score > 0 and total == yellow_score:
+                    db.session.add(
+                        Award(
+                            event_id=event.id,
+                            stage_id=stage.id,
+                            user_id=user_id,
+                            award_type="yellow_jersey",
+                        )
+                    )
+
+
+def build_leaderboard(event: Event) -> list[LeaderboardRow]:
+    stages = list(event.stages)
+    latest_stage = latest_finished_stage(event)
+    scores_by_user: dict[int, dict[int, int]] = defaultdict(dict)
+    totals = defaultdict(int)
+
+    scores = (
+        UserStageScore.query.join(Stage)
+        .filter(Stage.event_id == event.id)
+        .all()
+    )
+    for score in scores:
+        scores_by_user[score.user_id][score.stage.number] = score.score
+        totals[score.user_id] += score.score
+
+    stage_win_counts = dict(
+        db.session.query(Award.user_id, func.count(Award.id))
+        .filter(Award.event_id == event.id, Award.award_type == "stage_win")
+        .group_by(Award.user_id)
+        .all()
+    )
+    stage_win_numbers: dict[int, set[int]] = defaultdict(set)
+    yellow_stage_numbers: dict[int, set[int]] = defaultdict(set)
+    award_rows = (
+        Award.query.join(Stage, Award.stage_id == Stage.id)
+        .filter(
+            Award.event_id == event.id,
+            Award.award_type.in_(("stage_win", "yellow_jersey")),
+        )
+        .all()
+    )
+    for award in award_rows:
+        if award.award_type == "stage_win":
+            stage_win_numbers[award.user_id].add(award.stage.number)
+        elif award.award_type == "yellow_jersey":
+            yellow_stage_numbers[award.user_id].add(award.stage.number)
+
+    yellow_user_ids = current_yellow_user_ids(event)
+    entries = EventEntry.query.filter_by(event_id=event.id, status="active").all()
+    rows = []
+    for entry in entries:
+        latest_score = scores_by_user[entry.user_id].get(latest_stage.number, 0) if latest_stage else 0
+        rows.append(
+            LeaderboardRow(
+                user=entry.user,
+                total_score=totals[entry.user_id],
+                latest_stage_score=latest_score,
+                stage_scores={stage.number: scores_by_user[entry.user_id].get(stage.number, 0) for stage in stages},
+                stage_wins=stage_win_counts.get(entry.user_id, 0),
+                stage_win_numbers=frozenset(stage_win_numbers[entry.user_id]),
+                yellow_stage_numbers=frozenset(yellow_stage_numbers[entry.user_id]),
+                is_yellow=entry.user_id in yellow_user_ids,
+            )
+        )
+    rows.sort(key=lambda row: (-row.total_score, row.user.username.lower()))
+    return rows
+
+
+def build_stage_leaderboard(event: Event, stage: Stage) -> list[StageLeaderboardRow]:
+    entries = EventEntry.query.filter_by(event_id=event.id, status="active").all()
+    lineups = StageLineup.query.filter_by(stage_id=stage.id).all()
+    scores = UserStageScore.query.filter_by(stage_id=stage.id).all()
+    lineup_by_user = {lineup.user_id: lineup for lineup in lineups}
+    score_by_user = {score.user_id: score for score in scores}
+
+    awards = Award.query.filter_by(event_id=event.id, stage_id=stage.id).all()
+    stage_winner_ids = {award.user_id for award in awards if award.award_type == "stage_win"}
+    yellow_user_ids = {award.user_id for award in awards if award.award_type == "yellow_jersey"}
+
+    rows = []
+    for entry in entries:
+        lineup = lineup_by_user.get(entry.user_id)
+        score = score_by_user.get(entry.user_id)
+        rider_score_by_id = {
+            rider_score.event_rider_id: rider_score
+            for rider_score in score.rider_scores
+        } if score else {}
+        lineup_riders = []
+        if lineup:
+            for link in lineup.riders:
+                rider_score = rider_score_by_id.get(link.event_rider_id)
+                rank_label = "Nog geen uitslag"
+                points = 0
+                if rider_score:
+                    rank_label = f"#{rider_score.rank}" if rider_score.rank else (rider_score.status or "—")
+                    points = rider_score.total_points
+                lineup_riders.append(
+                    StageLineupRiderView(
+                        event_rider=link.event_rider,
+                        is_captain=link.event_rider_id == lineup.captain_event_rider_id,
+                        points=points,
+                        rank_label=rank_label,
+                    )
+                )
+        lineup_riders.sort(
+            key=lambda rider: (
+                not rider.is_captain,
+                -rider.points,
+                rider.event_rider.rider.name.lower(),
+            )
+        )
+        rows.append(
+            StageLeaderboardRow(
+                user=entry.user,
+                score=score.score if score else 0,
+                has_score=score is not None,
+                captain_bonus=score.captain_bonus if score else 0,
+                lineup_riders=tuple(lineup_riders),
+                is_stage_winner=entry.user_id in stage_winner_ids,
+                is_yellow_after_stage=entry.user_id in yellow_user_ids,
+            )
+        )
+
+    rows.sort(key=lambda row: (-row.score, row.user.username.lower()))
+    return rows
+
+
+def build_rider_stage_history(
+    event: Event,
+    current_stage: Stage,
+    event_riders: list[EventRider],
+) -> dict[int, RiderStageHistory]:
+    event_rider_ids = [event_rider.id for event_rider in event_riders]
+    if not event_rider_ids:
+        return {}
+
+    eligible_stage_numbers = [
+        stage.number
+        for stage in event.stages
+        if stage.number < current_stage.number or (stage.id == current_stage.id and stage.has_ranked_result())
+    ]
+    if not eligible_stage_numbers:
+        return {
+            event_rider_id: RiderStageHistory(event_rider_id=event_rider_id, total_points=0, results=[])
+            for event_rider_id in event_rider_ids
+        }
+
+    results = (
+        StageResult.query.join(Stage)
+        .filter(
+            Stage.event_id == event.id,
+            Stage.number.in_(eligible_stage_numbers),
+            StageResult.event_rider_id.in_(event_rider_ids),
+        )
+        .order_by(Stage.number)
+        .all()
+    )
+
+    by_rider: dict[int, list[RiderStageHistoryItem]] = defaultdict(list)
+    for result in results:
+        rank_label = f"#{result.rank}" if result.rank else result.status
+        by_rider[result.event_rider_id].append(
+            RiderStageHistoryItem(
+                stage_number=result.stage.number,
+                stage_name=result.stage.name,
+                rank_label=rank_label,
+                points=result.base_points,
+            )
+        )
+
+    return {
+        event_rider_id: RiderStageHistory(
+            event_rider_id=event_rider_id,
+            total_points=sum(item.points for item in by_rider[event_rider_id]),
+            results=by_rider[event_rider_id],
+        )
+        for event_rider_id in event_rider_ids
+    }
+
+
+def latest_finished_stage(event: Event) -> Stage | None:
+    finished = [stage for stage in event.stages if stage.has_ranked_result()]
+    return finished[-1] if finished else None
+
+
+def current_yellow_user_ids(event: Event) -> set[int]:
+    latest_stage = latest_finished_stage(event)
+    if not latest_stage:
+        return set()
+    return {
+        award.user_id
+        for award in Award.query.filter_by(
+            event_id=event.id,
+            stage_id=latest_stage.id,
+            award_type="yellow_jersey",
+        )
+    }
+
+
+def can_edit_team(event: Event, now: datetime | None = None) -> bool:
+    return event.status == "active" and not event.has_started(now)

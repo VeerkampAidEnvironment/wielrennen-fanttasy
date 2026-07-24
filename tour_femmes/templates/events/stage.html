@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% block title %}{{ event.name }} Etappe {{ stage.number }}{% endblock %}
+{% block body %}
+{% set active = 'stage-' ~ stage.id %}
+{% include "events/_event_nav.html" with context %}
+
+{% macro rider_card(event_rider) %}
+  {% set rider = event_rider.rider %}
+  {% set history = rider_history.get(event_rider.id) %}
+  {% set selected = event_rider.id in selected_ids %}
+  {% set is_captain = captain_id == event_rider.id %}
+  <article
+    class="lineup-builder-card {{ 'selected' if selected else '' }} {{ 'captain' if is_captain else '' }} {{ 'locked' if locked else '' }}"
+    data-lineup-card
+    data-event-rider-id="{{ event_rider.id }}"
+    {% if not locked %}role="button" tabindex="0" aria-label="{{ rider.name }} in etappeselectie wisselen"{% endif %}
+  >
+    <input
+      class="lineup-hidden-input"
+      type="checkbox"
+      name="riders"
+      value="{{ event_rider.id }}"
+      data-lineup-checkbox
+      data-fixed-disabled="{{ '1' if locked else '0' }}"
+      {% if selected %}checked{% endif %}
+      {% if locked %}disabled{% endif %}
+    >
+    <input
+      class="lineup-hidden-input"
+      type="radio"
+      name="captain"
+      value="{{ event_rider.id }}"
+      data-captain-radio
+      data-fixed-disabled="{{ '1' if locked else '0' }}"
+      {% if is_captain %}checked{% endif %}
+      {% if locked or not selected %}disabled{% endif %}
+    >
+    <span class="lineup-card-photo">
+      {% if rider.photo_url %}
+        <img src="{{ pcs_image_url(rider.photo_url) }}" alt="" loading="lazy" decoding="async">
+      {% else %}
+        <span>{{ rider.name[:2] }}</span>
+      {% endif %}
+    </span>
+    <span class="lineup-card-main">
+      <strong>{{ rider.name }}</strong>
+      <small>{{ event_rider.team.name if event_rider.team else 'Geen ploeg' }}</small>
+    </span>
+    <span class="stage-history">
+      {% if history and history.results %}
+        <span class="history-total">{{ history.total_points }} ptn</span>
+        {% for item in history.results[-4:] %}
+          <span class="history-chip" title="{{ item.stage_name }}">S{{ item.stage_number }} {{ item.rank_label }} / {{ item.points }}</span>
+        {% endfor %}
+      {% else %}
+        <span class="muted">Nog geen koersresultaten</span>
+      {% endif %}
+    </span>
+    {% if not locked %}
+      <span class="lineup-card-actions">
+        <button type="button" class="mini-action" data-toggle-lineup>{{ 'Verwijderen' if selected else 'Toevoegen' }}</button>
+        <button type="button" class="mini-action captain-action" data-toggle-captain>{{ 'Kopman gekozen' if is_captain else 'Kopman' }}</button>
+      </span>
+    {% else %}
+      <span class="lineup-card-status">{{ 'Kopman' if is_captain else 'Geselecteerd' if selected else 'Bank' }}</span>
+    {% endif %}
+  </article>
+{% endmacro %}
+
+<section class="section-head">
+  <div>
+    <p class="eyebrow">{{ event.name }}</p>
+    <h1>Etappe {{ stage.number }}: {{ stage.name }}</h1>
+  </div>
+  <div
+    class="meter deadline-meter"
+    {% if stage.starts_at %}
+      data-deadline-at="{{ stage.deadline_timestamp_ms() }}"
+      {% if stage.number == 1 %}data-hide-team-tab-on-expiry="1"{% endif %}
+    {% endif %}
+  >
+    <span class="deadline-date">
+      <small>Deadline</small>
+      <time>{{ stage.starts_at.strftime('%d-%m-%Y %H:%M') if stage.starts_at else 'Onbekend' }}</time>
+    </span>
+    <strong class="deadline-countdown" data-deadline-countdown role="timer">
+      {{ 'Onbekend' if not stage.starts_at else 'Gesloten' if locked else 'Berekenen…' }}
+    </strong>
+    <span class="deadline-state">{{ 'Gesloten' if locked else 'Open' }}</span>
+  </div>
+</section>
+
+{% if stage.profile_image_url %}
+  <section class="stage-profile-panel">
+    <h2>Etappeprofiel</h2>
+    <img class="stage-profile" src="{{ pcs_image_url(stage.profile_image_url) }}" alt="Profiel van etappe {{ stage.number }}" decoding="async">
+  </section>
+{% endif %}
+
+{% if not show_results %}
+  <section class="pcs-live-panel">
+    <div class="pcs-live-head">
+      <div>
+        <div class="pcs-live-kicker">
+          {% if live_available %}
+            <span class="live-dot" aria-hidden="true"></span>
+            Live via ProCyclingStats
+          {% else %}
+            Live viewer
+          {% endif %}
+        </div>
+        <h2>Koerssituatie en tijdlijn</h2>
+        {% if live_available %}
+          <p>De echte PCS LiveStats-pagina, automatisch iedere 30 seconden ververst.</p>
+        {% else %}
+          <p>Deze viewer blijft leeg tot de wedstrijddag van deze etappe.</p>
+        {% endif %}
+      </div>
+      {% if live_available and stage.live_url %}
+        <a class="secondary-button" href="{{ stage.live_url }}" target="_blank" rel="noopener noreferrer">Open volledig op PCS</a>
+      {% endif %}
+    </div>
+
+    {% if live_available %}
+      <div class="pcs-live-window" data-live-viewer>
+        <div class="pcs-live-loading" data-live-loading>
+          <span class="loading-spinner" aria-hidden="true"></span>
+          PCS LiveStats laden…
+        </div>
+        <iframe
+          class="pcs-live-frame"
+          data-live-frame
+          src="{{ url_for('events.stage_live_view', event_id=event.id, stage_id=stage.id) }}"
+          title="PCS LiveStats voor etappe {{ stage.number }}"
+          loading="eager"
+          referrerpolicy="no-referrer"
+          sandbox="allow-popups allow-popups-to-escape-sandbox"
+        ></iframe>
+      </div>
+    {% else %}
+      <div class="live-waiting-state">
+        <span class="live-waiting-icon" aria-hidden="true">◷</span>
+        <div>
+          <strong>Nog niet beschikbaar</strong>
+          <p>
+            Etappe {{ stage.number }} start
+            {{ stage.starts_at.strftime('op %d-%m-%Y om %H:%M') if stage.starts_at else 'op een nog onbekend tijdstip' }}.
+          </p>
+        </div>
+      </div>
+    {% endif %}
+  </section>
+{% endif %}
+
+<section class="split-layout {{ 'stage-selection-only' if not show_results else '' }}">
+  <div>
+    <h2>Etappeselectie</h2>
+    {% if locked %}
+      <div class="notice">De selectie is gesloten voor deze etappe.</div>
+    {% endif %}
+    <form method="post" data-lineup-form data-team-size="{{ event.lineup_size }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="lineup-builder">
+        <section class="lineup-builder-section selected-lineup-section">
+          <div class="lineup-builder-head">
+            <div>
+              <h3>Opgestelde renners</h3>
+              <p class="muted"><strong data-count>{{ selected_ids|length }}</strong> / {{ event.lineup_size }} renners</p>
+            </div>
+            <div class="captain-meter" data-captain-meter>{{ 'Kopman gekozen' if captain_id else 'Geen kopman' }}</div>
+          </div>
+          <div class="lineup-selected-grid" data-selected-lineup>
+            {% for event_rider in team_riders if event_rider.id in selected_ids %}
+              {{ rider_card(event_rider) }}
+            {% endfor %}
+            {% set open_slot_count = event.lineup_size - selected_ids|length %}
+            {% for _ in range(open_slot_count if open_slot_count > 0 else 0) %}
+              <div class="lineup-empty-slot" data-empty-slot>Open plek</div>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="lineup-builder-section">
+          <div class="lineup-builder-head">
+            <h3>Beschikbare renners</h3>
+            <span class="muted">{{ team_riders|length }} renners in je koersselectie</span>
+          </div>
+          <div class="lineup-bench-grid" data-bench-lineup>
+            {% for event_rider in team_riders if event_rider.id not in selected_ids %}
+              {{ rider_card(event_rider) }}
+            {% endfor %}
+          </div>
+        </section>
+      </div>
+      {% if not locked %}
+        <div class="button-row lineup-autosave-row">
+          <span class="autosave-status" data-autosave-status role="status" aria-live="polite"></span>
+          <span class="muted"><strong data-count>{{ selected_ids|length }}</strong> / {{ event.lineup_size }} renners</span>
+        </div>
+      {% endif %}
+    </form>
+  </div>
+
+  {% if show_results or session.get('admin_ok') %}
+    <div>
+    {% if show_results %}
+      <h2>Uitslag en score</h2>
+      {% if user_result %}
+        <div class="score-panel">
+          <span>Jouw etappescore</span>
+          <strong>{{ user_result.score }}</strong>
+          <small>Kopmanbonus {{ user_result.captain_bonus }}</small>
+        </div>
+        {% if user_result.rider_scores %}
+          <div class="score-breakdown">
+            <h3>Score per renner</h3>
+            <table class="data-table compact-table">
+              <thead>
+                <tr>
+                  <th>Renner</th>
+                  <th>Uitslag</th>
+                  <th>Basis</th>
+                  <th>Bonus</th>
+                  <th>Totaal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for rider_score in user_result.rider_scores %}
+                  <tr>
+                    <td>
+                      {{ rider_score.event_rider.rider.name }}
+                      {% if rider_score.captain_bonus %}<span class="captain-pill">Kopman</span>{% endif %}
+                    </td>
+                    <td>{{ '#' ~ rider_score.rank if rider_score.rank else rider_score.status }}</td>
+                    <td>{{ rider_score.base_points }}</td>
+                    <td>{{ rider_score.captain_bonus }}</td>
+                    <td>{{ rider_score.total_points }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+      {% endif %}
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Plaats</th>
+            <th>Renner</th>
+            <th>Punten</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for result in stage.results[:30] %}
+            <tr>
+              <td>{{ result.rank or result.status }}</td>
+              <td>{{ result.event_rider.rider.name }}</td>
+              <td>{{ result.base_points }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+    {% if session.get('admin_ok') %}
+      <div class="admin-inline">
+        {% if live_available %}
+          <form method="post" action="{{ url_for('admin.import_live', stage_id=stage.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="secondary-button">Live nu verversen</button>
+          </form>
+        {% endif %}
+        {% if locked %}
+          <form method="post" action="{{ url_for('admin.import_results', stage_id=stage.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="secondary-button">Uitslag laden</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endif %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

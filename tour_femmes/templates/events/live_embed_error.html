@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="30">
+  <title>PCS LiveStats tijdelijk niet bereikbaar</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      display: grid;
+      min-height: 480px;
+      margin: 0;
+      place-items: center;
+      padding: 32px;
+      background: #f7f8f6;
+      color: #18221d;
+      font: 16px/1.5 Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+    main {
+      max-width: 520px;
+      padding: 28px;
+      border: 1px solid #d4ded2;
+      border-radius: 12px;
+      background: #fff;
+      text-align: center;
+    }
+    h1 { margin: 0 0 10px; font-size: 1.35rem; }
+    p { margin: 0; color: #657168; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Liveverbinding wordt hersteld</h1>
+    <p>{{ message }}</p>
+    <p>Deze viewer probeert het over 30 seconden automatisch opnieuw.</p>
+  </main>
+</body>
+</html>

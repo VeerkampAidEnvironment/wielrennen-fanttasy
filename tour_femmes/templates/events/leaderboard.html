@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}{{ event.name }} Klassement{% endblock %}
+{% block body %}
+{% set active = 'leaderboard' %}
+{% include "events/_event_nav.html" with context %}
+
+<section class="section-head classification-heading">
+  <div>
+    <p class="eyebrow">{{ event.name }}</p>
+    <h1>{{ 'Etappe ' ~ selected_stage.number if selected_stage else 'Algemeen klassement' }}</h1>
+    <p class="muted">
+      {% if selected_stage %}
+        {{ selected_stage.name }} · scores en opstellingen per deelnemer
+      {% else %}
+        De actuele stand, etappewinnaars en leiders na iedere verreden etappe
+      {% endif %}
+    </p>
+  </div>
+</section>
+
+<nav class="classification-tabs" aria-label="Klassementsweergave">
+  <a
+    class="{{ 'active' if not selected_stage else '' }}"
+    href="{{ url_for('events.leaderboard', event_id=event.id) }}"
+    aria-current="{{ 'page' if not selected_stage else 'false' }}"
+  >
+    Totaal
+  </a>
+  {% for stage in event.stages %}
+    <a
+      class="{{ 'active' if selected_stage and selected_stage.id == stage.id else '' }}"
+      href="{{ url_for('events.leaderboard', event_id=event.id, stage=stage.number) }}"
+      aria-current="{{ 'page' if selected_stage and selected_stage.id == stage.id else 'false' }}"
+    >
+      Etappe {{ stage.number }}
+    </a>
+  {% endfor %}
+</nav>
+
+{% if not selected_stage %}
+  <div class="classification-legend" aria-label="Legenda">
+    <span><span class="stage-win-badge" aria-hidden="true">W</span> Etappewinnaar</span>
+    <span><span class="jersey-badge" aria-hidden="true"></span> Leider na etappe</span>
+  </div>
+
+  <div class="table-scroll classification-table-wrap">
+    <table class="data-table leaderboard-table classification-table">
+      <thead>
+        <tr>
+          <th>Positie</th>
+          <th>Deelnemer</th>
+          <th>Totaal</th>
+          <th>Etappezeges</th>
+          {% for stage in event.stages %}
+            <th>S{{ stage.number }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr class="{{ 'current-leader' if row.is_yellow else '' }}">
+            <td><span class="rank-number">{{ loop.index }}</span></td>
+            <td>
+              <div class="classification-user">
+                {% if row.is_yellow %}
+                  <span class="jersey-badge" title="Huidige leider"></span>
+                {% endif %}
+                <strong>{{ row.user.username }}</strong>
+                {% if row.is_yellow %}<small>Huidige leider</small>{% endif %}
+              </div>
+            </td>
+            <td><strong class="total-score">{{ row.total_score }}</strong></td>
+            <td>
+              {% if row.stage_wins %}
+                <span class="win-count"><span class="stage-win-badge" aria-hidden="true">W</span> {{ row.stage_wins }}</span>
+              {% else %}
+                <span class="muted">—</span>
+              {% endif %}
+            </td>
+            {% for stage in event.stages %}
+              <td class="stage-score-cell">
+                {% if stage.has_ranked_result() %}
+                  <strong>{{ row.stage_scores.get(stage.number, 0) }}</strong>
+                  <span class="stage-cell-awards">
+                    {% if stage.number in row.stage_win_numbers %}
+                      <span class="stage-win-badge" title="Winnaar van etappe {{ stage.number }}">W</span>
+                    {% endif %}
+                    {% if stage.number in row.yellow_stage_numbers %}
+                      <span class="jersey-badge" title="Leider na etappe {{ stage.number }}"></span>
+                    {% endif %}
+                  </span>
+                {% else %}
+                  <span class="muted">—</span>
+                {% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="{{ 4 + event.stages|length }}">Nog geen deelnemers.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <section class="stage-classification-summary">
+    <div>
+      <span>Etappe</span>
+      <strong>{{ selected_stage.number }}</strong>
+    </div>
+    <div>
+      <span>Start</span>
+      <strong>{{ selected_stage.starts_at.strftime('%d-%m-%Y %H:%M') if selected_stage.starts_at else 'Onbekend' }}</strong>
+    </div>
+    <div>
+      <span>Status</span>
+      <strong>
+        {% if selected_stage.has_ranked_result() %}
+          Uitslag verwerkt
+        {% elif lineups_visible %}
+          Gestart
+        {% else %}
+          Nog niet gestart
+        {% endif %}
+      </strong>
+    </div>
+  </section>
+
+  {% if not lineups_visible %}
+    <div class="notice lineup-privacy-notice">
+      Opstellingen van andere deelnemers worden zichtbaar zodra de deadline van deze etappe is verstreken.
+    </div>
+  {% endif %}
+
+  <section class="stage-user-results">
+    {% for row in stage_rows %}
+      <article class="stage-user-result {{ 'stage-winner' if row.is_stage_winner else '' }} {{ 'stage-leader' if row.is_yellow_after_stage else '' }}">
+        <header>
+          <div class="stage-user-rank">
+            <span>{{ loop.index }}</span>
+            <div>
+              <h2>{{ row.user.username }}</h2>
+              <div class="stage-user-awards">
+                {% if row.is_stage_winner %}
+                  <span class="result-award winner"><span class="stage-win-badge" aria-hidden="true">W</span> Etappewinnaar</span>
+                {% endif %}
+                {% if row.is_yellow_after_stage %}
+                  <span class="result-award leader"><span class="jersey-badge" aria-hidden="true"></span> Leider na etappe</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="stage-user-score">
+            <span>Score</span>
+            <strong>{{ row.score if row.has_score else '—' }}</strong>
+            {% if row.captain_bonus %}<small>+{{ row.captain_bonus }} kopmanbonus</small>{% endif %}
+          </div>
+        </header>
+
+        {% if lineups_visible %}
+          {% if row.lineup_riders %}
+            <div class="stage-lineup-overview">
+              {% for lineup_rider in row.lineup_riders %}
+                {% set rider = lineup_rider.event_rider.rider %}
+                <div class="stage-lineup-rider {{ 'captain' if lineup_rider.is_captain else '' }}">
+                  <span class="stage-lineup-photo">
+                    {% if rider.photo_url %}
+                      <img src="{{ pcs_image_url(rider.photo_url) }}" alt="" loading="lazy" decoding="async">
+                    {% else %}
+                      <span>{{ rider.name[:2] }}</span>
+                    {% endif %}
+                  </span>
+                  <span class="stage-lineup-main">
+                    <strong>{{ rider.name }}</strong>
+                    <small>{{ lineup_rider.event_rider.team.name if lineup_rider.event_rider.team else 'Geen ploeg' }}</small>
+                  </span>
+                  <span class="stage-lineup-result">
+                    {% if lineup_rider.is_captain %}<small class="captain-pill">Kopman</small>{% endif %}
+                    <strong>{{ lineup_rider.points }} ptn</strong>
+                    <small>{{ lineup_rider.rank_label }}</small>
+                  </span>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-lineup">Geen opstelling ingediend voor deze etappe.</div>
+          {% endif %}
+        {% else %}
+          <div class="lineup-locked">
+            <span aria-hidden="true">●</span>
+            Opstelling verborgen tot de deadline
+          </div>
+        {% endif %}
+      </article>
+    {% else %}
+      <div class="empty-state">
+        <h2>Nog geen deelnemers</h2>
+        <p class="muted">Er zijn nog geen actieve deelnemers voor deze koers.</p>
+      </div>
+    {% endfor %}
+  </section>
+{% endif %}
+{% endblock %}

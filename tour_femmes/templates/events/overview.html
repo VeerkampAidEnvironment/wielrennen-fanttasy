@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Koersen{% endblock %}
+{% block body %}
+<section class="section-head">
+  <div>
+    <p class="eyebrow">Fantasy wielrennen</p>
+    <h1>Actieve koersen</h1>
+  </div>
+</section>
+
+{% if not cards %}
+  <div class="empty-state">
+    <h2>Nog geen actieve koersen</h2>
+    <p class="muted">Vraag een admin om een koers uit ProCyclingStats toe te voegen.</p>
+  </div>
+{% else %}
+  <div class="event-grid">
+    {% for card in cards %}
+      {% set event = card.event %}
+      <article class="event-card">
+        <div class="card-topline">
+          <span class="pill {{ 'started' if event.has_started(now) else 'pending' }}">{{ event.display_status(now) }}</span>
+          <span class="muted">{{ event.year }}</span>
+        </div>
+        <h2>{{ event.name }}</h2>
+        <dl class="status-list">
+          <div>
+            <dt>Start</dt>
+            <dd>{{ event.starts_at.strftime('%d-%m-%Y %H:%M') if event.starts_at else 'Onbekend' }}</dd>
+          </div>
+          <div>
+            <dt>Deelname</dt>
+            <dd>{{ 'Ingeschreven' if card.entry else 'Niet ingeschreven' }}</dd>
+          </div>
+          <div>
+            <dt>Teamselectie</dt>
+            <dd>{{ 'Compleet' if card.selection_finished else 'Nog niet compleet' }}</dd>
+          </div>
+          <div>
+            <dt>Volgende etappe</dt>
+            <dd>{{ card.next_lineup_status }}</dd>
+          </div>
+        </dl>
+        <div class="button-row">
+          <a class="primary-button" href="{{ url_for('events.event_home', event_id=event.id) }}">Open koers</a>
+          {% if not card.entry %}
+            <form method="post" action="{{ url_for('events.join', event_id=event.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="secondary-button">Meedoen</button>
+            </form>
+          {% endif %}
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}

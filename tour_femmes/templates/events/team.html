@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+{% block title %}{{ event.name }} Team{% endblock %}
+{% block body %}
+{% set active = 'team' %}
+{% include "events/_event_nav.html" with context %}
+
+<section class="section-head">
+  <div>
+    <p class="eyebrow">{{ event.name }}</p>
+    <h1>Teamselectie</h1>
+  </div>
+  {% set team_deadline = event.first_stage() %}
+  <div
+    class="meter deadline-meter"
+    data-selection-meter
+    {% if team_deadline and team_deadline.starts_at %}
+      data-deadline-at="{{ team_deadline.deadline_timestamp_ms() }}"
+      data-hide-team-tab-on-expiry="1"
+    {% endif %}
+  >
+    <span class="deadline-date">
+      <small>Deadline</small>
+      <time>
+        {{ team_deadline.starts_at.strftime('%d-%m-%Y %H:%M') if team_deadline and team_deadline.starts_at else 'Onbekend' }}
+      </time>
+    </span>
+    <strong class="deadline-countdown" data-deadline-countdown role="timer">
+      {{ 'Onbekend' if not team_deadline or not team_deadline.starts_at else 'Gesloten' if not editable else 'Berekenen…' }}
+    </strong>
+    <span><strong data-count>{{ selected_ids|length }}</strong> / {{ event.team_size }} renners</span>
+    <span><strong data-budget-total>{{ selection.total_price if selection else 0 }}</strong> / {{ event.budget }} budget</span>
+    {% if editable %}<span class="autosave-status" data-autosave-status role="status" aria-live="polite"></span>{% endif %}
+  </div>
+</section>
+
+<section
+  class="team-status-card {{ 'complete' if team_status.complete else '' }} {{ 'over-budget' if team_status.over_budget else '' }}"
+  data-team-status-card
+>
+  <div class="team-status-heading">
+    <div>
+      <p class="eyebrow">Selectiestatus</p>
+      <h2>Teamstatus</h2>
+    </div>
+    <span class="team-status-pill" data-status-label>
+      {% if team_status.over_budget %}Boven budget{% elif team_status.complete %}Compleet{% else %}Concept{% endif %}
+    </span>
+  </div>
+  <div class="team-status-grid">
+    <article>
+      <span>Renners</span>
+      <strong><span data-status-count>{{ team_status.selected_count }}</span> / {{ event.team_size }}</strong>
+      <small data-status-rider-note>
+        {% if team_status.remaining_riders == 0 %}Selectie vol{% else %}Nog {{ team_status.remaining_riders }}{% endif %}
+      </small>
+    </article>
+    <article>
+      <span>Budget gebruikt</span>
+      <strong><span data-status-total>{{ team_status.selected_total }}</span> / {{ event.budget }}</strong>
+      <small data-status-budget-note>
+        {% if team_status.over_budget %}{{ -team_status.remaining_budget }} boven budget{% else %}{{ team_status.remaining_budget }} over{% endif %}
+      </small>
+    </article>
+    <article class="team-status-progress-tile">
+      <span>Compleetheid</span>
+      <strong data-status-completion>{{ team_status.completion_percent }}%</strong>
+      <span class="status-progress"><span data-status-complete-bar style="width: {{ team_status.completion_percent }}%"></span></span>
+    </article>
+    <article class="team-status-progress-tile">
+      <span>Budget</span>
+      <strong data-status-budget-percent>{{ team_status.budget_percent }}%</strong>
+      <span class="status-progress budget-progress"><span data-status-budget-bar style="width: {{ team_status.budget_percent }}%"></span></span>
+    </article>
+  </div>
+</section>
+
+{% if not editable %}
+  <div class="notice">De teamselectie is gesloten omdat de eerste etappe is gestart.</div>
+{% endif %}
+
+<form
+  method="post"
+  action="{{ url_for('events.team', event_id=event.id) }}"
+  data-team-form
+  data-team-size="{{ event.team_size }}"
+  data-budget="{{ event.budget }}"
+  data-price-min="{{ price_min }}"
+  data-price-max="{{ price_max }}"
+>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <section class="my-team-panel" data-selected-team-panel>
+    <div class="team-status-heading">
+      <div>
+        <p class="eyebrow">Mijn selectie</p>
+        <h2>Mijn team</h2>
+      </div>
+      <span class="team-status-pill"><span data-count>{{ selected_ids|length }}</span> / {{ event.team_size }}</span>
+    </div>
+    <div class="my-team-list" data-selected-team-list>
+      {% for event_rider in event_riders if event_rider.id in selected_ids %}
+        {% set rider = event_rider.rider %}
+        <button
+          type="button"
+          class="my-team-rider"
+          data-selected-team-rider
+          value="{{ event_rider.id }}"
+          aria-label="{{ rider.name }} uit mijn team verwijderen"
+          title="Verwijder uit mijn team"
+          {% if not editable %}disabled{% endif %}
+        >
+          <span class="my-team-photo">
+            {% if rider.photo_url %}
+              <img src="{{ pcs_image_url(rider.photo_url) }}" alt="" loading="lazy" decoding="async">
+            {% else %}
+              <span>{{ rider.name[:2] }}</span>
+            {% endif %}
+          </span>
+          <span class="my-team-main">
+            <strong>{{ rider.name }}</strong>
+            <small>{{ event_rider.team.name if event_rider.team else 'Geen ploeg' }}</small>
+          </span>
+          <span class="my-team-price">{{ event_rider.price }}</span>
+        </button>
+      {% endfor %}
+    </div>
+    <p class="my-team-empty {{ '' if selected_ids|length == 0 else 'hidden' }}" data-selected-team-empty>
+      Nog geen renners geselecteerd.
+    </p>
+  </section>
+  <section class="team-filter-panel" aria-label="Team filters">
+    <label class="filter-search">
+      Zoeken
+      <input type="search" data-rider-search placeholder="Rennernaam">
+    </label>
+    <label>
+      Ploeg
+      <select data-team-filter>
+        <option value="">Alle ploegen</option>
+        {% for team in team_filters %}
+          <option value="{{ team.name }}">{{ team.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>
+      Sorteren
+      <select data-sort-filter>
+        <option value="price-desc">Prijs hoog naar laag</option>
+        <option value="price-asc">Prijs laag naar hoog</option>
+        {% for speciality in speciality_filters %}
+          <option value="speciality-{{ speciality.key }}-desc">{{ speciality.label }} hoog naar laag</option>
+        {% endfor %}
+      </select>
+    </label>
+    <div class="price-filter" data-price-filter>
+      <div class="price-filter-top">
+        <span>Prijs</span>
+        <output data-price-range-label>{{ price_min }} - {{ price_max }}</output>
+      </div>
+      <div class="price-range">
+        <span class="price-range-track"></span>
+        <span class="price-range-fill" data-price-range-fill></span>
+        <input
+          type="range"
+          min="{{ price_min }}"
+          max="{{ price_max }}"
+          value="{{ price_min }}"
+          step="1"
+          aria-label="Minimumprijs"
+          data-price-min-range
+        >
+        <input
+          type="range"
+          min="{{ price_min }}"
+          max="{{ price_max }}"
+          value="{{ price_max }}"
+          step="1"
+          aria-label="Maximumprijs"
+          data-price-max-range
+        >
+      </div>
+      <div class="price-filter-fields">
+        <label>
+          Min
+          <input type="number" min="{{ price_min }}" max="{{ price_max }}" value="{{ price_min }}" data-price-min-input>
+        </label>
+        <label>
+          Max
+          <input type="number" min="{{ price_min }}" max="{{ price_max }}" value="{{ price_max }}" data-price-max-input>
+        </label>
+      </div>
+    </div>
+    <div class="team-filter-chips" data-team-chips>
+      <button type="button" class="team-filter-chip active" data-team-chip value="">
+        <span class="team-chip-image empty"></span>
+        <span>Alle</span>
+      </button>
+      {% for team in team_filters %}
+        <button type="button" class="team-filter-chip" data-team-chip value="{{ team.name }}">
+          <span class="team-chip-image">
+            {% if team.image_url %}
+              <img src="{{ pcs_image_url(team.image_url) }}" alt="" loading="lazy" decoding="async">
+            {% else %}
+              <span>{{ team.name[:2] }}</span>
+            {% endif %}
+          </span>
+          <span>{{ team.name }}</span>
+        </button>
+      {% endfor %}
+    </div>
+    <button type="button" class="secondary-button" data-reset-filters>Wissen</button>
+    <span class="filter-count"><strong data-visible-count>{{ event_riders|length - selected_ids|length }}</strong> beschikbaar</span>
+  </section>
+  <div class="rider-grid">
+    {% for event_rider in event_riders %}
+      {% set rider = event_rider.rider %}
+      {% set unavailable = not event_rider.selectable %}
+      {% set budget_blocked = editable and event_rider.id not in selected_ids and event_rider.price is not none and team_status.selected_total + event_rider.price > event.budget %}
+      <article
+        class="rider-card {{ 'selected' if event_rider.id in selected_ids else '' }} {{ 'disabled' if unavailable or not editable or budget_blocked else '' }} {{ 'budget-disabled' if budget_blocked else '' }}"
+        data-rider-card
+        data-rider-name="{{ rider.name|lower }}"
+        data-team="{{ event_rider.team.name if event_rider.team else '' }}"
+        data-price="{{ event_rider.price if event_rider.price is not none else -1 }}"
+        data-unavailable-reason="{% if not editable %}Gesloten{% elif event_rider.price is none %}Geen prijs{% elif event_rider.frozen %}Bevroren{% elif not event_rider.active %}Niet op startlijst{% else %}Niet beschikbaar{% endif %}"
+        {% for speciality in speciality_filters %}
+          data-speciality-{{ speciality.key }}="{{ rider.specialties.get(speciality.stat_label, 0) if rider.specialties else 0 }}"
+        {% endfor %}
+        >
+        <input
+          type="checkbox"
+          name="riders"
+          value="{{ event_rider.id }}"
+          data-price="{{ event_rider.price or 0 }}"
+          data-fixed-disabled="{{ '1' if unavailable or not editable else '0' }}"
+          {% if event_rider.id in selected_ids %}checked{% endif %}
+          {% if unavailable or not editable or budget_blocked %}disabled{% endif %}
+        >
+        <span class="rider-card-media">
+          {% if rider.photo_url %}
+            <img src="{{ pcs_image_url(rider.photo_url) }}" alt="" loading="lazy" decoding="async">
+          {% else %}
+            <span class="rider-initials">{{ rider.name[:2] }}</span>
+          {% endif %}
+          <span class="select-mark"></span>
+        </span>
+        <span class="price price-badge">
+          <small>Prijs</small>
+          <strong>{{ event_rider.price }}</strong>
+        </span>
+        <span class="rider-card-body">
+          <span class="rider-main">
+            <strong>{{ rider.name }}</strong>
+            <small class="rider-team-line">
+              {% if event_rider.team and event_rider.team.image_url %}
+                <img src="{{ pcs_image_url(event_rider.team.image_url) }}" alt="" loading="lazy" decoding="async">
+              {% endif %}
+              <span>{{ event_rider.team.name if event_rider.team else 'Geen ploeg' }}</span>
+            </small>
+          </span>
+          <span class="rider-meta">
+            {% if rider.nationality %}<span>{{ rider.nationality }}</span>{% endif %}
+            {% if rider.age is not none %}<span>{{ rider.age }} jaar</span>{% endif %}
+            {% if rider.height_m %}<span>{{ rider.height_m }} m</span>{% endif %}
+          </span>
+          {% if rider.best_results %}
+            <span class="card-section best-results-section rider-card-detail">
+            <span class="section-label">Beste resultaten</span>
+              <span class="result-list">
+                {% for result in rider.best_results[:4] %}
+                  <span>{{ result }}</span>
+                {% endfor %}
+              </span>
+            </span>
+          {% endif %}
+          {% if rider.grand_tour_results %}
+            <span class="card-section grand-tour-section rider-card-detail">
+              <span class="section-label">Grote rondes</span>
+              <span class="gt-list">
+                {% for race, results in rider.grand_tour_results.items() %}
+                  <span class="gt-race">
+                    <strong>{{ race }}</strong>
+                    {% for result in results %}
+                      <span>{{ result }}</span>
+                    {% endfor %}
+                  </span>
+                {% endfor %}
+              </span>
+            </span>
+          {% endif %}
+          {% if rider.specialties %}
+            <span class="card-section profile-section">
+              <span class="section-label">PCS-profiel</span>
+              <span class="profile-bars">
+                {% for speciality in speciality_filters %}
+                  {% set value = rider.specialties.get(speciality.stat_label, 0) %}
+                  {% set width = (value / 80)|round(0, 'floor') %}
+                  <span class="profile-stat profile-stat-{{ speciality.key }}">
+                    <span class="profile-stat-top"><span>{{ speciality.label }}</span></span>
+                    <span class="profile-track"><span style="width: {{ 100 if width > 100 else width }}%"></span></span>
+                  </span>
+                {% endfor %}
+              </span>
+            </span>
+          {% endif %}
+          {% if rider.best_results or rider.grand_tour_results %}
+            <button type="button" class="details-toggle" data-card-toggle aria-expanded="false">Details</button>
+          {% endif %}
+          <span class="selection-action" data-selection-action>
+            {% if event_rider.id in selected_ids %}Renner verwijderen{% elif budget_blocked %}Boven budget{% else %}Renner toevoegen{% endif %}
+          </span>
+        </span>
+      </article>
+    {% endfor %}
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Admin Inloggen{% endblock %}
+{% block body %}
+<section class="auth-shell">
+  <form class="auth-panel" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h1>Admin</h1>
+    <label>
+      Wachtwoord
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <button type="submit" class="primary-button">Admin openen</button>
+  </form>
+</section>
+{% endblock %}

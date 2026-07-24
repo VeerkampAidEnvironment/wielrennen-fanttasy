@@ -1,0 +1,3089 @@
+﻿[
+    {
+        "fullName":  "Agnieszka Skalniak-Sójka",
+        "sanitizedFullName":  "Agnieszka Skalniak-Sojka",
+        "firstName":  "Agnieszka",
+        "lastName":  "Skalniak-Sójka",
+        "price":  3,
+        "participating":  true,
+        "team":  "CANYON//SRAM"
+    },
+    {
+        "fullName":  "Alana Castrique",
+        "sanitizedFullName":  "Alana Castrique",
+        "firstName":  "Alana",
+        "lastName":  "Castrique",
+        "price":  2,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Alberte Greve",
+        "sanitizedFullName":  "Alberte Greve",
+        "firstName":  "Alberte",
+        "lastName":  "Greve",
+        "price":  2,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Alena Amialiusik",
+        "sanitizedFullName":  "Alena Amialiusik",
+        "firstName":  "Alena",
+        "lastName":  "Amialiusik",
+        "price":  3,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Alena Ivanchenko",
+        "sanitizedFullName":  "Alena Ivanchenko",
+        "firstName":  "Alena",
+        "lastName":  "Ivanchenko",
+        "price":  2,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Alessia Vigilia",
+        "sanitizedFullName":  "Alessia Vigilia",
+        "firstName":  "Alessia",
+        "lastName":  "Vigilia",
+        "price":  2,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Alexandra Manly",
+        "sanitizedFullName":  "Alexandra Manly",
+        "firstName":  "Alexandra",
+        "lastName":  "Manly",
+        "price":  3,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Alexandra Volstad",
+        "sanitizedFullName":  "Alexandra Volstad",
+        "firstName":  "Alexandra",
+        "lastName":  "Volstad",
+        "price":  2,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Alexis Magner",
+        "sanitizedFullName":  "Alexis Magner",
+        "firstName":  "Alexis",
+        "lastName":  "Magner",
+        "price":  2,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Alice Coutinho",
+        "sanitizedFullName":  "Alice Coutinho",
+        "firstName":  "Alice",
+        "lastName":  "Coutinho",
+        "price":  2,
+        "participating":  true,
+        "team":  "Mayenne Monbana My Pie"
+    },
+    {
+        "fullName":  "Alice Maria Arzuffi",
+        "sanitizedFullName":  "Alice Maria Arzuffi",
+        "firstName":  "Alice Maria",
+        "lastName":  "Arzuffi",
+        "price":  2,
+        "participating":  true,
+        "team":  "Laboral Kutxa - Fundación Euskadi"
+    },
+    {
+        "fullName":  "Alice Towers",
+        "sanitizedFullName":  "Alice Towers",
+        "firstName":  "Alice",
+        "lastName":  "Towers",
+        "price":  2,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Alicia González",
+        "sanitizedFullName":  "Alicia Gonzalez",
+        "firstName":  "Alicia",
+        "lastName":  "González",
+        "price":  3,
+        "participating":  true,
+        "team":  "St Michel - Preference Home - Auber93"
+    },
+    {
+        "fullName":  "Alison Avoine",
+        "sanitizedFullName":  "Alison Avoine",
+        "firstName":  "Alison",
+        "lastName":  "Avoine",
+        "price":  2,
+        "participating":  true,
+        "team":  "Ma Petite Entreprise"
+    },
+    {
+        "fullName":  "Alison Jackson",
+        "sanitizedFullName":  "Alison Jackson",
+        "firstName":  "Alison",
+        "lastName":  "Jackson",
+        "price":  3,
+        "participating":  true,
+        "team":  "St Michel - Preference Home - Auber93"
+    },
+    {
+        "fullName":  "Allison Mrugal",
+        "sanitizedFullName":  "Allison Mrugal",
+        "firstName":  "Allison",
+        "lastName":  "Mrugal",
+        "price":  2,
+        "participating":  true,
+        "team":  "Mayenne Monbana My Pie"
+    },
+    {
+        "fullName":  "Ally Wollaston",
+        "sanitizedFullName":  "Ally Wollaston",
+        "firstName":  "Ally",
+        "lastName":  "Wollaston",
+        "price":  4,
+        "participating":  true,
+        "team":  "FDJ United - SUEZ"
+    },
+    {
+        "fullName":  "Amalie Dideriksen",
+        "sanitizedFullName":  "Amalie Dideriksen",
+        "firstName":  "Amalie",
+        "lastName":  "Dideriksen",
+        "price":  3,
+        "participating":  true,
+        "team":  "Cofidis Women Team"
+    },
+    {
+        "fullName":  "Amanda Spratt",
+        "sanitizedFullName":  "Amanda Spratt",
+        "firstName":  "Amanda",
+        "lastName":  "Spratt",
+        "price":  3,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Amber Kraak",
+        "sanitizedFullName":  "Amber Kraak",
+        "firstName":  "Amber",
+        "lastName":  "Kraak",
+        "price":  3,
+        "participating":  true,
+        "team":  "FDJ United - SUEZ"
+    },
+    {
+        "fullName":  "Amber Pate",
+        "sanitizedFullName":  "Amber Pate",
+        "firstName":  "Amber",
+        "lastName":  "Pate",
+        "price":  2,
+        "participating":  true,
+        "team":  "Liv - AlUla - Jayco"
+    },
+    {
+        "fullName":  "Amber van der Hulst",
+        "sanitizedFullName":  "Amber van der Hulst",
+        "firstName":  "Amber",
+        "lastName":  "van der Hulst",
+        "price":  2,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Ana Vitoria Magalhães",
+        "sanitizedFullName":  "Ana Vitoria Magalhaes",
+        "firstName":  "Ana Vitoria",
+        "lastName":  "Magalhães",
+        "price":  2,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Anastasiya Kolesava",
+        "sanitizedFullName":  "Anastasiya Kolesava",
+        "firstName":  "Anastasiya",
+        "lastName":  "Kolesava",
+        "price":  2,
+        "participating":  true,
+        "team":  "CANYON//SRAM"
+    },
+    {
+        "fullName":  "Aniek van Alphen",
+        "sanitizedFullName":  "Aniek van Alphen",
+        "firstName":  "Aniek",
+        "lastName":  "van Alphen",
+        "price":  2,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Anna Henderson",
+        "sanitizedFullName":  "Anna Henderson",
+        "firstName":  "Anna",
+        "lastName":  "Henderson",
+        "price":  4,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Anna van der Breggen",
+        "sanitizedFullName":  "Anna van der Breggen",
+        "firstName":  "Anna",
+        "lastName":  "van der Breggen",
+        "price":  7,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Anna van Wersch",
+        "sanitizedFullName":  "Anna van Wersch",
+        "firstName":  "Anna",
+        "lastName":  "van Wersch",
+        "price":  2,
+        "participating":  true,
+        "team":  "Lotto Intermarché Ladies"
+    },
+    {
+        "fullName":  "Anne Dorthe Ysland",
+        "sanitizedFullName":  "Anne Dorthe Ysland",
+        "firstName":  "Anne Dorthe",
+        "lastName":  "Ysland",
+        "price":  2,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Anne Knijnenburg",
+        "sanitizedFullName":  "Anne Knijnenburg",
+        "firstName":  "Anne",
+        "lastName":  "Knijnenburg",
+        "price":  2,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Anneke Dijkstra",
+        "sanitizedFullName":  "Anneke Dijkstra",
+        "firstName":  "Anneke",
+        "lastName":  "Dijkstra",
+        "price":  2,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Annelies Nijssen",
+        "sanitizedFullName":  "Annelies Nijssen",
+        "firstName":  "Annelies",
+        "lastName":  "Nijssen",
+        "price":  2,
+        "participating":  true,
+        "team":  "Lotto Intermarché Ladies"
+    },
+    {
+        "fullName":  "Annemarie Worst",
+        "sanitizedFullName":  "Annemarie Worst",
+        "firstName":  "Annemarie",
+        "lastName":  "Worst",
+        "price":  2,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Anniina Ahtosalo",
+        "sanitizedFullName":  "Anniina Ahtosalo",
+        "firstName":  "Anniina",
+        "lastName":  "Ahtosalo",
+        "price":  3,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Anouska Koster",
+        "sanitizedFullName":  "Anouska Koster",
+        "firstName":  "Anouska",
+        "lastName":  "Koster",
+        "price":  3,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Antonia Niedermaier",
+        "sanitizedFullName":  "Antonia Niedermaier",
+        "firstName":  "Antonia",
+        "lastName":  "Niedermaier",
+        "price":  5,
+        "participating":  true,
+        "team":  "CANYON//SRAM"
+    },
+    {
+        "fullName":  "Anya Louw",
+        "sanitizedFullName":  "Anya Louw",
+        "firstName":  "Anya",
+        "lastName":  "Louw",
+        "price":  2,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Arianna Fidanza",
+        "sanitizedFullName":  "Arianna Fidanza",
+        "firstName":  "Arianna",
+        "lastName":  "Fidanza",
+        "price":  4,
+        "participating":  true,
+        "team":  "Laboral Kutxa - Fundación Euskadi"
+    },
+    {
+        "fullName":  "Arlenis Sierra",
+        "sanitizedFullName":  "Arlenis Sierra",
+        "firstName":  "Arlenis",
+        "lastName":  "Sierra",
+        "price":  3,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Ashleigh Moolman Pasio",
+        "sanitizedFullName":  "Ashleigh Moolman Pasio",
+        "firstName":  "Ashleigh",
+        "lastName":  "Moolman Pasio",
+        "price":  4,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Aude Biannic",
+        "sanitizedFullName":  "Aude Biannic",
+        "firstName":  "Aude",
+        "lastName":  "Biannic",
+        "price":  3,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Audrey De Keersmaeker",
+        "sanitizedFullName":  "Audrey De Keersmaeker",
+        "firstName":  "Audrey",
+        "lastName":  "De Keersmaeker",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Auke De Buysser",
+        "sanitizedFullName":  "Auke De Buysser",
+        "firstName":  "Auke",
+        "lastName":  "De Buysser",
+        "price":  2,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Ava Holmgren",
+        "sanitizedFullName":  "Ava Holmgren",
+        "firstName":  "Ava",
+        "lastName":  "Holmgren",
+        "price":  2,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Axelle Dubau-Prévot",
+        "sanitizedFullName":  "Axelle Dubau-Prevot",
+        "firstName":  "Axelle",
+        "lastName":  "Dubau-Prévot",
+        "price":  2,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Babette van der Wolf",
+        "sanitizedFullName":  "Babette van der Wolf",
+        "firstName":  "Babette",
+        "lastName":  "van der Wolf",
+        "price":  2,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Barbara Guarischi",
+        "sanitizedFullName":  "Barbara Guarischi",
+        "firstName":  "Barbara",
+        "lastName":  "Guarischi",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Barbara Malcotti",
+        "sanitizedFullName":  "Barbara Malcotti",
+        "firstName":  "Barbara",
+        "lastName":  "Malcotti",
+        "price":  3,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Becky Storrie",
+        "sanitizedFullName":  "Becky Storrie",
+        "firstName":  "Becky",
+        "lastName":  "Storrie",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Blanka Vas",
+        "sanitizedFullName":  "Blanka Vas",
+        "firstName":  "Blanka",
+        "lastName":  "Vas",
+        "price":  4,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Bodine Vollering",
+        "sanitizedFullName":  "Bodine Vollering",
+        "firstName":  "Bodine",
+        "lastName":  "Vollering",
+        "price":  2,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Brodie Chapman",
+        "sanitizedFullName":  "Brodie Chapman",
+        "firstName":  "Brodie",
+        "lastName":  "Chapman",
+        "price":  3,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Caoimhe O\u0027Brien",
+        "sanitizedFullName":  "Caoimhe O\u0027Brien",
+        "firstName":  "Caoimhe",
+        "lastName":  "O\u0027Brien",
+        "price":  2,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Carina Schrempf",
+        "sanitizedFullName":  "Carina Schrempf",
+        "firstName":  "Carina",
+        "lastName":  "Schrempf",
+        "price":  2,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Carlotta Cipressi",
+        "sanitizedFullName":  "Carlotta Cipressi",
+        "firstName":  "Carlotta",
+        "lastName":  "Cipressi",
+        "price":  2,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Caroline Andersson",
+        "sanitizedFullName":  "Caroline Andersson",
+        "firstName":  "Caroline",
+        "lastName":  "Andersson",
+        "price":  3,
+        "participating":  true,
+        "team":  "Liv - AlUla - Jayco"
+    },
+    {
+        "fullName":  "Caroline Wreszin",
+        "sanitizedFullName":  "Caroline Wreszin",
+        "firstName":  "Caroline",
+        "lastName":  "Wreszin",
+        "price":  2,
+        "participating":  true,
+        "team":  "St Michel - Preference Home - Auber93"
+    },
+    {
+        "fullName":  "Carys Lloyd",
+        "sanitizedFullName":  "Carys Lloyd",
+        "firstName":  "Carys",
+        "lastName":  "Lloyd",
+        "price":  3,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Cat Ferguson",
+        "sanitizedFullName":  "Cat Ferguson",
+        "firstName":  "Cat",
+        "lastName":  "Ferguson",
+        "price":  4,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Catalina Soto",
+        "sanitizedFullName":  "Catalina Soto",
+        "firstName":  "Catalina",
+        "lastName":  "Soto",
+        "price":  2,
+        "participating":  true,
+        "team":  "Laboral Kutxa - Fundación Euskadi"
+    },
+    {
+        "fullName":  "Cecilie Ludwig",
+        "sanitizedFullName":  "Cecilie Ludwig",
+        "firstName":  "Cecilie",
+        "lastName":  "Ludwig",
+        "price":  3,
+        "participating":  true,
+        "team":  "CANYON//SRAM"
+    },
+    {
+        "fullName":  "Cédrine Kerbaol",
+        "sanitizedFullName":  "Cedrine Kerbaol",
+        "firstName":  "Cédrine",
+        "lastName":  "Kerbaol",
+        "price":  5,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Célia Gery",
+        "sanitizedFullName":  "Celia Gery",
+        "firstName":  "Célia",
+        "lastName":  "Gery",
+        "price":  4,
+        "participating":  true,
+        "team":  "FDJ United - SUEZ"
+    },
+    {
+        "fullName":  "Célia Le Mouel",
+        "sanitizedFullName":  "Celia Le Mouel",
+        "firstName":  "Célia",
+        "lastName":  "Le Mouel",
+        "price":  2,
+        "participating":  true,
+        "team":  "Ma Petite Entreprise"
+    },
+    {
+        "fullName":  "Ceylin Alvarado",
+        "sanitizedFullName":  "Ceylin Alvarado",
+        "firstName":  "Ceylin",
+        "lastName":  "Alvarado",
+        "price":  2,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Charlotte Kool",
+        "sanitizedFullName":  "Charlotte Kool",
+        "firstName":  "Charlotte",
+        "lastName":  "Kool",
+        "price":  6,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Chiara Consonni",
+        "sanitizedFullName":  "Chiara Consonni",
+        "firstName":  "Chiara",
+        "lastName":  "Consonni",
+        "price":  6,
+        "participating":  true,
+        "team":  "CANYON//SRAM"
+    },
+    {
+        "fullName":  "Chloé Dygert",
+        "sanitizedFullName":  "Chloe Dygert",
+        "firstName":  "Chloé",
+        "lastName":  "Dygert",
+        "price":  4,
+        "participating":  true,
+        "team":  "CANYON//SRAM"
+    },
+    {
+        "fullName":  "Christina Schweinberger",
+        "sanitizedFullName":  "Christina Schweinberger",
+        "firstName":  "Christina",
+        "lastName":  "Schweinberger",
+        "price":  3,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Claire Steels",
+        "sanitizedFullName":  "Claire Steels",
+        "firstName":  "Claire",
+        "lastName":  "Steels",
+        "price":  2,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Clara Copponi",
+        "sanitizedFullName":  "Clara Copponi",
+        "firstName":  "Clara",
+        "lastName":  "Copponi",
+        "price":  3,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Clara Emond",
+        "sanitizedFullName":  "Clara Emond",
+        "firstName":  "Clara",
+        "lastName":  "Emond",
+        "price":  3,
+        "participating":  true,
+        "team":  "St Michel - Preference Home - Auber93"
+    },
+    {
+        "fullName":  "Clémence Chereau",
+        "sanitizedFullName":  "Clemence Chereau",
+        "firstName":  "Clémence",
+        "lastName":  "Chereau",
+        "price":  2,
+        "participating":  true,
+        "team":  "St Michel - Preference Home - Auber93"
+    },
+    {
+        "fullName":  "Clémence Latimier",
+        "sanitizedFullName":  "Clemence Latimier",
+        "firstName":  "Clémence",
+        "lastName":  "Latimier",
+        "price":  2,
+        "participating":  true,
+        "team":  "Ma Petite Entreprise"
+    },
+    {
+        "fullName":  "Constance Valentin",
+        "sanitizedFullName":  "Constance Valentin",
+        "firstName":  "Constance",
+        "lastName":  "Valentin",
+        "price":  2,
+        "participating":  true,
+        "team":  "Mayenne Monbana My Pie"
+    },
+    {
+        "fullName":  "Cristina Tonetti",
+        "sanitizedFullName":  "Cristina Tonetti",
+        "firstName":  "Cristina",
+        "lastName":  "Tonetti",
+        "price":  2,
+        "participating":  true,
+        "team":  "Laboral Kutxa - Fundación Euskadi"
+    },
+    {
+        "fullName":  "Daniek Hengeveld",
+        "sanitizedFullName":  "Daniek Hengeveld",
+        "firstName":  "Daniek",
+        "lastName":  "Hengeveld",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team Visma - Lease a Bike"
+    },
+    {
+        "fullName":  "Daniela Hezinová",
+        "sanitizedFullName":  "Daniela Hezinova",
+        "firstName":  "Daniela",
+        "lastName":  "Hezinová",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Daria Pikulik",
+        "sanitizedFullName":  "Daria Pikulik",
+        "firstName":  "Daria",
+        "lastName":  "Pikulik",
+        "price":  3,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Debora Silvestri",
+        "sanitizedFullName":  "Debora Silvestri",
+        "firstName":  "Debora",
+        "lastName":  "Silvestri",
+        "price":  2,
+        "participating":  true,
+        "team":  "Laboral Kutxa - Fundación Euskadi"
+    },
+    {
+        "fullName":  "Demi Vollering",
+        "sanitizedFullName":  "Demi Vollering",
+        "firstName":  "Demi",
+        "lastName":  "Vollering",
+        "price":  11,
+        "participating":  true,
+        "team":  "FDJ United - SUEZ"
+    },
+    {
+        "fullName":  "Dilyxine Miermont",
+        "sanitizedFullName":  "Dilyxine Miermont",
+        "firstName":  "Dilyxine",
+        "lastName":  "Miermont",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Dina Boels",
+        "sanitizedFullName":  "Dina Boels",
+        "firstName":  "Dina",
+        "lastName":  "Boels",
+        "price":  2,
+        "participating":  true,
+        "team":  "Lotto Intermarché Ladies"
+    },
+    {
+        "fullName":  "Dominika Wlodarczyk",
+        "sanitizedFullName":  "Dominika Wlodarczyk",
+        "firstName":  "Dominika",
+        "lastName":  "Wlodarczyk",
+        "price":  5,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Eglantine Rayer",
+        "sanitizedFullName":  "Eglantine Rayer",
+        "firstName":  "Eglantine",
+        "lastName":  "Rayer",
+        "price":  2,
+        "participating":  true,
+        "team":  "FDJ United - SUEZ"
+    },
+    {
+        "fullName":  "Elena Cecchini",
+        "sanitizedFullName":  "Elena Cecchini",
+        "firstName":  "Elena",
+        "lastName":  "Cecchini",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Eleonora Ciabocco",
+        "sanitizedFullName":  "Eleonora Ciabocco",
+        "firstName":  "Eleonora",
+        "lastName":  "Ciabocco",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Eleonora Gasparrini",
+        "sanitizedFullName":  "Eleonora Gasparrini",
+        "firstName":  "Eleonora",
+        "lastName":  "Gasparrini",
+        "price":  4,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Eline Jansen",
+        "sanitizedFullName":  "Eline Jansen",
+        "firstName":  "Eline",
+        "lastName":  "Jansen",
+        "price":  4,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Elinor Barker",
+        "sanitizedFullName":  "Elinor Barker",
+        "firstName":  "Elinor",
+        "lastName":  "Barker",
+        "price":  3,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Elisa Balsamo",
+        "sanitizedFullName":  "Elisa Balsamo",
+        "firstName":  "Elisa",
+        "lastName":  "Balsamo",
+        "price":  7,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Elisa Longo Borghini",
+        "sanitizedFullName":  "Elisa Longo Borghini",
+        "firstName":  "Elisa",
+        "lastName":  "Longo Borghini",
+        "price":  8,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Elisabeth Ebras",
+        "sanitizedFullName":  "Elisabeth Ebras",
+        "firstName":  "Elisabeth",
+        "lastName":  "Ebras",
+        "price":  2,
+        "participating":  true,
+        "team":  "Lotto Intermarché Ladies"
+    },
+    {
+        "fullName":  "Elise Chabbey",
+        "sanitizedFullName":  "Elise Chabbey",
+        "firstName":  "Elise",
+        "lastName":  "Chabbey",
+        "price":  5,
+        "participating":  true,
+        "team":  "FDJ United - SUEZ"
+    },
+    {
+        "fullName":  "Elise Uijen",
+        "sanitizedFullName":  "Elise Uijen",
+        "firstName":  "Elise",
+        "lastName":  "Uijen",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Ella Heremans",
+        "sanitizedFullName":  "Ella Heremans",
+        "firstName":  "Ella",
+        "lastName":  "Heremans",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Ella Wyllie",
+        "sanitizedFullName":  "Ella Wyllie",
+        "firstName":  "Ella",
+        "lastName":  "Wyllie",
+        "price":  2,
+        "participating":  true,
+        "team":  "Liv - AlUla - Jayco"
+    },
+    {
+        "fullName":  "Elyne Roussel",
+        "sanitizedFullName":  "Elyne Roussel",
+        "firstName":  "Elyne",
+        "lastName":  "Roussel",
+        "price":  2,
+        "participating":  true,
+        "team":  "St Michel - Preference Home - Auber93"
+    },
+    {
+        "fullName":  "Elynor Backstedt",
+        "sanitizedFullName":  "Elynor Backstedt",
+        "firstName":  "Elynor",
+        "lastName":  "Backstedt",
+        "price":  2,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Ema Comte",
+        "sanitizedFullName":  "Ema Comte",
+        "firstName":  "Ema",
+        "lastName":  "Comte",
+        "price":  2,
+        "participating":  true,
+        "team":  "Cofidis Women Team"
+    },
+    {
+        "fullName":  "Emilie Morier",
+        "sanitizedFullName":  "Emilie Morier",
+        "firstName":  "Emilie",
+        "lastName":  "Morier",
+        "price":  2,
+        "participating":  true,
+        "team":  "St Michel - Preference Home - Auber93"
+    },
+    {
+        "fullName":  "Emma Norsgaard Bjerg",
+        "sanitizedFullName":  "Emma Norsgaard Bjerg",
+        "firstName":  "Emma",
+        "lastName":  "Norsgaard Bjerg",
+        "price":  3,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Erica Magnaldi",
+        "sanitizedFullName":  "Erica Magnaldi",
+        "firstName":  "Erica",
+        "lastName":  "Magnaldi",
+        "price":  3,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Esmée Peperkamp",
+        "sanitizedFullName":  "Esmee Peperkamp",
+        "firstName":  "Esmée",
+        "lastName":  "Peperkamp",
+        "price":  2,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Eva van Agt",
+        "sanitizedFullName":  "Eva van Agt",
+        "firstName":  "Eva",
+        "lastName":  "van Agt",
+        "price":  3,
+        "participating":  true,
+        "team":  "FDJ United - SUEZ"
+    },
+    {
+        "fullName":  "Évita Muzic",
+        "sanitizedFullName":  "Evita Muzic",
+        "firstName":  "Évita",
+        "lastName":  "Muzic",
+        "price":  4,
+        "participating":  true,
+        "team":  "FDJ United - SUEZ"
+    },
+    {
+        "fullName":  "Evy Kuijpers",
+        "sanitizedFullName":  "Evy Kuijpers",
+        "firstName":  "Evy",
+        "lastName":  "Kuijpers",
+        "price":  2,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Fauve Bastiaenssen",
+        "sanitizedFullName":  "Fauve Bastiaenssen",
+        "firstName":  "Fauve",
+        "lastName":  "Bastiaenssen",
+        "price":  2,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Febe Jooris",
+        "sanitizedFullName":  "Febe Jooris",
+        "firstName":  "Febe",
+        "lastName":  "Jooris",
+        "price":  2,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Federica Venturelli",
+        "sanitizedFullName":  "Federica Venturelli",
+        "firstName":  "Federica",
+        "lastName":  "Venturelli",
+        "price":  2,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Felicity Wilson-Haffenden",
+        "sanitizedFullName":  "Felicity Wilson-Haffenden",
+        "firstName":  "Felicity",
+        "lastName":  "Wilson-Haffenden",
+        "price":  2,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Femke de Vries",
+        "sanitizedFullName":  "Femke de Vries",
+        "firstName":  "Femke",
+        "lastName":  "de Vries",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team Visma - Lease a Bike"
+    },
+    {
+        "fullName":  "Femke Gerritse",
+        "sanitizedFullName":  "Femke Gerritse",
+        "firstName":  "Femke",
+        "lastName":  "Gerritse",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Femke Markus",
+        "sanitizedFullName":  "Femke Markus",
+        "firstName":  "Femke",
+        "lastName":  "Markus",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Fien Van Eynde",
+        "sanitizedFullName":  "Fien Van Eynde",
+        "firstName":  "Fien",
+        "lastName":  "Van Eynde",
+        "price":  2,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Fiona Mangan",
+        "sanitizedFullName":  "Fiona Mangan",
+        "firstName":  "Fiona",
+        "lastName":  "Mangan",
+        "price":  2,
+        "participating":  true,
+        "team":  "Mayenne Monbana My Pie"
+    },
+    {
+        "fullName":  "Fleur Moors",
+        "sanitizedFullName":  "Fleur Moors",
+        "firstName":  "Fleur",
+        "lastName":  "Moors",
+        "price":  4,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Floortje Mackaij",
+        "sanitizedFullName":  "Floortje Mackaij",
+        "firstName":  "Floortje",
+        "lastName":  "Mackaij",
+        "price":  3,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Flora Perkins",
+        "sanitizedFullName":  "Flora Perkins",
+        "firstName":  "Flora",
+        "lastName":  "Perkins",
+        "price":  3,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Florien Bolks",
+        "sanitizedFullName":  "Florien Bolks",
+        "firstName":  "Florien",
+        "lastName":  "Bolks",
+        "price":  2,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Francesca Barale",
+        "sanitizedFullName":  "Francesca Barale",
+        "firstName":  "Francesca",
+        "lastName":  "Barale",
+        "price":  2,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Francesca Pellegrini",
+        "sanitizedFullName":  "Francesca Pellegrini",
+        "firstName":  "Francesca",
+        "lastName":  "Pellegrini",
+        "price":  2,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Franziska Koch",
+        "sanitizedFullName":  "Franziska Koch",
+        "firstName":  "Franziska",
+        "lastName":  "Koch",
+        "price":  4,
+        "participating":  true,
+        "team":  "FDJ United - SUEZ"
+    },
+    {
+        "fullName":  "Gaia Masetti",
+        "sanitizedFullName":  "Gaia Masetti",
+        "firstName":  "Gaia",
+        "lastName":  "Masetti",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Gaia Realini",
+        "sanitizedFullName":  "Gaia Realini",
+        "firstName":  "Gaia",
+        "lastName":  "Realini",
+        "price":  4,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Georgia Baker",
+        "sanitizedFullName":  "Georgia Baker",
+        "firstName":  "Georgia",
+        "lastName":  "Baker",
+        "price":  4,
+        "participating":  true,
+        "team":  "Liv - AlUla - Jayco"
+    },
+    {
+        "fullName":  "Giada Borghesi",
+        "sanitizedFullName":  "Giada Borghesi",
+        "firstName":  "Giada",
+        "lastName":  "Borghesi",
+        "price":  2,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Gladys Verhulst",
+        "sanitizedFullName":  "Gladys Verhulst",
+        "firstName":  "Gladys",
+        "lastName":  "Verhulst",
+        "price":  3,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Greta Marturano",
+        "sanitizedFullName":  "Greta Marturano",
+        "firstName":  "Greta",
+        "lastName":  "Marturano",
+        "price":  2,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Hannah Ludwig",
+        "sanitizedFullName":  "Hannah Ludwig",
+        "firstName":  "Hannah",
+        "lastName":  "Ludwig",
+        "price":  2,
+        "participating":  true,
+        "team":  "Cofidis Women Team"
+    },
+    {
+        "fullName":  "Heidi Franz",
+        "sanitizedFullName":  "Heidi Franz",
+        "firstName":  "Heidi",
+        "lastName":  "Franz",
+        "price":  2,
+        "participating":  true,
+        "team":  "St Michel - Preference Home - Auber93"
+    },
+    {
+        "fullName":  "Henrietta Christie",
+        "sanitizedFullName":  "Henrietta Christie",
+        "firstName":  "Henrietta",
+        "lastName":  "Christie",
+        "price":  2,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Idoia Eraso",
+        "sanitizedFullName":  "Idoia Eraso",
+        "firstName":  "Idoia",
+        "lastName":  "Eraso",
+        "price":  2,
+        "participating":  true,
+        "team":  "Laboral Kutxa - Fundación Euskadi"
+    },
+    {
+        "fullName":  "Ilken Seynave",
+        "sanitizedFullName":  "Ilken Seynave",
+        "firstName":  "Ilken",
+        "lastName":  "Seynave",
+        "price":  2,
+        "participating":  true,
+        "team":  "Lotto Intermarché Ladies"
+    },
+    {
+        "fullName":  "Ilona Rouat",
+        "sanitizedFullName":  "Ilona Rouat",
+        "firstName":  "Ilona",
+        "lastName":  "Rouat",
+        "price":  2,
+        "participating":  true,
+        "team":  "Ma Petite Entreprise"
+    },
+    {
+        "fullName":  "Ilse Pluimers",
+        "sanitizedFullName":  "Ilse Pluimers",
+        "firstName":  "Ilse",
+        "lastName":  "Pluimers",
+        "price":  3,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Imogen Wolff",
+        "sanitizedFullName":  "Imogen Wolff",
+        "firstName":  "Imogen",
+        "lastName":  "Wolff",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team Visma - Lease a Bike"
+    },
+    {
+        "fullName":  "India Grangier",
+        "sanitizedFullName":  "India Grangier",
+        "firstName":  "India",
+        "lastName":  "Grangier",
+        "price":  2,
+        "participating":  true,
+        "team":  "St Michel - Preference Home - Auber93"
+    },
+    {
+        "fullName":  "Inge van der Heijden",
+        "sanitizedFullName":  "Inge van der Heijden",
+        "firstName":  "Inge",
+        "lastName":  "van der Heijden",
+        "price":  2,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Ingvild Gåskjenn",
+        "sanitizedFullName":  "Ingvild Gaskjenn",
+        "firstName":  "Ingvild",
+        "lastName":  "Gåskjenn",
+        "price":  3,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Irati Aranguren",
+        "sanitizedFullName":  "Irati Aranguren",
+        "firstName":  "Irati",
+        "lastName":  "Aranguren",
+        "price":  2,
+        "participating":  true,
+        "team":  "Laboral Kutxa - Fundación Euskadi"
+    },
+    {
+        "fullName":  "Isabella Holmgren",
+        "sanitizedFullName":  "Isabella Holmgren",
+        "firstName":  "Isabella",
+        "lastName":  "Holmgren",
+        "price":  3,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Iurani Blanco",
+        "sanitizedFullName":  "Iurani Blanco",
+        "firstName":  "Iurani",
+        "lastName":  "Blanco",
+        "price":  2,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Jade Wiel",
+        "sanitizedFullName":  "Jade Wiel",
+        "firstName":  "Jade",
+        "lastName":  "Wiel",
+        "price":  3,
+        "participating":  true,
+        "team":  "FDJ United - SUEZ"
+    },
+    {
+        "fullName":  "Jeanne Korevaar",
+        "sanitizedFullName":  "Jeanne Korevaar",
+        "firstName":  "Jeanne",
+        "lastName":  "Korevaar",
+        "price":  2,
+        "participating":  true,
+        "team":  "Liv - AlUla - Jayco"
+    },
+    {
+        "fullName":  "Jelena Eric",
+        "sanitizedFullName":  "Jelena Eric",
+        "firstName":  "Jelena",
+        "lastName":  "Eric",
+        "price":  3,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Jenaya Francis",
+        "sanitizedFullName":  "Jenaya Francis",
+        "firstName":  "Jenaya",
+        "lastName":  "Francis",
+        "price":  2,
+        "participating":  true,
+        "team":  "Mayenne Monbana My Pie"
+    },
+    {
+        "fullName":  "Jente Koops",
+        "sanitizedFullName":  "Jente Koops",
+        "firstName":  "Jente",
+        "lastName":  "Koops",
+        "price":  2,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Josie Nelson",
+        "sanitizedFullName":  "Josie Nelson",
+        "firstName":  "Josie",
+        "lastName":  "Nelson",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Josie Talbot",
+        "sanitizedFullName":  "Josie Talbot",
+        "firstName":  "Josie",
+        "lastName":  "Talbot",
+        "price":  2,
+        "participating":  true,
+        "team":  "Liv - AlUla - Jayco"
+    },
+    {
+        "fullName":  "Julia Kopecký",
+        "sanitizedFullName":  "Julia Kopecky",
+        "firstName":  "Julia",
+        "lastName":  "Kopecký",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Juliana Londoño",
+        "sanitizedFullName":  "Juliana Londono",
+        "firstName":  "Juliana",
+        "lastName":  "Londoño",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Julie Bego",
+        "sanitizedFullName":  "Julie Bego",
+        "firstName":  "Julie",
+        "lastName":  "Bego",
+        "price":  3,
+        "participating":  true,
+        "team":  "Cofidis Women Team"
+    },
+    {
+        "fullName":  "Julie Brouwers",
+        "sanitizedFullName":  "Julie Brouwers",
+        "firstName":  "Julie",
+        "lastName":  "Brouwers",
+        "price":  2,
+        "participating":  true,
+        "team":  "Lotto Intermarché Ladies"
+    },
+    {
+        "fullName":  "Julie De Wilde",
+        "sanitizedFullName":  "Julie De Wilde",
+        "firstName":  "Julie",
+        "lastName":  "De Wilde",
+        "price":  3,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Julie Van De Velde",
+        "sanitizedFullName":  "Julie Van De Velde",
+        "firstName":  "Julie",
+        "lastName":  "Van De Velde",
+        "price":  2,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Juliette Berthet",
+        "sanitizedFullName":  "Juliette Berthet",
+        "firstName":  "Juliette",
+        "lastName":  "Berthet",
+        "price":  6,
+        "participating":  true,
+        "team":  "FDJ United - SUEZ"
+    },
+    {
+        "fullName":  "Justine Gegu",
+        "sanitizedFullName":  "Justine Gegu",
+        "firstName":  "Justine",
+        "lastName":  "Gegu",
+        "price":  2,
+        "participating":  true,
+        "team":  "Mayenne Monbana My Pie"
+    },
+    {
+        "fullName":  "Justine Ghekiere",
+        "sanitizedFullName":  "Justine Ghekiere",
+        "firstName":  "Justine",
+        "lastName":  "Ghekiere",
+        "price":  3,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Justyna Czapla",
+        "sanitizedFullName":  "Justyna Czapla",
+        "firstName":  "Justyna",
+        "lastName":  "Czapla",
+        "price":  2,
+        "participating":  true,
+        "team":  "CANYON//SRAM"
+    },
+    {
+        "fullName":  "Kamilla Aasebø",
+        "sanitizedFullName":  "Kamilla Aasebo",
+        "firstName":  "Kamilla",
+        "lastName":  "Aasebø",
+        "price":  2,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Karlijn Swinkels",
+        "sanitizedFullName":  "Karlijn Swinkels",
+        "firstName":  "Karlijn",
+        "lastName":  "Swinkels",
+        "price":  4,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Karolina Kumiega",
+        "sanitizedFullName":  "Karolina Kumiega",
+        "firstName":  "Karolina",
+        "lastName":  "Kumiega",
+        "price":  2,
+        "participating":  true,
+        "team":  "St Michel - Preference Home - Auber93"
+    },
+    {
+        "fullName":  "Karolina Perekitko",
+        "sanitizedFullName":  "Karolina Perekitko",
+        "firstName":  "Karolina",
+        "lastName":  "Perekitko",
+        "price":  2,
+        "participating":  true,
+        "team":  "Mayenne Monbana My Pie"
+    },
+    {
+        "fullName":  "Katarzyna Niewiadoma-Phinney",
+        "sanitizedFullName":  "Katarzyna Niewiadoma-Phinney",
+        "firstName":  "Katarzyna",
+        "lastName":  "Niewiadoma-Phinney",
+        "price":  8,
+        "participating":  true,
+        "team":  "CANYON//SRAM"
+    },
+    {
+        "fullName":  "Katharina Sadnik",
+        "sanitizedFullName":  "Katharina Sadnik",
+        "firstName":  "Katharina",
+        "lastName":  "Sadnik",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team Visma - Lease a Bike"
+    },
+    {
+        "fullName":  "Kathrin Schweinberger",
+        "sanitizedFullName":  "Kathrin Schweinberger",
+        "firstName":  "Kathrin",
+        "lastName":  "Schweinberger",
+        "price":  3,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Katia Ragusa",
+        "sanitizedFullName":  "Katia Ragusa",
+        "firstName":  "Katia",
+        "lastName":  "Ragusa",
+        "price":  3,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Katrijn De Clercq",
+        "sanitizedFullName":  "Katrijn De Clercq",
+        "firstName":  "Katrijn",
+        "lastName":  "De Clercq",
+        "price":  3,
+        "participating":  true,
+        "team":  "Lotto Intermarché Ladies"
+    },
+    {
+        "fullName":  "Katrine Aalerud",
+        "sanitizedFullName":  "Katrine Aalerud",
+        "firstName":  "Katrine",
+        "lastName":  "Aalerud",
+        "price":  3,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Kiara Lylyk",
+        "sanitizedFullName":  "Kiara Lylyk",
+        "firstName":  "Kiara",
+        "lastName":  "Lylyk",
+        "price":  2,
+        "participating":  true,
+        "team":  "Mayenne Monbana My Pie"
+    },
+    {
+        "fullName":  "Kim Cadzow",
+        "sanitizedFullName":  "Kim Cadzow",
+        "firstName":  "Kim",
+        "lastName":  "Cadzow",
+        "price":  3,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Kim Le Court",
+        "sanitizedFullName":  "Kim Le Court",
+        "firstName":  "Kim",
+        "lastName":  "Le Court",
+        "price":  7,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Kristen Faulkner",
+        "sanitizedFullName":  "Kristen Faulkner",
+        "firstName":  "Kristen",
+        "lastName":  "Faulkner",
+        "price":  5,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Kristýna Burlová",
+        "sanitizedFullName":  "Kristyna Burlova",
+        "firstName":  "Kristýna",
+        "lastName":  "Burlová",
+        "price":  3,
+        "participating":  true,
+        "team":  "Cofidis Women Team"
+    },
+    {
+        "fullName":  "Lani Wittevrongel",
+        "sanitizedFullName":  "Lani Wittevrongel",
+        "firstName":  "Lani",
+        "lastName":  "Wittevrongel",
+        "price":  2,
+        "participating":  true,
+        "team":  "Lotto Intermarché Ladies"
+    },
+    {
+        "fullName":  "Lara Gillespie",
+        "sanitizedFullName":  "Lara Gillespie",
+        "firstName":  "Lara",
+        "lastName":  "Gillespie",
+        "price":  5,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Laura Asencio",
+        "sanitizedFullName":  "Laura Asencio",
+        "firstName":  "Laura",
+        "lastName":  "Asencio",
+        "price":  2,
+        "participating":  true,
+        "team":  "Ma Petite Entreprise"
+    },
+    {
+        "fullName":  "Laura Molenaar",
+        "sanitizedFullName":  "Laura Molenaar",
+        "firstName":  "Laura",
+        "lastName":  "Molenaar",
+        "price":  2,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Laura Ruiz",
+        "sanitizedFullName":  "Laura Ruiz",
+        "firstName":  "Laura",
+        "lastName":  "Ruiz",
+        "price":  2,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Laura Tomasi",
+        "sanitizedFullName":  "Laura Tomasi",
+        "firstName":  "Laura",
+        "lastName":  "Tomasi",
+        "price":  2,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Lauren Dickson",
+        "sanitizedFullName":  "Lauren Dickson",
+        "firstName":  "Lauren",
+        "lastName":  "Dickson",
+        "price":  3,
+        "participating":  true,
+        "team":  "FDJ United - SUEZ"
+    },
+    {
+        "fullName":  "Lauretta Hanson",
+        "sanitizedFullName":  "Lauretta Hanson",
+        "firstName":  "Lauretta",
+        "lastName":  "Hanson",
+        "price":  3,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Léa Curinier",
+        "sanitizedFullName":  "Lea Curinier",
+        "firstName":  "Léa",
+        "lastName":  "Curinier",
+        "price":  3,
+        "participating":  true,
+        "team":  "FDJ United - SUEZ"
+    },
+    {
+        "fullName":  "Lea Lin Teutenberg",
+        "sanitizedFullName":  "Lea Lin Teutenberg",
+        "firstName":  "Lea Lin",
+        "lastName":  "Teutenberg",
+        "price":  2,
+        "participating":  true,
+        "team":  "Lotto Intermarché Ladies"
+    },
+    {
+        "fullName":  "Léa Rondel",
+        "sanitizedFullName":  "Lea Rondel",
+        "firstName":  "Léa",
+        "lastName":  "Rondel",
+        "price":  2,
+        "participating":  true,
+        "team":  "Mayenne Monbana My Pie"
+    },
+    {
+        "fullName":  "Léa Stern",
+        "sanitizedFullName":  "Lea Stern",
+        "firstName":  "Léa",
+        "lastName":  "Stern",
+        "price":  2,
+        "participating":  true,
+        "team":  "Ma Petite Entreprise"
+    },
+    {
+        "fullName":  "Letizia Borghesi",
+        "sanitizedFullName":  "Letizia Borghesi",
+        "firstName":  "Letizia",
+        "lastName":  "Borghesi",
+        "price":  3,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Letizia Paternoster",
+        "sanitizedFullName":  "Letizia Paternoster",
+        "firstName":  "Letizia",
+        "lastName":  "Paternoster",
+        "price":  5,
+        "participating":  true,
+        "team":  "Liv - AlUla - Jayco"
+    },
+    {
+        "fullName":  "Liane Lippert",
+        "sanitizedFullName":  "Liane Lippert",
+        "firstName":  "Liane",
+        "lastName":  "Lippert",
+        "price":  4,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Lieke Nooijen",
+        "sanitizedFullName":  "Lieke Nooijen",
+        "firstName":  "Lieke",
+        "lastName":  "Nooijen",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team Visma - Lease a Bike"
+    },
+    {
+        "fullName":  "Lily Williams",
+        "sanitizedFullName":  "Lily Williams",
+        "firstName":  "Lily",
+        "lastName":  "Williams",
+        "price":  3,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Linda Riedmann",
+        "sanitizedFullName":  "Linda Riedmann",
+        "firstName":  "Linda",
+        "lastName":  "Riedmann",
+        "price":  3,
+        "participating":  true,
+        "team":  "Lotto Intermarché Ladies"
+    },
+    {
+        "fullName":  "Linda Zanetti",
+        "sanitizedFullName":  "Linda Zanetti",
+        "firstName":  "Linda",
+        "lastName":  "Zanetti",
+        "price":  4,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Lisa Van Belle",
+        "sanitizedFullName":  "Lisa Van Belle",
+        "firstName":  "Lisa",
+        "lastName":  "Van Belle",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Loes Adegeest",
+        "sanitizedFullName":  "Loes Adegeest",
+        "firstName":  "Loes",
+        "lastName":  "Adegeest",
+        "price":  3,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Lonneke Uneken",
+        "sanitizedFullName":  "Lonneke Uneken",
+        "firstName":  "Lonneke",
+        "lastName":  "Uneken",
+        "price":  3,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Lore De Schepper",
+        "sanitizedFullName":  "Lore De Schepper",
+        "firstName":  "Lore",
+        "lastName":  "De Schepper",
+        "price":  3,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Lorena Wiebes",
+        "sanitizedFullName":  "Lorena Wiebes",
+        "firstName":  "Lorena",
+        "lastName":  "Wiebes",
+        "price":  9,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Lotte Claes",
+        "sanitizedFullName":  "Lotte Claes",
+        "firstName":  "Lotte",
+        "lastName":  "Claes",
+        "price":  3,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Lotte Kopecky",
+        "sanitizedFullName":  "Lotte Kopecky",
+        "firstName":  "Lotte",
+        "lastName":  "Kopecky",
+        "price":  8,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Lucía Ruiz",
+        "sanitizedFullName":  "Lucia Ruiz",
+        "firstName":  "Lucía",
+        "lastName":  "Ruiz",
+        "price":  2,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Lucie Fityus",
+        "sanitizedFullName":  "Lucie Fityus",
+        "firstName":  "Lucie",
+        "lastName":  "Fityus",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Lucinda Brand",
+        "sanitizedFullName":  "Lucinda Brand",
+        "firstName":  "Lucinda",
+        "lastName":  "Brand",
+        "price":  3,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Maaike Boogaard",
+        "sanitizedFullName":  "Maaike Boogaard",
+        "firstName":  "Maaike",
+        "lastName":  "Boogaard",
+        "price":  3,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Mackenzie Coupland",
+        "sanitizedFullName":  "Mackenzie Coupland",
+        "firstName":  "Mackenzie",
+        "lastName":  "Coupland",
+        "price":  2,
+        "participating":  true,
+        "team":  "Liv - AlUla - Jayco"
+    },
+    {
+        "fullName":  "Maeva Squiban",
+        "sanitizedFullName":  "Maeva Squiban",
+        "firstName":  "Maeva",
+        "lastName":  "Squiban",
+        "price":  5,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Magdeleine Vallieres",
+        "sanitizedFullName":  "Magdeleine Vallieres",
+        "firstName":  "Magdeleine",
+        "lastName":  "Vallieres",
+        "price":  4,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Maggie Coles-Lyster",
+        "sanitizedFullName":  "Maggie Coles-Lyster",
+        "firstName":  "Maggie",
+        "lastName":  "Coles-Lyster",
+        "price":  3,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Maike van der Duin",
+        "sanitizedFullName":  "Maike van der Duin",
+        "firstName":  "Maike",
+        "lastName":  "van der Duin",
+        "price":  3,
+        "participating":  true,
+        "team":  "CANYON//SRAM"
+    },
+    {
+        "fullName":  "Malou Eisen",
+        "sanitizedFullName":  "Malou Eisen",
+        "firstName":  "Malou",
+        "lastName":  "Eisen",
+        "price":  2,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Malwina Mul",
+        "sanitizedFullName":  "Malwina Mul",
+        "firstName":  "Malwina",
+        "lastName":  "Mul",
+        "price":  2,
+        "participating":  true,
+        "team":  "Cofidis Women Team"
+    },
+    {
+        "fullName":  "Mara Roldan",
+        "sanitizedFullName":  "Mara Roldan",
+        "firstName":  "Mara",
+        "lastName":  "Roldan",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Mareille Meijering",
+        "sanitizedFullName":  "Mareille Meijering",
+        "firstName":  "Mareille",
+        "lastName":  "Meijering",
+        "price":  3,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Margaux Vigie",
+        "sanitizedFullName":  "Margaux Vigie",
+        "firstName":  "Margaux",
+        "lastName":  "Vigie",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team Visma - Lease a Bike"
+    },
+    {
+        "fullName":  "Margot Marasco",
+        "sanitizedFullName":  "Margot Marasco",
+        "firstName":  "Margot",
+        "lastName":  "Marasco",
+        "price":  2,
+        "participating":  true,
+        "team":  "Ma Petite Entreprise"
+    },
+    {
+        "fullName":  "Margot Vanpachtenbeke",
+        "sanitizedFullName":  "Margot Vanpachtenbeke",
+        "firstName":  "Margot",
+        "lastName":  "Vanpachtenbeke",
+        "price":  3,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Maria Martins",
+        "sanitizedFullName":  "Maria Martins",
+        "firstName":  "Maria",
+        "lastName":  "Martins",
+        "price":  3,
+        "participating":  true,
+        "team":  "CANYON//SRAM"
+    },
+    {
+        "fullName":  "Marianne Vos",
+        "sanitizedFullName":  "Marianne Vos",
+        "firstName":  "Marianne",
+        "lastName":  "Vos",
+        "price":  7,
+        "participating":  true,
+        "team":  "Team Visma - Lease a Bike"
+    },
+    {
+        "fullName":  "Marie Le Net",
+        "sanitizedFullName":  "Marie Le Net",
+        "firstName":  "Marie",
+        "lastName":  "Le Net",
+        "price":  3,
+        "participating":  true,
+        "team":  "FDJ United - SUEZ"
+    },
+    {
+        "fullName":  "Marie Schreiber",
+        "sanitizedFullName":  "Marie Schreiber",
+        "firstName":  "Marie",
+        "lastName":  "Schreiber",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Marieke Meert",
+        "sanitizedFullName":  "Marieke Meert",
+        "firstName":  "Marieke",
+        "lastName":  "Meert",
+        "price":  2,
+        "participating":  true,
+        "team":  "Lotto Intermarché Ladies"
+    },
+    {
+        "fullName":  "Marine Allione",
+        "sanitizedFullName":  "Marine Allione",
+        "firstName":  "Marine",
+        "lastName":  "Allione",
+        "price":  2,
+        "participating":  true,
+        "team":  "Mayenne Monbana My Pie"
+    },
+    {
+        "fullName":  "Marine Lenehan",
+        "sanitizedFullName":  "Marine Lenehan",
+        "firstName":  "Marine",
+        "lastName":  "Lenehan",
+        "price":  2,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Marion Borras",
+        "sanitizedFullName":  "Marion Borras",
+        "firstName":  "Marion",
+        "lastName":  "Borras",
+        "price":  2,
+        "participating":  true,
+        "team":  "Cofidis Women Team"
+    },
+    {
+        "fullName":  "Marion Bunel",
+        "sanitizedFullName":  "Marion Bunel",
+        "firstName":  "Marion",
+        "lastName":  "Bunel",
+        "price":  4,
+        "participating":  true,
+        "team":  "Team Visma - Lease a Bike"
+    },
+    {
+        "fullName":  "Marit Raaijmakers",
+        "sanitizedFullName":  "Marit Raaijmakers",
+        "firstName":  "Marit",
+        "lastName":  "Raaijmakers",
+        "price":  2,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Marjolein van \u0027t Geloof",
+        "sanitizedFullName":  "Marjolein van \u0027t Geloof",
+        "firstName":  "Marjolein",
+        "lastName":  "van \u0027t Geloof",
+        "price":  4,
+        "participating":  true,
+        "team":  "Laboral Kutxa - Fundación Euskadi"
+    },
+    {
+        "fullName":  "Marlen Reusser",
+        "sanitizedFullName":  "Marlen Reusser",
+        "firstName":  "Marlen",
+        "lastName":  "Reusser",
+        "price":  7,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Marta Jaskulska",
+        "sanitizedFullName":  "Marta Jaskulska",
+        "firstName":  "Marta",
+        "lastName":  "Jaskulska",
+        "price":  3,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Marta Lach",
+        "sanitizedFullName":  "Marta Lach",
+        "firstName":  "Marta",
+        "lastName":  "Lach",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Marte Berg Edseth",
+        "sanitizedFullName":  "Marte Berg Edseth",
+        "firstName":  "Marte Berg",
+        "lastName":  "Edseth",
+        "price":  3,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Marthe Goossens",
+        "sanitizedFullName":  "Marthe Goossens",
+        "firstName":  "Marthe",
+        "lastName":  "Goossens",
+        "price":  3,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Marthe Truyen",
+        "sanitizedFullName":  "Marthe Truyen",
+        "firstName":  "Marthe",
+        "lastName":  "Truyen",
+        "price":  3,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Martina Alzini",
+        "sanitizedFullName":  "Martina Alzini",
+        "firstName":  "Martina",
+        "lastName":  "Alzini",
+        "price":  2,
+        "participating":  true,
+        "team":  "Cofidis Women Team"
+    },
+    {
+        "fullName":  "Martina Fidanza",
+        "sanitizedFullName":  "Martina Fidanza",
+        "firstName":  "Martina",
+        "lastName":  "Fidanza",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team Visma - Lease a Bike"
+    },
+    {
+        "fullName":  "Matilde Vitillo",
+        "sanitizedFullName":  "Matilde Vitillo",
+        "firstName":  "Matilde",
+        "lastName":  "Vitillo",
+        "price":  2,
+        "participating":  true,
+        "team":  "Liv - AlUla - Jayco"
+    },
+    {
+        "fullName":  "Maud Oudeman",
+        "sanitizedFullName":  "Maud Oudeman",
+        "firstName":  "Maud",
+        "lastName":  "Oudeman",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team Visma - Lease a Bike"
+    },
+    {
+        "fullName":  "Maud Rijnbeek",
+        "sanitizedFullName":  "Maud Rijnbeek",
+        "firstName":  "Maud",
+        "lastName":  "Rijnbeek",
+        "price":  2,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Mavi García",
+        "sanitizedFullName":  "Mavi Garcia",
+        "firstName":  "Mavi",
+        "lastName":  "García",
+        "price":  3,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Megan Arens",
+        "sanitizedFullName":  "Megan Arens",
+        "firstName":  "Megan",
+        "lastName":  "Arens",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Megan Jastrab",
+        "sanitizedFullName":  "Megan Jastrab",
+        "firstName":  "Megan",
+        "lastName":  "Jastrab",
+        "price":  4,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Meis Poland",
+        "sanitizedFullName":  "Meis Poland",
+        "firstName":  "Meis",
+        "lastName":  "Poland",
+        "price":  2,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Mia Gjertsen",
+        "sanitizedFullName":  "Mia Gjertsen",
+        "firstName":  "Mia",
+        "lastName":  "Gjertsen",
+        "price":  2,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Mia Griffin",
+        "sanitizedFullName":  "Mia Griffin",
+        "firstName":  "Mia",
+        "lastName":  "Griffin",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Mie Ottestad",
+        "sanitizedFullName":  "Mie Ottestad",
+        "firstName":  "Mie",
+        "lastName":  "Ottestad",
+        "price":  3,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Mijntje Geurts",
+        "sanitizedFullName":  "Mijntje Geurts",
+        "firstName":  "Mijntje",
+        "lastName":  "Geurts",
+        "price":  3,
+        "participating":  true,
+        "team":  "Cofidis Women Team"
+    },
+    {
+        "fullName":  "Mikayla Harvey",
+        "sanitizedFullName":  "Mikayla Harvey",
+        "firstName":  "Mikayla",
+        "lastName":  "Harvey",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Millie Couzens",
+        "sanitizedFullName":  "Millie Couzens",
+        "firstName":  "Millie",
+        "lastName":  "Couzens",
+        "price":  2,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Mireia Benito",
+        "sanitizedFullName":  "Mireia Benito",
+        "firstName":  "Mireia",
+        "lastName":  "Benito",
+        "price":  3,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Mirre Knaven",
+        "sanitizedFullName":  "Mirre Knaven",
+        "firstName":  "Mirre",
+        "lastName":  "Knaven",
+        "price":  2,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Mischa Bredewold",
+        "sanitizedFullName":  "Mischa Bredewold",
+        "firstName":  "Mischa",
+        "lastName":  "Bredewold",
+        "price":  5,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Mona Mitterwallner",
+        "sanitizedFullName":  "Mona Mitterwallner",
+        "firstName":  "Mona",
+        "lastName":  "Mitterwallner",
+        "price":  2,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Monica Trinca Colonel",
+        "sanitizedFullName":  "Monica Trinca Colonel",
+        "firstName":  "Monica",
+        "lastName":  "Trinca Colonel",
+        "price":  4,
+        "participating":  true,
+        "team":  "Liv - AlUla - Jayco"
+    },
+    {
+        "fullName":  "Morgane Coston",
+        "sanitizedFullName":  "Morgane Coston",
+        "firstName":  "Morgane",
+        "lastName":  "Coston",
+        "price":  2,
+        "participating":  true,
+        "team":  "Ma Petite Entreprise"
+    },
+    {
+        "fullName":  "Mylène de Zoete",
+        "sanitizedFullName":  "Mylene de Zoete",
+        "firstName":  "Mylène",
+        "lastName":  "de Zoete",
+        "price":  2,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Nadia Gontova",
+        "sanitizedFullName":  "Nadia Gontova",
+        "firstName":  "Nadia",
+        "lastName":  "Gontova",
+        "price":  2,
+        "participating":  true,
+        "team":  "Liv - AlUla - Jayco"
+    },
+    {
+        "fullName":  "Nadia Quagliotto",
+        "sanitizedFullName":  "Nadia Quagliotto",
+        "firstName":  "Nadia",
+        "lastName":  "Quagliotto",
+        "price":  2,
+        "participating":  true,
+        "team":  "Cofidis Women Team"
+    },
+    {
+        "fullName":  "Naia Amondarain Gaztañaga",
+        "sanitizedFullName":  "Naia Amondarain Gaztanaga",
+        "firstName":  "Naia",
+        "lastName":  "Amondarain Gaztañaga",
+        "price":  2,
+        "participating":  true,
+        "team":  "Laboral Kutxa - Fundación Euskadi"
+    },
+    {
+        "fullName":  "Natalie Quinn",
+        "sanitizedFullName":  "Natalie Quinn",
+        "firstName":  "Natalie",
+        "lastName":  "Quinn",
+        "price":  2,
+        "participating":  true,
+        "team":  "Mayenne Monbana My Pie"
+    },
+    {
+        "fullName":  "Neve Bradbury",
+        "sanitizedFullName":  "Neve Bradbury",
+        "firstName":  "Neve",
+        "lastName":  "Bradbury",
+        "price":  4,
+        "participating":  true,
+        "team":  "CANYON//SRAM"
+    },
+    {
+        "fullName":  "Niamh Fisher-Black",
+        "sanitizedFullName":  "Niamh Fisher-Black",
+        "firstName":  "Niamh",
+        "lastName":  "Fisher-Black",
+        "price":  6,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Nicole Steigenga",
+        "sanitizedFullName":  "Nicole Steigenga",
+        "firstName":  "Nicole",
+        "lastName":  "Steigenga",
+        "price":  3,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Nienke Veenhoven",
+        "sanitizedFullName":  "Nienke Veenhoven",
+        "firstName":  "Nienke",
+        "lastName":  "Veenhoven",
+        "price":  4,
+        "participating":  true,
+        "team":  "Team Visma - Lease a Bike"
+    },
+    {
+        "fullName":  "Nienke Vinke",
+        "sanitizedFullName":  "Nienke Vinke",
+        "firstName":  "Nienke",
+        "lastName":  "Vinke",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Nikola Nosková",
+        "sanitizedFullName":  "Nikola Noskova",
+        "firstName":  "Nikola",
+        "lastName":  "Nosková",
+        "price":  2,
+        "participating":  true,
+        "team":  "Cofidis Women Team"
+    },
+    {
+        "fullName":  "Nina Berton",
+        "sanitizedFullName":  "Nina Berton",
+        "firstName":  "Nina",
+        "lastName":  "Berton",
+        "price":  2,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Nina Buijsman",
+        "sanitizedFullName":  "Nina Buijsman",
+        "firstName":  "Nina",
+        "lastName":  "Buijsman",
+        "price":  2,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Noä Jansen",
+        "sanitizedFullName":  "Noa Jansen",
+        "firstName":  "Noä",
+        "lastName":  "Jansen",
+        "price":  2,
+        "participating":  true,
+        "team":  "Liv - AlUla - Jayco"
+    },
+    {
+        "fullName":  "Noemi Rüegg",
+        "sanitizedFullName":  "Noemi Ruegg",
+        "firstName":  "Noemi",
+        "lastName":  "Rüegg",
+        "price":  5,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Noémie Abgrall",
+        "sanitizedFullName":  "Noemie Abgrall",
+        "firstName":  "Noémie",
+        "lastName":  "Abgrall",
+        "price":  2,
+        "participating":  true,
+        "team":  "Ma Petite Entreprise"
+    },
+    {
+        "fullName":  "Océane Mahe",
+        "sanitizedFullName":  "Oceane Mahe",
+        "firstName":  "Océane",
+        "lastName":  "Mahe",
+        "price":  2,
+        "participating":  true,
+        "team":  "Ma Petite Entreprise"
+    },
+    {
+        "fullName":  "Olivia Baril",
+        "sanitizedFullName":  "Olivia Baril",
+        "firstName":  "Olivia",
+        "lastName":  "Baril",
+        "price":  3,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Paula Blasi",
+        "sanitizedFullName":  "Paula Blasi",
+        "firstName":  "Paula",
+        "lastName":  "Blasi",
+        "price":  8,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Paula Ostiz",
+        "sanitizedFullName":  "Paula Ostiz",
+        "firstName":  "Paula",
+        "lastName":  "Ostiz",
+        "price":  3,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Paula Patiño",
+        "sanitizedFullName":  "Paula Patino",
+        "firstName":  "Paula",
+        "lastName":  "Patiño",
+        "price":  2,
+        "participating":  true,
+        "team":  "Laboral Kutxa - Fundación Euskadi"
+    },
+    {
+        "fullName":  "Pauliena Rooijakkers",
+        "sanitizedFullName":  "Pauliena Rooijakkers",
+        "firstName":  "Pauliena",
+        "lastName":  "Rooijakkers",
+        "price":  4,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Pauline Ferrand-Prévot",
+        "sanitizedFullName":  "Pauline Ferrand-Prevot",
+        "firstName":  "Pauline",
+        "lastName":  "Ferrand-Prévot",
+        "price":  10,
+        "participating":  true,
+        "team":  "Team Visma - Lease a Bike"
+    },
+    {
+        "fullName":  "Petra Stiasny",
+        "sanitizedFullName":  "Petra Stiasny",
+        "firstName":  "Petra",
+        "lastName":  "Stiasny",
+        "price":  3,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Pfeiffer Georgi",
+        "sanitizedFullName":  "Pfeiffer Georgi",
+        "firstName":  "Pfeiffer",
+        "lastName":  "Georgi",
+        "price":  4,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Puck Pieterse",
+        "sanitizedFullName":  "Puck Pieterse",
+        "firstName":  "Puck",
+        "lastName":  "Pieterse",
+        "price":  7,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Quinty Schoens",
+        "sanitizedFullName":  "Quinty Schoens",
+        "firstName":  "Quinty",
+        "lastName":  "Schoens",
+        "price":  2,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Quinty Ton",
+        "sanitizedFullName":  "Quinty Ton",
+        "firstName":  "Quinty",
+        "lastName":  "Ton",
+        "price":  3,
+        "participating":  true,
+        "team":  "Liv - AlUla - Jayco"
+    },
+    {
+        "fullName":  "Rachele Barbieri",
+        "sanitizedFullName":  "Rachele Barbieri",
+        "firstName":  "Rachele",
+        "lastName":  "Barbieri",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Rebecca Koerner",
+        "sanitizedFullName":  "Rebecca Koerner",
+        "firstName":  "Rebecca",
+        "lastName":  "Koerner",
+        "price":  2,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Ricarda Bauernfeind",
+        "sanitizedFullName":  "Ricarda Bauernfeind",
+        "firstName":  "Ricarda",
+        "lastName":  "Bauernfeind",
+        "price":  4,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Riejanne Markus",
+        "sanitizedFullName":  "Riejanne Markus",
+        "firstName":  "Riejanne",
+        "lastName":  "Markus",
+        "price":  4,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Robyn Clay",
+        "sanitizedFullName":  "Robyn Clay",
+        "firstName":  "Robyn",
+        "lastName":  "Clay",
+        "price":  2,
+        "participating":  true,
+        "team":  "Team Picnic PostNL"
+    },
+    {
+        "fullName":  "Romina Hinojosa",
+        "sanitizedFullName":  "Romina Hinojosa",
+        "firstName":  "Romina",
+        "lastName":  "Hinojosa",
+        "price":  2,
+        "participating":  true,
+        "team":  "Lotto Intermarché Ladies"
+    },
+    {
+        "fullName":  "Rosa Klöser",
+        "sanitizedFullName":  "Rosa Kloser",
+        "firstName":  "Rosa",
+        "lastName":  "Klöser",
+        "price":  2,
+        "participating":  true,
+        "team":  "CANYON//SRAM"
+    },
+    {
+        "fullName":  "Rosita Reijnhout",
+        "sanitizedFullName":  "Rosita Reijnhout",
+        "firstName":  "Rosita",
+        "lastName":  "Reijnhout",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team Visma - Lease a Bike"
+    },
+    {
+        "fullName":  "Ruby Roseman-Gannon",
+        "sanitizedFullName":  "Ruby Roseman-Gannon",
+        "firstName":  "Ruby",
+        "lastName":  "Roseman-Gannon",
+        "price":  3,
+        "participating":  true,
+        "team":  "Liv - AlUla - Jayco"
+    },
+    {
+        "fullName":  "Ruth Edwards",
+        "sanitizedFullName":  "Ruth Edwards",
+        "firstName":  "Ruth",
+        "lastName":  "Edwards",
+        "price":  3,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Sabrina Stultiens",
+        "sanitizedFullName":  "Sabrina Stultiens",
+        "firstName":  "Sabrina",
+        "lastName":  "Stultiens",
+        "price":  3,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Sandrine Tas",
+        "sanitizedFullName":  "Sandrine Tas",
+        "firstName":  "Sandrine",
+        "lastName":  "Tas",
+        "price":  3,
+        "participating":  true,
+        "team":  "Lotto Intermarché Ladies"
+    },
+    {
+        "fullName":  "Sara Casasola",
+        "sanitizedFullName":  "Sara Casasola",
+        "firstName":  "Sara",
+        "lastName":  "Casasola",
+        "price":  2,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Sara Fiorin",
+        "sanitizedFullName":  "Sara Fiorin",
+        "firstName":  "Sara",
+        "lastName":  "Fiorin",
+        "price":  2,
+        "participating":  true,
+        "team":  "Laboral Kutxa - Fundación Euskadi"
+    },
+    {
+        "fullName":  "Sara Martín",
+        "sanitizedFullName":  "Sara Martin",
+        "firstName":  "Sara",
+        "lastName":  "Martín",
+        "price":  3,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Sarah Gigante",
+        "sanitizedFullName":  "Sarah Gigante",
+        "firstName":  "Sarah",
+        "lastName":  "Gigante",
+        "price":  5,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Sarah Van Dam",
+        "sanitizedFullName":  "Sarah Van Dam",
+        "firstName":  "Sarah",
+        "lastName":  "Van Dam",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team Visma - Lease a Bike"
+    },
+    {
+        "fullName":  "Scarlett Souren",
+        "sanitizedFullName":  "Scarlett Souren",
+        "firstName":  "Scarlett",
+        "lastName":  "Souren",
+        "price":  3,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Shari Bossuyt",
+        "sanitizedFullName":  "Shari Bossuyt",
+        "firstName":  "Shari",
+        "lastName":  "Bossuyt",
+        "price":  4,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Sheyla Gutiérrez",
+        "sanitizedFullName":  "Sheyla Gutierrez",
+        "firstName":  "Sheyla",
+        "lastName":  "Gutiérrez",
+        "price":  2,
+        "participating":  true,
+        "team":  "Movistar Team"
+    },
+    {
+        "fullName":  "Shirin van Anrooij",
+        "sanitizedFullName":  "Shirin van Anrooij",
+        "firstName":  "Shirin",
+        "lastName":  "van Anrooij",
+        "price":  4,
+        "participating":  true,
+        "team":  "Lidl - Trek"
+    },
+    {
+        "fullName":  "Sigrid Haugset",
+        "sanitizedFullName":  "Sigrid Haugset",
+        "firstName":  "Sigrid",
+        "lastName":  "Haugset",
+        "price":  3,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Silke Smulders",
+        "sanitizedFullName":  "Silke Smulders",
+        "firstName":  "Silke",
+        "lastName":  "Smulders",
+        "price":  3,
+        "participating":  true,
+        "team":  "Liv - AlUla - Jayco"
+    },
+    {
+        "fullName":  "Silvia Persico",
+        "sanitizedFullName":  "Silvia Persico",
+        "firstName":  "Silvia",
+        "lastName":  "Persico",
+        "price":  4,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Silvia Zanardi",
+        "sanitizedFullName":  "Silvia Zanardi",
+        "firstName":  "Silvia",
+        "lastName":  "Zanardi",
+        "price":  3,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Simone Boilard",
+        "sanitizedFullName":  "Simone Boilard",
+        "firstName":  "Simone",
+        "lastName":  "Boilard",
+        "price":  2,
+        "participating":  true,
+        "team":  "St Michel - Preference Home - Auber93"
+    },
+    {
+        "fullName":  "Sofia Bertizzolo",
+        "sanitizedFullName":  "Sofia Bertizzolo",
+        "firstName":  "Sofia",
+        "lastName":  "Bertizzolo",
+        "price":  3,
+        "participating":  true,
+        "team":  "FDJ United - SUEZ"
+    },
+    {
+        "fullName":  "Sofie van Rooijen",
+        "sanitizedFullName":  "Sofie van Rooijen",
+        "firstName":  "Sofie",
+        "lastName":  "van Rooijen",
+        "price":  3,
+        "participating":  true,
+        "team":  "UAE Team ADQ"
+    },
+    {
+        "fullName":  "Solbjørk Anderson",
+        "sanitizedFullName":  "Solbjork Anderson",
+        "firstName":  "Solbjørk",
+        "lastName":  "Anderson",
+        "price":  2,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Solène Muller",
+        "sanitizedFullName":  "Solene Muller",
+        "firstName":  "Solène",
+        "lastName":  "Muller",
+        "price":  2,
+        "participating":  true,
+        "team":  "St Michel - Preference Home - Auber93"
+    },
+    {
+        "fullName":  "Sophie von Berswordt-Wallrabe",
+        "sanitizedFullName":  "Sophie von Berswordt-Wallrabe",
+        "firstName":  "Sophie",
+        "lastName":  "von Berswordt-Wallrabe",
+        "price":  3,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Soraya Paladin",
+        "sanitizedFullName":  "Soraya Paladin",
+        "firstName":  "Soraya",
+        "lastName":  "Paladin",
+        "price":  3,
+        "participating":  true,
+        "team":  "CANYON//SRAM"
+    },
+    {
+        "fullName":  "Špela Kern",
+        "sanitizedFullName":  "Spela Kern",
+        "firstName":  "Špela",
+        "lastName":  "Kern",
+        "price":  2,
+        "participating":  true,
+        "team":  "Cofidis Women Team"
+    },
+    {
+        "fullName":  "Steffi Häberlin",
+        "sanitizedFullName":  "Steffi Haberlin",
+        "firstName":  "Steffi",
+        "lastName":  "Häberlin",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Sterre Vervloet",
+        "sanitizedFullName":  "Sterre Vervloet",
+        "firstName":  "Sterre",
+        "lastName":  "Vervloet",
+        "price":  2,
+        "participating":  true,
+        "team":  "Lotto Intermarché Ladies"
+    },
+    {
+        "fullName":  "Stina Kagevi",
+        "sanitizedFullName":  "Stina Kagevi",
+        "firstName":  "Stina",
+        "lastName":  "Kagevi",
+        "price":  2,
+        "participating":  true,
+        "team":  "EF Education - Oatly"
+    },
+    {
+        "fullName":  "Susanne Andersen",
+        "sanitizedFullName":  "Susanne Andersen",
+        "firstName":  "Susanne",
+        "lastName":  "Andersen",
+        "price":  3,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Teuntje Beekhuis",
+        "sanitizedFullName":  "Teuntje Beekhuis",
+        "firstName":  "Teuntje",
+        "lastName":  "Beekhuis",
+        "price":  2,
+        "participating":  true,
+        "team":  "Uno-X Mobility"
+    },
+    {
+        "fullName":  "Thalita de Jong",
+        "sanitizedFullName":  "Thalita de Jong",
+        "firstName":  "Thalita",
+        "lastName":  "de Jong",
+        "price":  3,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Tiffany Cromwell",
+        "sanitizedFullName":  "Tiffany Cromwell",
+        "firstName":  "Tiffany",
+        "lastName":  "Cromwell",
+        "price":  3,
+        "participating":  true,
+        "team":  "CANYON//SRAM"
+    },
+    {
+        "fullName":  "Tiril Jørgensen",
+        "sanitizedFullName":  "Tiril Jorgensen",
+        "firstName":  "Tiril",
+        "lastName":  "Jørgensen",
+        "price":  2,
+        "participating":  true,
+        "team":  "Laboral Kutxa - Fundación Euskadi"
+    },
+    {
+        "fullName":  "Tirza Wisse",
+        "sanitizedFullName":  "Tirza Wisse",
+        "firstName":  "Tirza",
+        "lastName":  "Wisse",
+        "price":  2,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Titia Ryo",
+        "sanitizedFullName":  "Titia Ryo",
+        "firstName":  "Titia",
+        "lastName":  "Ryo",
+        "price":  2,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Urška Žigart",
+        "sanitizedFullName":  "Urska Zigart",
+        "firstName":  "Urška",
+        "lastName":  "Žigart",
+        "price":  3,
+        "participating":  true,
+        "team":  "AG Insurance - Soudal Team"
+    },
+    {
+        "fullName":  "Usoa Ostolaza",
+        "sanitizedFullName":  "Usoa Ostolaza",
+        "firstName":  "Usoa",
+        "lastName":  "Ostolaza",
+        "price":  4,
+        "participating":  true,
+        "team":  "Laboral Kutxa - Fundación Euskadi"
+    },
+    {
+        "fullName":  "Valentina Cavallar",
+        "sanitizedFullName":  "Valentina Cavallar",
+        "firstName":  "Valentina",
+        "lastName":  "Cavallar",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team SD Worx - Protime"
+    },
+    {
+        "fullName":  "Valentine Fortin",
+        "sanitizedFullName":  "Valentine Fortin",
+        "firstName":  "Valentine",
+        "lastName":  "Fortin",
+        "price":  3,
+        "participating":  true,
+        "team":  "Cofidis Women Team"
+    },
+    {
+        "fullName":  "Vera Tieleman",
+        "sanitizedFullName":  "Vera Tieleman",
+        "firstName":  "Vera",
+        "lastName":  "Tieleman",
+        "price":  2,
+        "participating":  true,
+        "team":  "VolkerWessels Cycling Team"
+    },
+    {
+        "fullName":  "Victoire Berteau",
+        "sanitizedFullName":  "Victoire Berteau",
+        "firstName":  "Victoire",
+        "lastName":  "Berteau",
+        "price":  4,
+        "participating":  true,
+        "team":  "Cofidis Women Team"
+    },
+    {
+        "fullName":  "Victorie Guilman",
+        "sanitizedFullName":  "Victorie Guilman",
+        "firstName":  "Victorie",
+        "lastName":  "Guilman",
+        "price":  2,
+        "participating":  true,
+        "team":  "Cofidis Women Team"
+    },
+    {
+        "fullName":  "Viktória Chladonová",
+        "sanitizedFullName":  "Viktoria Chladonova",
+        "firstName":  "Viktória",
+        "lastName":  "Chladonová",
+        "price":  3,
+        "participating":  true,
+        "team":  "Team Visma - Lease a Bike"
+    },
+    {
+        "fullName":  "Vittoria Guazzini",
+        "sanitizedFullName":  "Vittoria Guazzini",
+        "firstName":  "Vittoria",
+        "lastName":  "Guazzini",
+        "price":  4,
+        "participating":  true,
+        "team":  "FDJ United - SUEZ"
+    },
+    {
+        "fullName":  "Vittoria Ruffilli",
+        "sanitizedFullName":  "Vittoria Ruffilli",
+        "firstName":  "Vittoria",
+        "lastName":  "Ruffilli",
+        "price":  2,
+        "participating":  true,
+        "team":  "Laboral Kutxa - Fundación Euskadi"
+    },
+    {
+        "fullName":  "Wiktoria Pikulik",
+        "sanitizedFullName":  "Wiktoria Pikulik",
+        "firstName":  "Wiktoria",
+        "lastName":  "Pikulik",
+        "price":  2,
+        "participating":  true,
+        "team":  "Human Powered Health"
+    },
+    {
+        "fullName":  "Wilma Aintila",
+        "sanitizedFullName":  "Wilma Aintila",
+        "firstName":  "Wilma",
+        "lastName":  "Aintila",
+        "price":  2,
+        "participating":  true,
+        "team":  "CANYON//SRAM"
+    },
+    {
+        "fullName":  "Xaydee Van Sinaey",
+        "sanitizedFullName":  "Xaydee Van Sinaey",
+        "firstName":  "Xaydee",
+        "lastName":  "Van Sinaey",
+        "price":  2,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Yanina Kuskova",
+        "sanitizedFullName":  "Yanina Kuskova",
+        "firstName":  "Yanina",
+        "lastName":  "Kuskova",
+        "price":  2,
+        "participating":  true,
+        "team":  "Laboral Kutxa - Fundación Euskadi"
+    },
+    {
+        "fullName":  "Yara Kastelijn",
+        "sanitizedFullName":  "Yara Kastelijn",
+        "firstName":  "Yara",
+        "lastName":  "Kastelijn",
+        "price":  5,
+        "participating":  true,
+        "team":  "Fenix - Premier Tech"
+    },
+    {
+        "fullName":  "Yuliia Biriukova",
+        "sanitizedFullName":  "Yuliia Biriukova",
+        "firstName":  "Yuliia",
+        "lastName":  "Biriukova",
+        "price":  2,
+        "participating":  true,
+        "team":  "Laboral Kutxa - Fundación Euskadi"
+    },
+    {
+        "fullName":  "Zoe Bäckstedt",
+        "sanitizedFullName":  "Zoe Backstedt",
+        "firstName":  "Zoe",
+        "lastName":  "Bäckstedt",
+        "price":  5,
+        "participating":  true,
+        "team":  "CANYON//SRAM"
+    }
+]

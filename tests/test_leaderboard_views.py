@@ -1,0 +1,179 @@
+from datetime import datetime, timedelta, timezone
+
+from werkzeug.security import generate_password_hash
+
+from tour_femmes import create_app, db
+from tour_femmes.models import (
+    Event,
+    EventEntry,
+    EventRider,
+    Rider,
+    Stage,
+    StageLineup,
+    StageLineupRider,
+    StageResult,
+    Team,
+    User,
+)
+from tour_femmes.services.game import (
+    build_leaderboard,
+    build_stage_leaderboard,
+    recalculate_stage_scores,
+)
+
+
+class TestConfig:
+    SECRET_KEY = "test"
+    SQLALCHEMY_DATABASE_URI = "sqlite://"
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    TESTING = True
+    PCS_BASE_URL = "https://www.procyclingstats.com"
+    APP_TIMEZONE = "Europe/Amsterdam"
+
+
+def make_leaderboard_app():
+    app = create_app(__name__ + ".TestConfig")
+    with app.app_context():
+        alpha = User(username="alpha", password_hash=generate_password_hash("test"))
+        beta = User(username="beta", password_hash=generate_password_hash("test"))
+        event = Event(
+            name="Test Tour",
+            slug="test-tour",
+            year=2026,
+            pcs_url="https://www.procyclingstats.com/race/test-tour/2026",
+            team_size=1,
+            lineup_size=1,
+        )
+        stage_one = Stage(
+            event=event,
+            number=1,
+            name="Start › Finish",
+            starts_at=datetime.now(timezone.utc) - timedelta(hours=2),
+            pcs_url=f"{event.pcs_url}/stage-1",
+        )
+        stage_two = Stage(
+            event=event,
+            number=2,
+            name="Future › Finish",
+            starts_at=datetime.now(timezone.utc) + timedelta(days=1),
+            pcs_url=f"{event.pcs_url}/stage-2",
+        )
+        team = Team(event=event, name="Test Team")
+        rider_alpha = Rider(
+            name="Alpha Rider",
+            pcs_slug="alpha-rider",
+            pcs_url="https://www.procyclingstats.com/rider/alpha-rider",
+        )
+        rider_beta = Rider(
+            name="Beta Rider",
+            pcs_slug="beta-rider",
+            pcs_url="https://www.procyclingstats.com/rider/beta-rider",
+        )
+        event_rider_alpha = EventRider(event=event, rider=rider_alpha, team=team, price=1)
+        event_rider_beta = EventRider(event=event, rider=rider_beta, team=team, price=1)
+        db.session.add_all(
+            [
+                alpha,
+                beta,
+                event,
+                stage_one,
+                stage_two,
+                team,
+                rider_alpha,
+                rider_beta,
+                event_rider_alpha,
+                event_rider_beta,
+            ]
+        )
+        db.session.flush()
+        db.session.add_all(
+            [
+                EventEntry(user=alpha, event=event),
+                EventEntry(user=beta, event=event),
+            ]
+        )
+        alpha_lineup = StageLineup(
+            user=alpha,
+            stage=stage_one,
+            captain_event_rider_id=event_rider_alpha.id,
+        )
+        beta_lineup = StageLineup(
+            user=beta,
+            stage=stage_one,
+            captain_event_rider_id=event_rider_beta.id,
+        )
+        future_lineup = StageLineup(
+            user=alpha,
+            stage=stage_two,
+            captain_event_rider_id=event_rider_alpha.id,
+        )
+        db.session.add_all([alpha_lineup, beta_lineup, future_lineup])
+        db.session.flush()
+        alpha_lineup.riders.append(StageLineupRider(event_rider_id=event_rider_alpha.id))
+        beta_lineup.riders.append(StageLineupRider(event_rider_id=event_rider_beta.id))
+        future_lineup.riders.append(StageLineupRider(event_rider_id=event_rider_alpha.id))
+        db.session.add_all(
+            [
+                StageResult(
+                    stage=stage_one,
+                    event_rider=event_rider_alpha,
+                    rank=1,
+                    status="FIN",
+                ),
+                StageResult(
+                    stage=stage_one,
+                    event_rider=event_rider_beta,
+                    rank=2,
+                    status="FIN",
+                ),
+            ]
+        )
+        db.session.flush()
+        recalculate_stage_scores(stage_one)
+        db.session.commit()
+        return app, alpha.id, event.id
+
+
+def login(client, user_id):
+    with client.session_transaction() as session:
+        session["_user_id"] = str(user_id)
+        session["_fresh"] = True
+
+
+def test_leaderboard_builders_include_stage_winner_leader_and_lineup():
+    app, _user_id, event_id = make_leaderboard_app()
+    with app.app_context():
+        event = db.session.get(Event, event_id)
+        total_rows = build_leaderboard(event)
+        stage_rows = build_stage_leaderboard(event, event.stages[0])
+
+        assert total_rows[0].user.username == "alpha"
+        assert total_rows[0].stage_win_numbers == frozenset({1})
+        assert total_rows[0].yellow_stage_numbers == frozenset({1})
+        assert total_rows[0].is_yellow
+        assert stage_rows[0].is_stage_winner
+        assert stage_rows[0].is_yellow_after_stage
+        assert stage_rows[0].score == 200
+        assert stage_rows[0].lineup_riders[0].event_rider.rider.name == "Alpha Rider"
+        assert stage_rows[0].lineup_riders[0].is_captain
+
+
+def test_leaderboard_total_and_stage_tabs_render_expected_details():
+    app, user_id, event_id = make_leaderboard_app()
+    client = app.test_client()
+    login(client, user_id)
+
+    total_html = client.get(f"/events/{event_id}/leaderboard").get_data(as_text=True)
+    stage_html = client.get(f"/events/{event_id}/leaderboard?stage=1").get_data(as_text=True)
+    future_html = client.get(f"/events/{event_id}/leaderboard?stage=2").get_data(as_text=True)
+
+    assert "Totaal" in total_html
+    assert "Huidige leider" in total_html
+    assert "Winnaar van etappe 1" in total_html
+    assert "scores en opstellingen per deelnemer" in stage_html
+    assert "Alpha Rider" in stage_html
+    assert "Beta Rider" in stage_html
+    assert "Etappewinnaar" in stage_html
+    assert "Leider na etappe" in stage_html
+    assert "Opstelling verborgen tot de deadline" in future_html
+    assert "Alpha Rider" not in future_html

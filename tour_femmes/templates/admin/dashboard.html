@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block body %}
+<section class="section-head">
+  <div>
+    <p class="eyebrow">Admin</p>
+    <h1>Koersen</h1>
+  </div>
+</section>
+
+<section class="admin-grid">
+  <form class="admin-form" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h2>Koers toevoegen</h2>
+    <label>
+      Koersnaam
+      <input name="name" placeholder="Tour de France Femmes" required>
+    </label>
+    <label>
+      PCS-slug of URL
+      <input name="pcs_reference" placeholder="tour-de-france-femmes" required>
+    </label>
+    <label>
+      Jaar
+      <input name="year" type="number" value="2026" required>
+    </label>
+    <div class="form-row">
+      <label>
+        Budget
+        <input name="budget" type="number" value="65" min="0">
+      </label>
+      <label>
+        Teamsamenstelling
+        <input name="team_size" type="number" value="11" min="1">
+      </label>
+      <label>
+        Etappeselectie
+        <input name="lineup_size" type="number" value="6" min="6" max="6" readonly>
+      </label>
+    </div>
+    <button type="submit" class="primary-button">Koers toevoegen</button>
+  </form>
+
+  <div>
+    <h2>Bestaande koersen</h2>
+    <div class="simple-list">
+      {% for event in events %}
+        <a href="{{ url_for('admin.event_detail', event_id=event.id) }}">
+          <strong>{{ event.name }}</strong>
+          <span>{{ event.year }} · {{ event.slug }}</span>
+        </a>
+      {% else %}
+        <p class="muted">Nog geen koersen aangemaakt.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

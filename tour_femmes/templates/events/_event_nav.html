@@ -1,0 +1,21 @@
+<div class="event-nav event-top-nav" aria-label="Koerspagina's">
+  <a class="{{ 'active' if active == 'leaderboard' else '' }}" href="{{ url_for('events.leaderboard', event_id=event.id) }}">Klassement</a>
+  <a class="{{ 'active' if active == 'scoring' else '' }}" href="{{ url_for('events.scoring', event_id=event.id) }}">Puntentelling</a>
+</div>
+
+<div class="event-nav event-stage-nav" aria-label="Etappes">
+  {% if not event.has_started() %}
+    <a
+      class="team-selection-tab {{ 'active' if active == 'team' else '' }}"
+      href="{{ url_for('events.team', event_id=event.id) }}"
+      data-team-selection-tab
+    >
+      Teamselectie
+    </a>
+  {% endif %}
+  {% for nav_stage in event.stages %}
+    <a class="{{ 'active' if active == 'stage-' ~ nav_stage.id else '' }}" href="{{ url_for('events.stage', event_id=event.id, stage_id=nav_stage.id) }}">
+      Etappe {{ nav_stage.number }}
+    </a>
+  {% endfor %}
+</div>

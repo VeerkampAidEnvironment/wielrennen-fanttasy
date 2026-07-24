@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Prijzen {{ event.name }}{% endblock %}
+{% block body %}
+<section class="section-head">
+  <div>
+    <p class="eyebrow">{{ event.name }}</p>
+    <h1>Rennerprijzen</h1>
+  </div>
+  <a class="secondary-button" href="{{ url_for('admin.event_detail', event_id=event.id) }}">Terug</a>
+</section>
+
+<form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <table class="data-table price-table">
+    <thead>
+      <tr>
+        <th>Renner</th>
+        <th>Ploeg</th>
+        <th>Status</th>
+        <th>Prijs</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for link in riders %}
+        <tr class="{{ 'frozen-row' if link.frozen else '' }}">
+          <td>{{ link.rider.name }}</td>
+          <td>{{ link.team.name if link.team else 'Geen ploeg' }}</td>
+          <td>{{ 'Bevroren' if link.frozen else 'Actief' }}</td>
+          <td>
+            <input name="price_{{ link.id }}" type="number" min="0" value="{{ link.price if link.price is not none else '' }}">
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="sticky-action">
+    <button type="submit" class="primary-button">Prijzen opslaan</button>
+  </div>
+</form>
+{% endblock %}

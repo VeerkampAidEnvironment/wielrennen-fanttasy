@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ event.name }} Puntentelling{% endblock %}
+{% block body %}
+{% set active = 'scoring' %}
+{% include "events/_event_nav.html" with context %}
+
+<section class="section-head">
+  <div>
+    <p class="eyebrow">{{ event.name }}</p>
+    <h1>Puntentelling</h1>
+  </div>
+</section>
+
+<section class="scoring-page">
+  <div class="scoring-summary">
+    <article>
+      <span>Etappeselectie</span>
+      <strong>{{ event.lineup_size }}</strong>
+      <small>renners per etappe</small>
+    </article>
+    <article>
+      <span>Kopman</span>
+      <strong>x2</strong>
+      <small>verdubbelt eigen basispunten</small>
+    </article>
+    <article>
+      <span>Punten</span>
+      <strong>#1-#18</strong>
+      <small>DNF, DNS, DSQ en OTL scoren 0</small>
+    </article>
+  </div>
+
+  <table class="data-table scoring-table">
+    <thead>
+      <tr>
+        <th>Plaats</th>
+        <th>Punten</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for rule in scoring_rules %}
+        <tr>
+          <td>#{{ rule.rank }}</td>
+          <td>{{ rule.points }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

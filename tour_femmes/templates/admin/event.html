@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Admin {{ event.name }}{% endblock %}
+{% block body %}
+<section class="section-head">
+  <div>
+    <p class="eyebrow">Admin</p>
+    <h1>{{ event.name }}</h1>
+  </div>
+  <a class="secondary-button" href="{{ url_for('events.event_home', event_id=event.id) }}">Open koers</a>
+</section>
+
+<section class="stat-strip">
+  <div><strong>{{ event.stages|length }}</strong><span>Etappes</span></div>
+  <div><strong>{{ active_count }}</strong><span>Actieve renners</span></div>
+  <div><strong>{{ missing_prices|length }}</strong><span>Ontbrekende prijzen</span></div>
+  <div><strong>{{ frozen_count }}</strong><span>Bevroren renners</span></div>
+</section>
+
+<section class="admin-actions">
+  <form method="post" action="{{ url_for('admin.initialize_event', event_id=event.id) }}" data-admin-job-form data-job-title="Etappes laden uit PCS">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="primary-button">Etappes laden uit PCS</button>
+  </form>
+  <form method="post" action="{{ url_for('admin.sync_event_startlist', event_id=event.id) }}" data-admin-job-form data-job-title="Startlijst synchroniseren">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label class="checkbox-label">
+      <input type="checkbox" name="include_details" value="1">
+      Rennerprofielen aanvullen
+    </label>
+    <small class="muted">Startlijst en prijzen laden snel. Profielen kunnen langer duren en stoppen netjes als PCS tijdelijk afremt.</small>
+    <button type="submit" class="primary-button">Startlijst synchroniseren</button>
+  </form>
+  <a class="secondary-button" href="{{ url_for('admin.prices', event_id=event.id) }}">Rennerprijzen beheren</a>
+</section>
+
+<section class="admin-job-panel hidden" data-admin-job-panel aria-live="polite">
+  <div class="admin-job-head">
+    <div>
+      <p class="eyebrow" data-admin-job-label>PCS</p>
+      <h2 data-admin-job-title>Bezig met laden</h2>
+    </div>
+    <strong data-admin-job-count>0 / 0</strong>
+  </div>
+  <div class="admin-job-progress" data-admin-job-progress>
+    <span data-admin-job-bar></span>
+  </div>
+  <p class="muted" data-admin-job-message>Starten...</p>
+  <button type="button" class="secondary-button hidden" data-admin-job-refresh>Pagina vernieuwen</button>
+</section>
+
+<section class="split-layout">
+  <div>
+    <h2>Etappes</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Naam</th>
+          <th>Start</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for stage in event.stages %}
+          <tr>
+            <td>{{ stage.number }}</td>
+            <td>{{ stage.name }}</td>
+            <td>{{ stage.starts_at.strftime('%d-%m-%Y %H:%M') if stage.starts_at else 'Onbekend' }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="3">Nog geen etappes geladen.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <h2>Renners zonder prijs</h2>
+    <div class="simple-list">
+      {% for link in missing_prices[:40] %}
+        <a href="{{ url_for('admin.prices', event_id=event.id) }}">
+          <strong>{{ link.rider.name }}</strong>
+          <span>{{ link.team.name if link.team else 'Geen ploeg' }}</span>
+        </a>
+      {% else %}
+        <p class="muted">Alle actieve renners hebben een prijs.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

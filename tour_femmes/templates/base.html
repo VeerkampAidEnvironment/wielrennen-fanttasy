@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Tour Femmes Fantasy{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('events.overview') if current_user.is_authenticated else url_for('auth.login') }}">
+      Tour Femmes Fantasy
+    </a>
+    <nav class="topnav">
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('events.overview') }}">Koersen</a>
+        <a href="{{ url_for('admin.dashboard') }}">Admin</a>
+        <form method="post" action="{{ url_for('auth.logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="link-button">Uitloggen</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}">Inloggen</a>
+        <a href="{{ url_for('auth.register') }}">Registreren</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-stack">
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <main class="page">
+    {% block body %}{% endblock %}
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
