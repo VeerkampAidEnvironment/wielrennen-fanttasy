@@ -87,6 +87,14 @@ class StartlistSyncSummary:
 
 
 @dataclass(frozen=True)
+class ProfileEnrichmentSummary:
+    rider_details_loaded: int = 0
+    team_details_loaded: int = 0
+    remaining_riders: int = 0
+    rate_limited: bool = False
+
+
+@dataclass(frozen=True)
 class ParsedStage:
     number: int
     name: str
@@ -248,12 +256,10 @@ def initialize_event_from_pcs(
 
 def sync_startlist(
     event: Event,
-    include_rider_details: bool = True,
     client: PcsClient | None = None,
-    rider_detail_limit: int | None = None,
-    team_detail_limit: int | None = None,
     progress: ProgressCallback | None = None,
 ) -> StartlistSyncSummary:
+    """Synchronize only start-list membership, teams and available prices."""
     client = client or PcsClient()
     if progress:
         progress(0, 0, "Startlijst", "PCS startlijst ophalen.")
@@ -275,60 +281,62 @@ def sync_startlist(
         link.rider.pcs_slug: link
         for link in EventRider.query.join(Rider).filter(EventRider.event_id == event.id).all()
     }
+    riders_by_slug = {
+        rider.pcs_slug: rider
+        for rider in Rider.query.filter(Rider.pcs_slug.in_(seen_slugs)).all()
+    }
+    teams_by_name = {
+        team.name: team
+        for team in Team.query.filter_by(event_id=event.id).all()
+    }
 
     new_names: list[str] = []
     restored_names: list[str] = []
     priced_names: list[str] = []
-    synced_team_ids: set[int] = set()
-    rider_details_loaded = 0
-    team_details_loaded = 0
-    details_limit_reached = False
 
     for index, parsed in enumerate(parsed_riders, start=1):
         if progress:
             progress(index - 1, len(parsed_riders), "Startlijst", f"{parsed.name} verwerken.")
-        team = get_or_create_team(event, parsed.team_name, parsed.team_url)
-        db.session.flush()
-        if include_rider_details and not client.rate_limited and team.id not in synced_team_ids:
-            if team_detail_limit is not None and team_details_loaded >= team_detail_limit:
-                details_limit_reached = True
-            else:
-                if update_team_details(client, team):
-                    team_details_loaded += 1
-            synced_team_ids.add(team.id)
-        rider = Rider.query.filter_by(pcs_slug=parsed.pcs_slug).first()
+        team_name = clean_text(parsed.team_name)
+        team = teams_by_name.get(team_name)
+        if not team:
+            team = get_or_create_team(event, team_name, parsed.team_url)
+            teams_by_name[team_name] = team
+        elif parsed.team_url and team.pcs_url != parsed.team_url:
+            team.pcs_url = parsed.team_url
+
+        rider = riders_by_slug.get(parsed.pcs_slug)
         if not rider:
             rider = Rider(pcs_slug=parsed.pcs_slug, pcs_url=parsed.pcs_url, name=parsed.name)
             db.session.add(rider)
+            riders_by_slug[parsed.pcs_slug] = rider
             new_names.append(parsed.name)
         else:
-            rider.name = parsed.name
-            rider.pcs_url = parsed.pcs_url
-
-        if include_rider_details and not client.rate_limited:
-            if rider_detail_limit is not None and rider_details_loaded >= rider_detail_limit:
-                details_limit_reached = True
-            else:
-                if update_rider_details(client, rider):
-                    rider_details_loaded += 1
+            if rider.name != parsed.name:
+                rider.name = parsed.name
+            if rider.pcs_url != parsed.pcs_url:
+                rider.pcs_url = parsed.pcs_url
 
         link = existing_by_slug.get(parsed.pcs_slug)
         if not link:
             link = EventRider(event=event, rider=rider)
             db.session.add(link)
+            existing_by_slug[parsed.pcs_slug] = link
         elif link.frozen or not link.active:
             restored_names.append(parsed.name)
 
-        link.team = team
-        link.active = True
-        link.frozen = False
-        link.startlist_status = "listed"
-        link.imported_at = utcnow()
-        if price_catalog:
+        if link.team is not team:
+            link.team = team
+        if not link.active or link.frozen or link.startlist_status != "listed":
+            link.active = True
+            link.frozen = False
+            link.startlist_status = "listed"
+        if link.price is None and price_catalog:
             price = price_catalog.price_for_rider(rider)
             if price is not None:
                 link.price = price
                 priced_names.append(rider.name)
+        link.imported_at = utcnow()
         if progress:
             progress(index, len(parsed_riders), "Startlijst", f"{parsed.name} verwerkt.")
 
@@ -348,12 +356,67 @@ def sync_startlist(
         frozen_riders=sorted(frozen_names),
         seen_count=len(seen_slugs),
         priced_riders=sorted(set(priced_names)),
-        rider_details_loaded=rider_details_loaded,
-        team_details_loaded=team_details_loaded,
-        details_limit_reached=details_limit_reached,
         rate_limited=client.rate_limited,
         price_source=price_source,
         price_error=price_error,
+    )
+
+
+def enrich_missing_profiles(
+    event: Event,
+    client: PcsClient | None = None,
+    rider_limit: int = 10,
+    team_limit: int = 5,
+    progress: ProgressCallback | None = None,
+) -> ProfileEnrichmentSummary:
+    """Load slow PCS profile pages separately from the quick start-list sync."""
+    client = client or PcsClient()
+    links = (
+        EventRider.query.filter_by(event_id=event.id, active=True)
+        .join(EventRider.rider)
+        .order_by(EventRider.id)
+        .all()
+    )
+    missing_links = [link for link in links if rider_profile_is_missing(link.rider)]
+    batch = missing_links[:rider_limit]
+    total = len(batch)
+    loaded = 0
+    if progress:
+        progress(0, total, "Rennerprofielen", f"{len(missing_links)} profielen moeten worden aangevuld.")
+
+    for index, link in enumerate(batch, start=1):
+        if client.rate_limited:
+            break
+        if progress:
+            progress(index - 1, total, "Rennerprofielen", f"{link.rider.name} ophalen.")
+        if update_rider_details(client, link.rider):
+            loaded += 1
+        if progress:
+            progress(index, total, "Rennerprofielen", f"{link.rider.name} verwerkt.")
+
+    teams = list({link.team.id: link.team for link in links if link.team and not link.team.image_url}.values())
+    team_loaded = 0
+    for team in teams[:team_limit]:
+        if client.rate_limited:
+            break
+        if update_team_details(client, team):
+            team_loaded += 1
+
+    remaining = max(0, len(missing_links) - loaded)
+    return ProfileEnrichmentSummary(
+        rider_details_loaded=loaded,
+        team_details_loaded=team_loaded,
+        remaining_riders=remaining,
+        rate_limited=client.rate_limited,
+    )
+
+
+def rider_profile_is_missing(rider: Rider) -> bool:
+    return not (
+        rider.photo_url
+        and rider.date_of_birth
+        and rider.nationality
+        and rider.specialties
     )
 
 

@@ -23,12 +23,13 @@
   </form>
   <form method="post" action="{{ url_for('admin.sync_event_startlist', event_id=event.id) }}" data-admin-job-form data-job-title="Startlijst synchroniseren">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label class="checkbox-label">
-      <input type="checkbox" name="include_details" value="1">
-      Rennerprofielen aanvullen
-    </label>
-    <small class="muted">Startlijst en prijzen laden snel. Profielen kunnen langer duren en stoppen netjes als PCS tijdelijk afremt.</small>
-    <button type="submit" class="primary-button">Startlijst synchroniseren</button>
+    <small class="muted">Eén snelle PCS-controle: alleen nieuwe, teruggekeerde en verdwenen namen worden verwerkt. Beschikbare Sporza-prijzen worden automatisch gekoppeld.</small>
+    <button type="submit" class="primary-button">Startlijst snel bijwerken</button>
+  </form>
+  <form method="post" action="{{ url_for('admin.enrich_event_profiles', event_id=event.id) }}" data-admin-job-form data-job-title="Ontbrekende rennerprofielen ophalen">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <small class="muted">Haalt maximaal 10 ontbrekende profielen per keer op. Dit is bewust losgekoppeld van de snelle startlijstcontrole.</small>
+    <button type="submit" class="secondary-button">Ontbrekende profielen ophalen</button>
   </form>
   <a class="secondary-button" href="{{ url_for('admin.prices', event_id=event.id) }}">Rennerprijzen beheren</a>
 </section>

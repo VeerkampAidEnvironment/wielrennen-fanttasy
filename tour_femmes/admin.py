@@ -12,6 +12,7 @@ from tour_femmes import db
 from tour_femmes.models import Event, EventRider, Stage
 from tour_femmes.services.pcs import (
     PcsClient,
+    enrich_missing_profiles,
     fetch_live_embed_html,
     import_stage_results,
     initialize_event_from_pcs,
@@ -160,22 +161,18 @@ def initialize_event(event_id: int):
 @admin_required
 def sync_event_startlist(event_id: int):
     event = Event.query.get_or_404(event_id)
-    include_details = request.form.get("include_details") == "1"
     if _wants_json():
         job = start_admin_job(
             title="Startlijst synchroniseren",
             redirect_url=url_for("admin.event_detail", event_id=event.id),
-            work=lambda progress: sync_startlist_job(event.id, include_details, progress),
+            work=lambda progress: sync_startlist_job(event.id, progress),
         )
         return jsonify(asdict(job))
 
     try:
         summary = sync_startlist(
             event,
-            include_rider_details=include_details,
             client=interactive_pcs_client(),
-            rider_detail_limit=None if include_details else 0,
-            team_detail_limit=None if include_details else 0,
         )
         db.session.commit()
         flash(
@@ -183,8 +180,7 @@ def sync_event_startlist(event_id: int):
                 f"Startlijst gesynchroniseerd: {summary.seen_count} renners gezien, "
                 f"{len(summary.new_riders)} nieuw, {len(summary.restored_riders)} teruggezet, "
                 f"{len(summary.frozen_riders)} bevroren, "
-                f"{len(summary.priced_riders)} geprijsd, "
-                f"{summary.rider_details_loaded} rennerprofielen bijgewerkt."
+                f"{len(summary.priced_riders)} automatisch geprijsd."
             ),
             "success",
         )
@@ -196,13 +192,35 @@ def sync_event_startlist(event_id: int):
             flash(f"Sporza-prijzen konden niet worden geladen: {summary.price_error}", "warning")
         if summary.frozen_riders:
             flash("Bevroren: " + ", ".join(summary.frozen_riders[:30]), "warning")
-        if summary.rate_limited:
-            flash("PCS gaf een rate-limit. De basisdata is opgeslagen; probeer profielen later opnieuw.", "warning")
-        elif summary.details_limit_reached:
-            flash("Niet alle profielen konden in deze run worden bijgewerkt.", "info")
     except requests.RequestException as exc:
         db.session.rollback()
         flash(f"PCS-verzoek mislukt: {exc}", "danger")
+    return redirect(url_for("admin.event_detail", event_id=event.id))
+
+
+@admin_bp.route("/events/<int:event_id>/enrich-profiles", methods=["POST"])
+@admin_required
+def enrich_event_profiles(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    if _wants_json():
+        job = start_admin_job(
+            title="Ontbrekende rennerprofielen ophalen",
+            redirect_url=url_for("admin.event_detail", event_id=event.id),
+            work=lambda progress: enrich_profiles_job(event.id, progress),
+        )
+        return jsonify(asdict(job))
+
+    try:
+        summary = enrich_missing_profiles(event, client=interactive_pcs_client())
+        db.session.commit()
+        flash(
+            f"{summary.rider_details_loaded} profielen en {summary.team_details_loaded} ploegafbeeldingen bijgewerkt. "
+            f"{summary.remaining_riders} profielen resterend.",
+            "success",
+        )
+    except requests.RequestException as exc:
+        db.session.rollback()
+        flash(f"PCS-profielimport mislukt: {exc}", "danger")
     return redirect(url_for("admin.event_detail", event_id=event.id))
 
 
@@ -357,16 +375,13 @@ def initialize_event_job(event_id: int, progress) -> str:
     return f"{count} etappes geladen uit PCS."
 
 
-def sync_startlist_job(event_id: int, include_details: bool, progress) -> str:
+def sync_startlist_job(event_id: int, progress) -> str:
     event = db.session.get(Event, event_id)
     if not event:
         raise ValueError("Koers niet gevonden.")
     summary = sync_startlist(
         event,
-        include_rider_details=include_details,
         client=interactive_pcs_client(),
-        rider_detail_limit=None if include_details else 0,
-        team_detail_limit=None if include_details else 0,
         progress=progress,
     )
     message = (
@@ -374,12 +389,25 @@ def sync_startlist_job(event_id: int, include_details: bool, progress) -> str:
         f"{len(summary.new_riders)} nieuw, {len(summary.restored_riders)} teruggezet, "
         f"{len(summary.frozen_riders)} bevroren, {len(summary.priced_riders)} geprijsd."
     )
-    if include_details:
-        message += f" {summary.rider_details_loaded} rennerprofielen bijgewerkt."
+    return message
+
+
+def enrich_profiles_job(event_id: int, progress) -> str:
+    event = db.session.get(Event, event_id)
+    if not event:
+        raise ValueError("Koers niet gevonden.")
+    summary = enrich_missing_profiles(
+        event,
+        client=interactive_pcs_client(),
+        progress=progress,
+    )
+    message = (
+        f"{summary.rider_details_loaded} profielen en "
+        f"{summary.team_details_loaded} ploegafbeeldingen bijgewerkt. "
+        f"{summary.remaining_riders} profielen resterend."
+    )
     if summary.rate_limited:
-        message += " PCS gaf een rate-limit; probeer de rest later opnieuw."
-    elif summary.details_limit_reached:
-        message += " Niet alle profielen konden in deze run worden bijgewerkt."
+        message += " PCS gaf een rate-limit; probeer later opnieuw."
     return message
 
 
