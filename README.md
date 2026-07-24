@@ -8,6 +8,7 @@ A Flask fantasy cycling app for private games around ProCyclingStats-backed cycl
 - Active event overview cards with event status, user participation, team-selection status, and upcoming lineup status.
 - Event pages with team selection before the first stage starts.
 - Per-stage lineups, defaulting to 6 riders from an 11-rider event team, with one captain for double points.
+- Weighted daily and final bonuses for the general, points, mountains, and youth classifications, including leader/winner teammate bonuses.
 - Automatic lineup locking when a stage start time passes.
 - Stage view that embeds a safe, auto-refreshing copy of the current day's PCS LiveStats dashboard until ranked results are imported.
 - Event leaderboard with total scores, latest-stage scores, per-stage columns, a CSS yellow jersey marker for the current leader, and stage-win badges.
@@ -70,7 +71,7 @@ For the production MySQL setup, WSGI configuration, and update procedure, see
 
 ## Notes
 
-- The scorer is intentionally simple because no point table was specified yet. It awards stage points by rank 1-18 and doubles the captain's rider points.
+- Stage-result points are awarded by rank 1-18 and only those points are doubled for the captain. Classification and teammate bonuses are not doubled.
 - Event `team_size` and `lineup_size` are stored on each event. Defaults are 11 and 6.
 - PCS scraping is best-effort around their current URL patterns and page text. If PCS markup changes, importer errors should be handled in admin rather than silently changing game data.
 - Use PCS responsibly and avoid aggressive automated polling.

@@ -46,5 +46,61 @@
       {% endfor %}
     </tbody>
   </table>
+
+  <h2>Dagelijkse klassementsbonussen</h2>
+  <p class="muted">
+    Alleen renners in de opstelling van die etappe scoren deze punten.
+    De kopmanverdubbeling geldt niet voor klassementsbonussen.
+  </p>
+  <p>
+    <strong>{{ stage_winner_teammate_points }} punten</strong> voor iedere opgestelde
+    ploeggenoot van de etappewinnares. De winnares zelf ontvangt deze ploeggenootbonus niet.
+  </p>
+  <div class="table-scroll">
+    <table class="data-table scoring-table">
+      <thead>
+        <tr>
+          <th>Klassement</th>
+          <th>#1</th><th>#2</th><th>#3</th><th>#4</th><th>#5</th>
+          <th>Ploeggenoot leider</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for key, label in classification_labels.items() %}
+          <tr>
+            <td>{{ label }}</td>
+            {% for points in daily_classification_points[key] %}<td>{{ points }}</td>{% endfor %}
+            <td>{{ daily_teammate_points[key] }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Eindklassementsbonussen</h2>
+  <p class="muted">
+    Na de laatste etappe tellen deze punten voor iedere renster uit het oorspronkelijke team,
+    ook wanneer zij niet in de laatste dagopstelling stond.
+  </p>
+  <div class="table-scroll">
+    <table class="data-table scoring-table">
+      <thead>
+        <tr>
+          <th>Klassement</th>
+          {% for rank in range(1, 11) %}<th>#{{ rank }}</th>{% endfor %}
+          <th>Ploeggenoot winnaar</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for key, label in classification_labels.items() %}
+          <tr>
+            <td>{{ label }}</td>
+            {% for points in final_classification_points[key] %}<td>{{ points }}</td>{% endfor %}
+            <td>{{ final_teammate_points[key] }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </section>
 {% endblock %}

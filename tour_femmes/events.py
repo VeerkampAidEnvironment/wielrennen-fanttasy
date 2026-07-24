@@ -6,7 +6,15 @@ from requests import RequestException
 
 from tour_femmes import db
 from tour_femmes.models import Event, EventEntry, EventRider, Stage, StageLineup, TeamSelection, utcnow
-from tour_femmes.scoring import scoring_rules
+from tour_femmes.scoring import (
+    CLASSIFICATION_LABELS,
+    DAILY_CLASSIFICATION_POINTS,
+    DAILY_LEADER_TEAMMATE_POINTS,
+    FINAL_CLASSIFICATION_POINTS,
+    FINAL_WINNER_TEAMMATE_POINTS,
+    STAGE_WINNER_TEAMMATE_POINTS,
+    scoring_rules,
+)
 from tour_femmes.services.game import (
     build_leaderboard,
     build_rider_stage_history,
@@ -315,7 +323,17 @@ def leaderboard(event_id: int):
 @login_required
 def scoring(event_id: int):
     event = Event.query.get_or_404(event_id)
-    return render_template("events/scoring.html", event=event, scoring_rules=scoring_rules())
+    return render_template(
+        "events/scoring.html",
+        event=event,
+        scoring_rules=scoring_rules(),
+        classification_labels=CLASSIFICATION_LABELS,
+        daily_classification_points=DAILY_CLASSIFICATION_POINTS,
+        daily_teammate_points=DAILY_LEADER_TEAMMATE_POINTS,
+        final_classification_points=FINAL_CLASSIFICATION_POINTS,
+        final_teammate_points=FINAL_WINNER_TEAMMATE_POINTS,
+        stage_winner_teammate_points=STAGE_WINNER_TEAMMATE_POINTS,
+    )
 
 
 def _selection_finished(event: Event, selection: TeamSelection | None) -> bool:

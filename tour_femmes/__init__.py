@@ -96,6 +96,25 @@ def _ensure_schema(app: Flask) -> None:
             if "image_url" not in team_columns:
                 db.session.execute(text("ALTER TABLE team ADD COLUMN image_url VARCHAR(500)"))
                 db.session.commit()
+        if inspector.has_table("user_stage_rider_score"):
+            score_columns = {
+                column["name"]
+                for column in inspector.get_columns("user_stage_rider_score")
+            }
+            for column_name in (
+                "classification_points",
+                "teammate_points",
+                "final_classification_points",
+                "final_teammate_points",
+            ):
+                if column_name not in score_columns:
+                    db.session.execute(
+                        text(
+                            f"ALTER TABLE user_stage_rider_score "
+                            f"ADD COLUMN {column_name} INTEGER NOT NULL DEFAULT 0"
+                        )
+                    )
+            db.session.commit()
 
         # PythonAnywhere forks its web workers after importing the WSGI app.
         # Do not leave a connection opened during application startup.

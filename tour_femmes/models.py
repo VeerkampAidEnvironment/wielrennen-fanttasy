@@ -148,6 +148,11 @@ class Stage(db.Model):
         cascade="all, delete-orphan",
     )
     user_scores = db.relationship("UserStageScore", back_populates="stage", cascade="all, delete-orphan")
+    classification_results = db.relationship(
+        "ClassificationResult",
+        back_populates="stage",
+        cascade="all, delete-orphan",
+    )
 
     __table_args__ = (UniqueConstraint("event_id", "number", name="uq_stage_event_number"),)
 
@@ -352,6 +357,10 @@ class UserStageRiderScore(db.Model):
     status = db.Column(db.String(20), nullable=True)
     base_points = db.Column(db.Integer, default=0, nullable=False)
     captain_bonus = db.Column(db.Integer, default=0, nullable=False)
+    classification_points = db.Column(db.Integer, default=0, nullable=False)
+    teammate_points = db.Column(db.Integer, default=0, nullable=False)
+    final_classification_points = db.Column(db.Integer, default=0, nullable=False)
+    final_teammate_points = db.Column(db.Integer, default=0, nullable=False)
     total_points = db.Column(db.Integer, default=0, nullable=False)
 
     score = db.relationship("UserStageScore", back_populates="rider_scores")
@@ -359,6 +368,28 @@ class UserStageRiderScore(db.Model):
 
     __table_args__ = (
         UniqueConstraint("user_stage_score_id", "event_rider_id", name="uq_rider_score_once"),
+    )
+
+
+class ClassificationResult(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    stage_id = db.Column(db.Integer, db.ForeignKey("stage.id"), nullable=False, index=True)
+    event_rider_id = db.Column(db.Integer, db.ForeignKey("event_rider.id"), nullable=False, index=True)
+    classification = db.Column(db.String(20), nullable=False)
+    rank = db.Column(db.Integer, nullable=False)
+    is_final = db.Column(db.Boolean, default=False, nullable=False)
+    imported_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+
+    stage = db.relationship("Stage", back_populates="classification_results")
+    event_rider = db.relationship("EventRider")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "stage_id",
+            "event_rider_id",
+            "classification",
+            name="uq_classification_stage_rider",
+        ),
     )
 
 

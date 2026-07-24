@@ -1,4 +1,4 @@
-from tour_femmes.scoring import points_for_result, score_lineup
+from tour_femmes.scoring import classification_points, points_for_result, score_lineup
 
 
 def test_points_for_ranked_finisher():
@@ -22,3 +22,13 @@ def test_captain_doubles_only_their_points():
     assert total == 325
     assert captain_bonus == 80
     assert [score.total_points for score in rider_scores] == [100, 160, 65]
+
+
+def test_classification_weights_prioritize_yellow_and_final_results():
+    daily_winners = [
+        classification_points(classification, 1)
+        for classification in ("gc", "points", "mountains", "youth")
+    ]
+    assert daily_winners == sorted(daily_winners, reverse=True)
+    assert classification_points("gc", 1, final=True) == 200
+    assert classification_points("gc", 10, final=True) == 20

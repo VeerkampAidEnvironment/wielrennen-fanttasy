@@ -9,6 +9,7 @@ from sqlalchemy import func
 from tour_femmes import db
 from tour_femmes.models import (
     Award,
+    ClassificationResult,
     Event,
     EventEntry,
     EventRider,
@@ -23,7 +24,14 @@ from tour_femmes.models import (
     UserStageScore,
     utcnow,
 )
-from tour_femmes.scoring import points_for_result, score_lineup_from_results
+from tour_femmes.scoring import (
+    DAILY_LEADER_TEAMMATE_POINTS,
+    FINAL_WINNER_TEAMMATE_POINTS,
+    STAGE_WINNER_TEAMMATE_POINTS,
+    classification_points,
+    points_for_result,
+    score_lineup_from_results,
+)
 
 
 @dataclass(frozen=True)
@@ -216,8 +224,17 @@ def recalculate_stage_scores(stage: Stage) -> None:
     for result in stage.results:
         result.base_points = points_for_result(result.rank, result.status)
 
-    for lineup in stage.lineups:
-        lineup_ids = lineup.rider_ids()
+    lineup_by_user = {lineup.user_id: lineup for lineup in stage.lineups}
+    selections = TeamSelection.query.filter_by(event_id=stage.event_id).all()
+    selection_by_user = {selection.user_id: selection for selection in selections}
+    final_results_present = any(result.is_final for result in stage.classification_results)
+    user_ids = set(lineup_by_user)
+    if final_results_present:
+        user_ids.update(selection_by_user)
+
+    for user_id in user_ids:
+        lineup = lineup_by_user.get(user_id)
+        lineup_ids = lineup.rider_ids() if lineup else set()
         if len(lineup_ids) == stage.event.lineup_size and lineup.captain_event_rider_id in lineup_ids:
             total, captain_bonus, rider_scores = score_lineup_from_results(
                 lineup_ids,
@@ -228,32 +245,150 @@ def recalculate_stage_scores(stage: Stage) -> None:
             total = 0
             captain_bonus = 0
             rider_scores = []
-        score = UserStageScore.query.filter_by(user_id=lineup.user_id, stage_id=stage.id).first()
+        selection = selection_by_user.get(user_id)
+        final_eligible_ids = selection.rider_ids() if selection else set()
+        bonuses = calculate_classification_bonuses(
+            stage,
+            daily_eligible_ids=lineup_ids,
+            final_eligible_ids=final_eligible_ids,
+        )
+        total += sum(sum(parts) for parts in bonuses.values())
+
+        score = UserStageScore.query.filter_by(user_id=user_id, stage_id=stage.id).first()
         if not score:
-            score = UserStageScore(user_id=lineup.user_id, stage_id=stage.id)
+            score = UserStageScore(user_id=user_id, stage_id=stage.id)
             db.session.add(score)
         score.score = total
         score.captain_bonus = captain_bonus
         score.calculated_at = utcnow()
         score.rider_scores.clear()
         db.session.flush()
-        for rider_score in rider_scores:
-            result = results_by_rider.get(rider_score.event_rider_id)
+        rider_score_by_id = {item.event_rider_id: item for item in rider_scores}
+        scored_rider_ids = set(rider_score_by_id) | {
+            event_rider_id
+            for event_rider_id, parts in bonuses.items()
+            if any(parts)
+        }
+        for event_rider_id in scored_rider_ids:
+            rider_score = rider_score_by_id.get(event_rider_id)
+            daily_points, teammate_points, final_points, final_teammate_points = bonuses.get(
+                event_rider_id,
+                (0, 0, 0, 0),
+            )
+            base_points = rider_score.base_points if rider_score else 0
+            rider_captain_bonus = rider_score.captain_bonus if rider_score else 0
+            result = results_by_rider.get(event_rider_id)
             db.session.add(
                 UserStageRiderScore(
                     score=score,
-                    event_rider_id=rider_score.event_rider_id,
-                    rank=rider_score.rank,
-                    status=(rider_score.status if result else "Geen uitslag"),
-                    base_points=rider_score.base_points,
-                    captain_bonus=rider_score.captain_bonus,
-                    total_points=rider_score.total_points,
+                    event_rider_id=event_rider_id,
+                    rank=rider_score.rank if rider_score else None,
+                    status=(rider_score.status if rider_score and result else "Klassementsbonus"),
+                    base_points=base_points,
+                    captain_bonus=rider_captain_bonus,
+                    classification_points=daily_points,
+                    teammate_points=teammate_points,
+                    final_classification_points=final_points,
+                    final_teammate_points=final_teammate_points,
+                    total_points=(
+                        base_points
+                        + rider_captain_bonus
+                        + daily_points
+                        + teammate_points
+                        + final_points
+                        + final_teammate_points
+                    ),
                 )
             )
 
     stage.is_finished = stage.has_ranked_result()
     stage.results_imported_at = utcnow()
     recalculate_event_awards(stage.event)
+
+
+def calculate_classification_bonuses(
+    stage: Stage,
+    daily_eligible_ids: set[int],
+    final_eligible_ids: set[int],
+) -> dict[int, tuple[int, int, int, int]]:
+    """Return daily, daily-teammate, final and final-teammate points per rider."""
+    values: dict[int, list[int]] = defaultdict(lambda: [0, 0, 0, 0])
+    event_riders = {
+        link.id: link
+        for link in EventRider.query.filter_by(event_id=stage.event_id).all()
+    }
+    by_classification: dict[str, list[ClassificationResult]] = defaultdict(list)
+    for result in stage.classification_results:
+        by_classification[result.classification].append(result)
+
+    for classification, results in by_classification.items():
+        ordered = sorted(results, key=lambda result: result.rank)
+        # The final standings are also the daily standings after the last stage.
+        daily_results = ordered
+        final_results = [result for result in ordered if result.is_final]
+
+        for result in daily_results:
+            if result.event_rider_id in daily_eligible_ids:
+                values[result.event_rider_id][0] += classification_points(
+                    classification,
+                    result.rank,
+                    final=False,
+                )
+        if daily_results:
+            leader = daily_results[0]
+            leader_team_id = event_riders[leader.event_rider_id].team_id
+            for event_rider_id in daily_eligible_ids:
+                link = event_riders.get(event_rider_id)
+                if (
+                    link
+                    and leader_team_id
+                    and link.team_id == leader_team_id
+                    and event_rider_id != leader.event_rider_id
+                ):
+                    values[event_rider_id][1] += DAILY_LEADER_TEAMMATE_POINTS.get(classification, 0)
+
+        for result in final_results:
+            if result.event_rider_id in final_eligible_ids:
+                values[result.event_rider_id][2] += classification_points(
+                    classification,
+                    result.rank,
+                    final=True,
+                )
+        if final_results:
+            winner = final_results[0]
+            winner_team_id = event_riders[winner.event_rider_id].team_id
+            for event_rider_id in final_eligible_ids:
+                link = event_riders.get(event_rider_id)
+                if (
+                    link
+                    and winner_team_id
+                    and link.team_id == winner_team_id
+                    and event_rider_id != winner.event_rider_id
+                ):
+                    values[event_rider_id][3] += FINAL_WINNER_TEAMMATE_POINTS.get(classification, 0)
+
+    stage_winner = next(
+        (
+            result
+            for result in stage.results
+            if result.rank == 1 and result.status not in {"DNF", "DNS", "DSQ", "OTL", "DF", "NR"}
+        ),
+        None,
+    )
+    if stage_winner:
+        winner_link = event_riders.get(stage_winner.event_rider_id)
+        winner_team_id = winner_link.team_id if winner_link else None
+        for event_rider_id in daily_eligible_ids:
+            link = event_riders.get(event_rider_id)
+            if (
+                link
+                and winner_team_id
+                and link.team_id == winner_team_id
+                and event_rider_id != stage_winner.event_rider_id
+            ):
+                values[event_rider_id][1] += STAGE_WINNER_TEAMMATE_POINTS
+
+    return {event_rider_id: tuple(parts) for event_rider_id, parts in values.items()}
 
 
 def recalculate_event_awards(event: Event) -> None:

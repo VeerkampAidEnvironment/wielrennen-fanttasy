@@ -14,7 +14,16 @@ from bs4 import BeautifulSoup, NavigableString, Tag
 from flask import current_app, has_app_context
 
 from tour_femmes import db
-from tour_femmes.models import Event, EventRider, Rider, Stage, StageResult, Team, utcnow
+from tour_femmes.models import (
+    ClassificationResult,
+    Event,
+    EventRider,
+    Rider,
+    Stage,
+    StageResult,
+    Team,
+    utcnow,
+)
 from tour_femmes.scoring import points_for_result
 from tour_femmes.services.game import recalculate_stage_scores
 from tour_femmes.services.sporza_prices import load_sporza_price_catalog, sporza_edition_for_event
@@ -25,6 +34,12 @@ DEFAULT_PCS_REQUEST_DELAY_SECONDS = 4.0
 DEFAULT_PCS_MAX_RETRIES = 2
 DEFAULT_PCS_429_BACKOFF_SECONDS = 10.0
 PCS_LIVE_EMBED_CACHE_SECONDS = 20.0
+CLASSIFICATION_URL_SUFFIXES = {
+    "gc": "gc",
+    "points": "points",
+    "mountains": "kom",
+    "youth": "youth",
+}
 ProgressCallback = Callable[[int, int, str, str], None]
 LIVE_EMBED_CACHE: dict[str, tuple[float, str]] = {}
 LIVE_EMBED_CACHE_LOCK = Lock()
@@ -631,8 +646,77 @@ def import_stage_results(stage: Stage) -> int:
         result.raw_result = parsed.raw_result
         result.base_points = points_for_result(parsed.rank, parsed.status)
         result.imported_at = utcnow()
+    import_stage_classifications(stage, client)
     recalculate_stage_scores(stage)
     return len(parsed_results)
+
+
+def import_stage_classifications(stage: Stage, client: PcsClient) -> int:
+    links_by_slug = {
+        link.rider.pcs_slug: link.id
+        for link in EventRider.query.join(Rider).filter(EventRider.event_id == stage.event_id).all()
+    }
+    is_final = bool(stage.event.stages and stage.id == stage.event.stages[-1].id)
+    imported = 0
+    for classification, suffix in CLASSIFICATION_URL_SUFFIXES.items():
+        url = f"{stage.pcs_url}-{suffix}"
+        try:
+            soup = client.get_soup(url)
+        except requests.HTTPError as exc:
+            # PCS responds with 500 (rather than 404) for classification tabs
+            # that do not exist for a particular race. Keep classifications
+            # independent so one missing jersey never rolls back valid GC data.
+            if exc.response is not None and exc.response.status_code in {404, 410, 500}:
+                continue
+            raise
+        parsed = parse_classification_results(soup, links_by_slug)
+        ClassificationResult.query.filter_by(
+            stage_id=stage.id,
+            classification=classification,
+        ).delete()
+        for event_rider_id, rank in parsed:
+            db.session.add(
+                ClassificationResult(
+                    stage=stage,
+                    event_rider_id=event_rider_id,
+                    classification=classification,
+                    rank=rank,
+                    is_final=is_final,
+                    imported_at=utcnow(),
+                )
+            )
+            imported += 1
+    return imported
+
+
+def parse_classification_results(
+    soup: BeautifulSoup,
+    links_by_slug: dict[str, int],
+) -> list[tuple[int, int]]:
+    candidates: list[list[tuple[int, int]]] = []
+    tables = soup.find_all("table") or [soup]
+    for table in tables:
+        parsed: list[tuple[int, int]] = []
+        seen: set[int] = set()
+        for row in table.find_all("tr"):
+            rider_anchor = row.find("a", href=re.compile(r"(^|/)rider/"))
+            if not rider_anchor:
+                continue
+            cells = row.find_all(["td", "th"])
+            ranks = [
+                parse_rank(clean_text(cell.get_text(" ", strip=True)))
+                for cell in cells[:2]
+            ]
+            rank = next((value for value in ranks if value), None)
+            slug = urlparse(rider_anchor.get("href", "")).path.strip("/").split("rider/")[-1].strip("/")
+            event_rider_id = links_by_slug.get(slug)
+            if not rank or not event_rider_id or event_rider_id in seen:
+                continue
+            parsed.append((event_rider_id, rank))
+            seen.add(event_rider_id)
+        if parsed:
+            candidates.append(parsed)
+    return max(candidates, key=len, default=[])
 
 
 def parse_stage_results(soup: BeautifulSoup, stage: Stage) -> list[ParsedResult]:

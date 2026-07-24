@@ -220,7 +220,9 @@
                   <th>Renner</th>
                   <th>Uitslag</th>
                   <th>Basis</th>
-                  <th>Bonus</th>
+                  <th>Kopman</th>
+                  <th>Klassementen</th>
+                  <th>Ploeggenoten</th>
                   <th>Totaal</th>
                 </tr>
               </thead>
@@ -234,6 +236,14 @@
                     <td>{{ '#' ~ rider_score.rank if rider_score.rank else rider_score.status }}</td>
                     <td>{{ rider_score.base_points }}</td>
                     <td>{{ rider_score.captain_bonus }}</td>
+                    <td>
+                      {{ rider_score.classification_points + rider_score.final_classification_points }}
+                      {% if rider_score.final_classification_points %}<small>incl. {{ rider_score.final_classification_points }} eind</small>{% endif %}
+                    </td>
+                    <td>
+                      {{ rider_score.teammate_points + rider_score.final_teammate_points }}
+                      {% if rider_score.final_teammate_points %}<small>incl. {{ rider_score.final_teammate_points }} eind</small>{% endif %}
+                    </td>
                     <td>{{ rider_score.total_points }}</td>
                   </tr>
                 {% endfor %}

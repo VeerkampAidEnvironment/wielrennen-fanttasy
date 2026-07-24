@@ -25,6 +25,37 @@ POINTS_BY_RANK = {
     18: 1,
 }
 CAPTAIN_MULTIPLIER = 2
+STAGE_WINNER_TEAMMATE_POINTS = 10
+CLASSIFICATION_LABELS = {
+    "gc": "Algemeen klassement (geel)",
+    "points": "Puntenklassement (groen)",
+    "mountains": "Bergklassement",
+    "youth": "Jongerenklassement",
+}
+DAILY_CLASSIFICATION_POINTS = {
+    "gc": (16, 10, 8, 6, 4),
+    "points": (10, 6, 4, 2, 1),
+    "mountains": (8, 6, 4, 2, 1),
+    "youth": (5, 4, 3, 2, 1),
+}
+DAILY_LEADER_TEAMMATE_POINTS = {
+    "gc": 14,
+    "points": 8,
+    "mountains": 6,
+    "youth": 4,
+}
+FINAL_CLASSIFICATION_POINTS = {
+    "gc": (200, 160, 130, 110, 90, 75, 60, 45, 30, 20),
+    "points": (120, 95, 75, 60, 48, 38, 30, 22, 15, 10),
+    "mountains": (100, 80, 65, 52, 42, 33, 26, 19, 13, 8),
+    "youth": (70, 55, 45, 36, 29, 23, 18, 13, 9, 5),
+}
+FINAL_WINNER_TEAMMATE_POINTS = {
+    "gc": 40,
+    "points": 28,
+    "mountains": 14,
+    "youth": 14,
+}
 
 
 @dataclass(frozen=True)
@@ -59,6 +90,12 @@ def points_for_result(rank: int | None, status: str | None) -> int:
 
 def scoring_rules() -> list[ScoringRule]:
     return [ScoringRule(rank=rank, points=points) for rank, points in sorted(POINTS_BY_RANK.items())]
+
+
+def classification_points(classification: str, rank: int, final: bool = False) -> int:
+    table = FINAL_CLASSIFICATION_POINTS if final else DAILY_CLASSIFICATION_POINTS
+    values = table.get(classification, ())
+    return values[rank - 1] if 1 <= rank <= len(values) else 0
 
 
 def score_lineup(

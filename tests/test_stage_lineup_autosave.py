@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash
 
 from tour_femmes import create_app, db
 from tour_femmes.models import (
+    ClassificationResult,
     Event,
     EventEntry,
     EventRider,
@@ -20,6 +21,12 @@ from tour_femmes.models import (
     UserStageScore,
 )
 from tour_femmes.services.game import recalculate_stage_scores
+from tour_femmes.scoring import (
+    DAILY_LEADER_TEAMMATE_POINTS,
+    FINAL_WINNER_TEAMMATE_POINTS,
+    STAGE_WINNER_TEAMMATE_POINTS,
+    classification_points,
+)
 
 
 class TestConfig:
@@ -161,7 +168,8 @@ def test_stage_scoring_stores_user_and_rider_score_breakdown():
         db.session.commit()
 
         score = UserStageScore.query.filter_by(user_id=user_id, stage_id=stage_id).one()
-        assert score.score == 276
+        # 276 result points plus 5 teammates of the stage winner x 10.
+        assert score.score == 326
         assert score.captain_bonus == 80
         assert UserStageRiderScore.query.filter_by(user_stage_score_id=score.id).count() == 6
 
@@ -171,7 +179,68 @@ def test_stage_scoring_stores_user_and_rider_score_breakdown():
         ).one()
         assert captain_score.base_points == 80
         assert captain_score.captain_bonus == 80
-        assert captain_score.total_points == 160
+        assert captain_score.total_points == 160 + STAGE_WINNER_TEAMMATE_POINTS
+
+        winning_teammate = UserStageRiderScore.query.filter_by(
+            user_stage_score_id=score.id,
+            event_rider_id=event_rider_ids[1],
+        ).one()
+        assert winning_teammate.teammate_points == STAGE_WINNER_TEAMMATE_POINTS
+        assert winning_teammate.total_points == 160 + STAGE_WINNER_TEAMMATE_POINTS
+
+
+def test_final_gc_rewards_daily_lineup_and_full_team_teammates():
+    app, user_id, _event_id, stage_id, event_rider_ids = make_app_with_lineup_context()
+
+    with app.app_context():
+        stage = db.session.get(Stage, stage_id)
+        lineup = StageLineup(
+            user_id=user_id,
+            stage_id=stage_id,
+            captain_event_rider_id=event_rider_ids[0],
+        )
+        db.session.add(lineup)
+        db.session.flush()
+        for event_rider_id in event_rider_ids[:6]:
+            lineup.riders.append(StageLineupRider(event_rider_id=event_rider_id))
+
+        db.session.add(
+            ClassificationResult(
+                stage_id=stage_id,
+                event_rider_id=event_rider_ids[0],
+                classification="gc",
+                rank=1,
+                is_final=True,
+            )
+        )
+        db.session.flush()
+
+        recalculate_stage_scores(stage)
+        db.session.commit()
+
+        score = UserStageScore.query.filter_by(user_id=user_id, stage_id=stage_id).one()
+        expected = (
+            classification_points("gc", 1)
+            + 5 * DAILY_LEADER_TEAMMATE_POINTS["gc"]
+            + classification_points("gc", 1, final=True)
+            + 10 * FINAL_WINNER_TEAMMATE_POINTS["gc"]
+        )
+        assert score.score == expected
+
+        winner = UserStageRiderScore.query.filter_by(
+            user_stage_score_id=score.id,
+            event_rider_id=event_rider_ids[0],
+        ).one()
+        assert winner.classification_points == classification_points("gc", 1)
+        assert winner.final_classification_points == 200
+        assert winner.teammate_points == 0
+
+        reserve_teammate = UserStageRiderScore.query.filter_by(
+            user_stage_score_id=score.id,
+            event_rider_id=event_rider_ids[10],
+        ).one()
+        assert reserve_teammate.teammate_points == 0
+        assert reserve_teammate.final_teammate_points == FINAL_WINNER_TEAMMATE_POINTS["gc"]
 
 
 def test_scoring_rules_are_on_separate_tab_and_images_use_proxy():

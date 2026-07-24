@@ -9,6 +9,7 @@ from tour_femmes.services.pcs import (
     parse_date,
     parse_grand_tour_results,
     parse_label_values,
+    parse_classification_results,
     parse_rider_in_race_results,
     parse_specialties,
     parse_stage_name,
@@ -41,6 +42,24 @@ def test_parse_startlist_groups_riders_under_current_team():
     assert riders[0].team_url == "https://www.procyclingstats.com/team/fdj-suez-2026"
     assert riders[2].team_name == "Team Visma | Lease a Bike (WTW)"
     assert riders[2].team_url == "https://www.procyclingstats.com/team/visma-lease-a-bike-2026"
+
+
+def test_parse_classification_results_matches_ranked_riders_to_event_links():
+    soup = BeautifulSoup(
+        """
+        <table>
+          <tr><th>Rnk.</th><th>Rider</th><th>Points</th></tr>
+          <tr><td>1</td><td><a href="/rider/demi-vollering">Demi Vollering</a></td><td>200</td></tr>
+          <tr><td>2</td><td><a href="/rider/marianne-vos">Marianne Vos</a></td><td>180</td></tr>
+        </table>
+        """,
+        "html.parser",
+    )
+
+    assert parse_classification_results(
+        soup,
+        {"demi-vollering": 11, "marianne-vos": 22},
+    ) == [(11, 1), (22, 2)]
 
 
 def test_parse_stage_name_prefers_route_over_results_title():
