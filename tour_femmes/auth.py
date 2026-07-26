@@ -6,6 +6,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from tour_femmes import db
 from tour_femmes.models import Event, EventEntry, User
+from tour_femmes.services.deletion import delete_user_account
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -69,6 +70,84 @@ def register():
         return redirect(default_after_login_url(user))
 
     return render_template("auth/register.html")
+
+
+@auth_bp.route("/account")
+@login_required
+def account():
+    return render_template("auth/account.html")
+
+
+@auth_bp.route("/account/profile", methods=["POST"])
+@login_required
+def update_profile():
+    username = request.form.get("username", "").strip()
+    email = request.form.get("email", "").strip() or None
+    current_password = request.form.get("current_password", "")
+
+    if not check_password_hash(current_user.password_hash, current_password):
+        flash("Je huidige wachtwoord klopt niet.", "danger")
+        return redirect(url_for("auth.account"))
+    if not username:
+        flash("Gebruikersnaam is verplicht.", "danger")
+        return redirect(url_for("auth.account"))
+    if User.query.filter(User.username == username, User.id != current_user.id).first():
+        flash("Die gebruikersnaam is al in gebruik.", "danger")
+        return redirect(url_for("auth.account"))
+    if email and User.query.filter(User.email == email, User.id != current_user.id).first():
+        flash("Dat e-mailadres is al geregistreerd.", "danger")
+        return redirect(url_for("auth.account"))
+
+    current_user.username = username
+    current_user.email = email
+    db.session.commit()
+    flash("Profiel opgeslagen.", "success")
+    return redirect(url_for("auth.account"))
+
+
+@auth_bp.route("/account/password", methods=["POST"])
+@login_required
+def update_password():
+    current_password = request.form.get("current_password", "")
+    password = request.form.get("password", "")
+    confirm = request.form.get("confirm", "")
+
+    if not check_password_hash(current_user.password_hash, current_password):
+        flash("Je huidige wachtwoord klopt niet.", "danger")
+        return redirect(url_for("auth.account"))
+    if not password:
+        flash("Nieuw wachtwoord is verplicht.", "danger")
+        return redirect(url_for("auth.account"))
+    if password != confirm:
+        flash("Wachtwoorden komen niet overeen.", "danger")
+        return redirect(url_for("auth.account"))
+
+    current_user.password_hash = generate_password_hash(password)
+    db.session.commit()
+    flash("Wachtwoord bijgewerkt.", "success")
+    return redirect(url_for("auth.account"))
+
+
+@auth_bp.route("/account/delete", methods=["POST"])
+@login_required
+def delete_account():
+    current_password = request.form.get("current_password", "")
+    confirm_username = request.form.get("confirm_username", "").strip()
+    username = current_user.username
+    user = db.session.get(User, current_user.id)
+
+    if not user or not check_password_hash(user.password_hash, current_password):
+        flash("Je huidige wachtwoord klopt niet.", "danger")
+        return redirect(url_for("auth.account"))
+    if confirm_username != username:
+        flash("Typ je gebruikersnaam exact over om je account te verwijderen.", "danger")
+        return redirect(url_for("auth.account"))
+
+    logout_user()
+    delete_user_account(user)
+    db.session.commit()
+    flash("Je account is verwijderd.", "success")
+    return redirect(url_for("auth.login"))
 
 
 @auth_bp.route("/logout", methods=["POST"])

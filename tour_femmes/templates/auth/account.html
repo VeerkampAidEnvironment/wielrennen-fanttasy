@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Account{% endblock %}
+{% block body %}
+<section class="section-head">
+  <div>
+    <p class="eyebrow">Account</p>
+    <h1>Mijn gegevens</h1>
+    <p class="muted">Beheer je login en accountinstellingen.</p>
+  </div>
+</section>
+
+<section class="account-grid">
+  <form class="account-card" method="post" action="{{ url_for('auth.update_profile') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div>
+      <p class="eyebrow">Profiel</p>
+      <h2>Gebruikersgegevens</h2>
+    </div>
+    <label>
+      Gebruikersnaam
+      <input name="username" autocomplete="username" value="{{ current_user.username }}" required>
+    </label>
+    <label>
+      E-mail
+      <input type="email" name="email" autocomplete="email" value="{{ current_user.email or '' }}">
+    </label>
+    <label>
+      Huidig wachtwoord
+      <input type="password" name="current_password" autocomplete="current-password" required>
+    </label>
+    <button type="submit" class="primary-button">Profiel opslaan</button>
+  </form>
+
+  <form class="account-card" method="post" action="{{ url_for('auth.update_password') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div>
+      <p class="eyebrow">Beveiliging</p>
+      <h2>Wachtwoord wijzigen</h2>
+    </div>
+    <label>
+      Huidig wachtwoord
+      <input type="password" name="current_password" autocomplete="current-password" required>
+    </label>
+    <label>
+      Nieuw wachtwoord
+      <input type="password" name="password" autocomplete="new-password" required>
+    </label>
+    <label>
+      Bevestig nieuw wachtwoord
+      <input type="password" name="confirm" autocomplete="new-password" required>
+    </label>
+    <button type="submit" class="primary-button">Wachtwoord opslaan</button>
+  </form>
+
+  <form class="account-card danger-zone" method="post" action="{{ url_for('auth.delete_account') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div>
+      <p class="eyebrow">Verwijderen</p>
+      <h2>Account verwijderen</h2>
+      <p class="muted">Dit verwijdert je deelnames, teamselecties, etappeselecties en scores.</p>
+    </div>
+    <label>
+      Huidig wachtwoord
+      <input type="password" name="current_password" autocomplete="current-password" required>
+    </label>
+    <label>
+      Typ je gebruikersnaam ter bevestiging
+      <input name="confirm_username" autocomplete="off" placeholder="{{ current_user.username }}" required>
+    </label>
+    <button type="submit" class="danger-button">Account verwijderen</button>
+  </form>
+</section>
+{% endblock %}

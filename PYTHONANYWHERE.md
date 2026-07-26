@@ -129,6 +129,17 @@ After a reload, open an admin event page and click **PCS verbinding testen**.
 If a PCS request still fails, the flash message shows the failing endpoint and
 the PythonAnywhere error log contains the full request error.
 
+For `HTTP 403` there are two different cases:
+
+- `Herkomst lijkt PythonAnywhere-proxy/allowlist`: the request is still being
+  blocked before it reaches PCS. Confirm that `www.procyclingstats.com` is on
+  the allowlist, then reload the web app from the **Web** tab.
+- `Herkomst lijkt PCS/server` or `Herkomst lijkt PCS/Cloudflare`: the
+  PythonAnywhere allowlist is working, but PCS is refusing the HTML request
+  from the server. Images can still load in this case when
+  `PCS_PROXY_IMAGES=false`, because visitors fetch them directly in their own
+  browser instead of through PythonAnywhere.
+
 ## Important production notes
 
 - PythonAnywhere does not support background threads in web workers. Production

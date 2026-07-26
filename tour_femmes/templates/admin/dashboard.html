@@ -42,13 +42,39 @@
   </form>
 
   <div>
-    <h2>Bestaande koersen</h2>
-    <div class="simple-list">
+    <div class="admin-management-head">
+      <div>
+        <h2>Bestaande koersen</h2>
+        <p class="muted">{{ events|length }} koersen actief in beheer.</p>
+      </div>
+      <a class="secondary-button" href="{{ url_for('admin.users') }}">Gebruikers beheren ({{ user_count }})</a>
+    </div>
+    <div class="admin-management-list">
       {% for event in events %}
-        <a href="{{ url_for('admin.event_detail', event_id=event.id) }}">
-          <strong>{{ event.name }}</strong>
-          <span>{{ event.year }} · {{ event.slug }}</span>
-        </a>
+        <article class="admin-management-item">
+          <header>
+            <a href="{{ url_for('admin.event_detail', event_id=event.id) }}">
+              <strong>{{ event.name }}</strong>
+              <span>{{ event.year }} · {{ event.slug }}</span>
+            </a>
+          </header>
+          <form class="inline-edit-form" method="post" action="{{ url_for('admin.rename_event', event_id=event.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label>
+              Naam wijzigen
+              <input name="name" value="{{ event.name }}" required>
+            </label>
+            <button type="submit" class="secondary-button compact-button">Opslaan</button>
+          </form>
+          <form class="inline-edit-form danger-inline-form" method="post" action="{{ url_for('admin.delete_event', event_id=event.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label>
+              Koers verwijderen
+              <input name="confirm_name" placeholder="Typ {{ event.name }}" autocomplete="off" required>
+            </label>
+            <button type="submit" class="danger-button compact-button">Verwijderen</button>
+          </form>
+        </article>
       {% else %}
         <p class="muted">Nog geen koersen aangemaakt.</p>
       {% endfor %}

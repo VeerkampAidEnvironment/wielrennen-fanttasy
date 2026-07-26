@@ -39,6 +39,8 @@ DEFAULT_PCS_USER_AGENT = (
     "AppleWebKit/537.36 (KHTML, like Gecko) "
     "Chrome/126.0 Safari/537.36"
 )
+PCS_IMAGE_ACCEPT = "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
+PCS_HTML_ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
 PCS_LIVE_EMBED_CACHE_SECONDS = 20.0
 CLASSIFICATION_URL_SUFFIXES = {
     "gc": "gc",
@@ -176,15 +178,10 @@ class PcsClient:
             else config.get("PCS_429_BACKOFF_SECONDS", DEFAULT_PCS_429_BACKOFF_SECONDS)
         )
         self.rate_limited = False
+        self.user_agent = config.get("PCS_USER_AGENT", DEFAULT_PCS_USER_AGENT)
+        self.last_document_url = f"{self.base_url}/"
         self.session = requests.Session()
-        self.session.headers.update(
-            {
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                "Accept-Language": "en-US,en;q=0.9,nl;q=0.8",
-                "Connection": "close",
-                "User-Agent": config.get("PCS_USER_AGENT", DEFAULT_PCS_USER_AGENT),
-            }
-        )
+        self.session.headers.update(self.headers_for_url(self.last_document_url))
 
     def get_soup(self, url: str) -> BeautifulSoup:
         response = None
@@ -192,7 +189,7 @@ class PcsClient:
         for attempt in range(self.max_retries):
             self.wait_for_rate_limit()
             try:
-                response = self.session.get(url, timeout=self.timeout)
+                response = self.session.get(url, timeout=self.timeout, headers=self.headers_for_url(url))
                 self.last_request_at = monotonic()
             except requests.RequestException as exc:
                 self.last_request_at = monotonic()
@@ -210,10 +207,51 @@ class PcsClient:
                 sleep(retry_after_seconds(response, attempt, self.backoff_seconds))
                 continue
 
+            if response.status_code == 403:
+                raise requests.HTTPError(
+                    f"PCS gaf 403 Forbidden voor {url}. {pcs_forbidden_hint(response)}",
+                    response=response,
+                )
             response.raise_for_status()
+            self.last_document_url = url
             return BeautifulSoup(response.text, "html.parser")
 
         raise RuntimeError("PCS-verzoek mislukte voordat er een reactie terugkwam.")
+
+    def headers_for_url(self, url: str, image: bool = False) -> dict[str, str]:
+        referer = self.last_document_url or f"{self.base_url}/"
+        headers = {
+            "Accept": PCS_IMAGE_ACCEPT if image else PCS_HTML_ACCEPT,
+            "Accept-Language": "en-US,en;q=0.9,nl;q=0.8",
+            "Connection": "close",
+            "Referer": referer,
+            "User-Agent": self.user_agent,
+        }
+        if image:
+            headers.update(
+                {
+                    "Sec-Fetch-Dest": "image",
+                    "Sec-Fetch-Mode": "no-cors",
+                    "Sec-Fetch-Site": "same-origin",
+                }
+            )
+        else:
+            headers.update(
+                {
+                    "Cache-Control": "no-cache",
+                    "DNT": "1",
+                    "Pragma": "no-cache",
+                    "Sec-CH-UA": '"Not/A)Brand";v="8", "Chromium";v="126", "Google Chrome";v="126"',
+                    "Sec-CH-UA-Mobile": "?0",
+                    "Sec-CH-UA-Platform": '"Windows"',
+                    "Sec-Fetch-Dest": "document",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-Site": "same-origin",
+                    "Sec-Fetch-User": "?1",
+                    "Upgrade-Insecure-Requests": "1",
+                }
+            )
+        return headers
 
     def absolute_url(self, href: str) -> str:
         return self.canonical_url(urljoin(f"{self.base_url}/", href))
@@ -232,6 +270,35 @@ def retry_after_seconds(response: requests.Response, attempt: int, base_backoff:
     if retry_after and retry_after.isdigit():
         return min(float(retry_after), 180.0)
     return min(base_backoff * (attempt + 1), 180.0)
+
+
+def pcs_forbidden_hint(response: requests.Response, limit: int = 180) -> str:
+    text = ""
+    try:
+        text = clean_text(BeautifulSoup(response.text, "html.parser").get_text(" ", strip=True))
+    except Exception:
+        text = clean_text(response.text)
+
+    lower_text = text.lower()
+    if "access to arbitrary websites" in lower_text or "pythonanywhere" in lower_text:
+        source = "Herkomst lijkt PythonAnywhere-proxy/allowlist"
+    elif "cloudflare" in lower_text or response.headers.get("cf-ray"):
+        source = "Herkomst lijkt PCS/Cloudflare"
+    else:
+        source = "Herkomst lijkt PCS/server"
+
+    header_bits = []
+    for name in ("Server", "Via", "X-Cache", "CF-Ray"):
+        value = response.headers.get(name)
+        if value:
+            header_bits.append(f"{name}: {value}")
+
+    parts = [source]
+    if header_bits:
+        parts.append("; ".join(header_bits))
+    if text:
+        parts.append(f"body: {text[:limit]}")
+    return " | ".join(parts)
 
 
 def normalize_event_reference(reference: str, year: int | None = None) -> tuple[str, int, str]:

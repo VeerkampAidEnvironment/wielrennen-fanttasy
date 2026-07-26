@@ -1,6 +1,8 @@
 from tour_femmes import _pcs_image_url, create_app
 from tour_femmes.pcs_urls import canonicalize_pcs_url, is_configured_pcs_url
-from tour_femmes.services.pcs import PcsClient, normalize_event_reference
+from requests import Response
+
+from tour_femmes.services.pcs import PcsClient, normalize_event_reference, pcs_forbidden_hint
 
 
 class TestConfig:
@@ -34,6 +36,29 @@ def test_pcs_client_uses_canonical_www_host():
         client.canonical_url("https://procyclingstats.com/rider/demi-vollering")
         == "https://www.procyclingstats.com/rider/demi-vollering"
     )
+
+
+def test_pcs_client_sends_browser_like_headers():
+    client = PcsClient(base_url="https://www.procyclingstats.com")
+
+    document_headers = client.headers_for_url("https://www.procyclingstats.com/race/example/2026")
+    image_headers = client.headers_for_url("https://www.procyclingstats.com/images/example.jpg", image=True)
+
+    assert document_headers["Referer"] == "https://www.procyclingstats.com/"
+    assert document_headers["Upgrade-Insecure-Requests"] == "1"
+    assert document_headers["Sec-Fetch-Dest"] == "document"
+    assert "text/html" in document_headers["Accept"]
+    assert image_headers["Sec-Fetch-Dest"] == "image"
+    assert image_headers["Accept"].startswith("image/")
+
+
+def test_pcs_forbidden_hint_distinguishes_pythonanywhere_proxy():
+    response = Response()
+    response.status_code = 403
+    response._content = b"Access to arbitrary websites is not available from free accounts"
+    response.headers["Server"] = "PythonAnywhere"
+
+    assert "PythonAnywhere-proxy/allowlist" in pcs_forbidden_hint(response)
 
 
 def test_normalize_event_reference_uses_configured_base_for_pcs_urls():

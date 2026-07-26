@@ -16,6 +16,29 @@
   <div><strong>{{ frozen_count }}</strong><span>Bevroren renners</span></div>
 </section>
 
+<section class="admin-management-item event-admin-management">
+  <header>
+    <strong>Koers beheren</strong>
+    <span>{{ event.year }} · {{ event.slug }}</span>
+  </header>
+  <form class="inline-edit-form" method="post" action="{{ url_for('admin.rename_event', event_id=event.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>
+      Naam wijzigen
+      <input name="name" value="{{ event.name }}" required>
+    </label>
+    <button type="submit" class="secondary-button compact-button">Opslaan</button>
+  </form>
+  <form class="inline-edit-form danger-inline-form" method="post" action="{{ url_for('admin.delete_event', event_id=event.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>
+      Koers verwijderen
+      <input name="confirm_name" placeholder="Typ {{ event.name }}" autocomplete="off" required>
+    </label>
+    <button type="submit" class="danger-button compact-button">Verwijderen</button>
+  </form>
+</section>
+
 <section class="admin-actions">
   <form method="post" action="{{ url_for('admin.initialize_event', event_id=event.id) }}" data-admin-job-form data-job-title="Etappes laden uit PCS">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

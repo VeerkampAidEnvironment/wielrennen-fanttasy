@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Admin gebruikers{% endblock %}
+{% block body %}
+<section class="section-head">
+  <div>
+    <p class="eyebrow">Admin</p>
+    <h1>Gebruikers</h1>
+    <p class="muted">Verwijder accounts en alle gekoppelde speldata.</p>
+  </div>
+  <a class="secondary-button" href="{{ url_for('admin.dashboard') }}">Terug naar koersen</a>
+</section>
+
+<section class="admin-users-panel">
+  <table class="data-table admin-users-table">
+    <thead>
+      <tr>
+        <th>Gebruiker</th>
+        <th>E-mail</th>
+        <th>Aangemaakt</th>
+        <th>Speldata</th>
+        <th>Actie</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+        <tr>
+          <td>
+            <strong>{{ user.username }}</strong>
+            {% if current_user.is_authenticated and current_user.id == user.id %}
+              <span class="muted">Jij</span>
+            {% endif %}
+          </td>
+          <td>{{ user.email or 'Geen e-mail' }}</td>
+          <td>{{ user.created_at.strftime('%d-%m-%Y') if user.created_at else 'Onbekend' }}</td>
+          <td>
+            {{ user.entries|length }} deelnames ·
+            {{ user.team_selections|length }} teams ·
+            {{ user.stage_lineups|length }} etappeselecties
+          </td>
+          <td>
+            <form class="inline-edit-form danger-inline-form user-delete-form" method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <label>
+                Typ gebruikersnaam
+                <input name="confirm_username" placeholder="{{ user.username }}" autocomplete="off" required>
+              </label>
+              <button type="submit" class="danger-button compact-button">Verwijderen</button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5">Nog geen gebruikers.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

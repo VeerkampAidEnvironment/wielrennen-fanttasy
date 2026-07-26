@@ -4,13 +4,16 @@ from dataclasses import asdict, dataclass
 from functools import wraps
 from threading import Lock, Thread
 from time import monotonic
+from urllib.parse import urlparse
 from uuid import uuid4
 
 import requests
 from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, session, url_for
+from flask_login import current_user, logout_user
 
 from tour_femmes import db
-from tour_femmes.models import Event, EventRider, Stage
+from tour_femmes.models import Event, EventRider, Stage, User
+from tour_femmes.services.deletion import delete_event_game, delete_user_account
 from tour_femmes.services.pcs import (
     PcsClient,
     enrich_missing_profiles,
@@ -18,6 +21,7 @@ from tour_femmes.services.pcs import (
     import_stage_results,
     initialize_event_from_pcs,
     normalize_event_reference,
+    pcs_forbidden_hint,
     sync_startlist,
 )
 
@@ -111,7 +115,63 @@ def dashboard():
         return redirect(url_for("admin.event_detail", event_id=event.id))
 
     events = Event.query.order_by(Event.created_at.desc()).all()
-    return render_template("admin/dashboard.html", events=events)
+    return render_template("admin/dashboard.html", events=events, user_count=User.query.count())
+
+
+@admin_bp.route("/events/<int:event_id>/rename", methods=["POST"])
+@admin_required
+def rename_event(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    name = request.form.get("name", "").strip()
+    if not name:
+        flash("Koersnaam is verplicht.", "danger")
+        return redirect(request.referrer or url_for("admin.dashboard"))
+
+    event.name = name
+    db.session.commit()
+    flash("Koersnaam opgeslagen.", "success")
+    return redirect(request.referrer or url_for("admin.event_detail", event_id=event.id))
+
+
+@admin_bp.route("/events/<int:event_id>/delete", methods=["POST"])
+@admin_required
+def delete_event(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    confirmation = request.form.get("confirm_name", "").strip()
+    if confirmation not in {event.name, event.slug}:
+        flash("Typ de koersnaam exact over om deze koers te verwijderen.", "danger")
+        return redirect(request.referrer or url_for("admin.dashboard"))
+
+    event_name = event.name
+    delete_event_game(event)
+    db.session.commit()
+    flash(f"Koers '{event_name}' is verwijderd.", "success")
+    return redirect(url_for("admin.dashboard"))
+
+
+@admin_bp.route("/users")
+@admin_required
+def users():
+    users = User.query.order_by(User.username).all()
+    return render_template("admin/users.html", users=users)
+
+
+@admin_bp.route("/users/<int:user_id>/delete", methods=["POST"])
+@admin_required
+def delete_user(user_id: int):
+    user = User.query.get_or_404(user_id)
+    confirmation = request.form.get("confirm_username", "").strip()
+    if confirmation != user.username:
+        flash("Typ de gebruikersnaam exact over om deze gebruiker te verwijderen.", "danger")
+        return redirect(url_for("admin.users"))
+
+    username = user.username
+    if current_user.is_authenticated and current_user.id == user.id:
+        logout_user()
+    delete_user_account(user)
+    db.session.commit()
+    flash(f"Gebruiker '{username}' is verwijderd.", "success")
+    return redirect(url_for("admin.users"))
 
 
 @admin_bp.route("/events/<int:event_id>")
@@ -322,11 +382,20 @@ def run_pcs_diagnostics(event: Event) -> list[dict[str, object]]:
         ("Koerspagina", event.pcs_url),
         ("Startlijst", f"{event.pcs_url}/startlist"),
     ]
+    skipped_results = []
     first_stage = event.first_stage()
     if first_stage and first_stage.live_url:
         urls.append(("LiveStats", first_stage.live_url))
     if first_stage and first_stage.profile_image_url:
-        urls.append(("Afbeelding", first_stage.profile_image_url))
+        if current_app.config.get("PCS_PROXY_IMAGES", True):
+            urls.append(("Afbeelding", first_stage.profile_image_url))
+        else:
+            skipped_results.append(
+                {
+                    "ok": True,
+                    "message": "PCS test Afbeelding: overgeslagen; afbeeldingen laden rechtstreeks in de browser.",
+                }
+            )
 
     client = PcsClient(timeout=8, request_delay_seconds=0, max_retries=1, backoff_seconds=0)
     results: list[dict[str, object]] = []
@@ -334,17 +403,31 @@ def run_pcs_diagnostics(event: Event) -> list[dict[str, object]]:
         canonical_url = client.canonical_url(url)
         started_at = monotonic()
         try:
-            response = client.session.get(canonical_url, timeout=8, stream=True)
+            response = client.session.get(
+                canonical_url,
+                timeout=8,
+                stream=True,
+                headers=client.headers_for_url(canonical_url, image=_is_pcs_image_url(canonical_url)),
+            )
             elapsed = monotonic() - started_at
             content_type = response.headers.get("Content-Type", "onbekend").split(";")[0]
             ok = 200 <= response.status_code < 400
+            hint = ""
+            if response.status_code == 403:
+                hint = f", {pcs_forbidden_hint(response, limit=140)}"
+                current_app.logger.warning(
+                    "PCS diagnostics returned 403 for %s %s: %s",
+                    label,
+                    canonical_url,
+                    pcs_forbidden_hint(response, limit=400),
+                )
             response.close()
             results.append(
                 {
                     "ok": ok,
                     "message": (
                         f"PCS test {label}: HTTP {response.status_code}, "
-                        f"{content_type}, {elapsed:.1f}s, {canonical_url}"
+                        f"{content_type}, {elapsed:.1f}s, {canonical_url}{hint}"
                     ),
                 }
             )
@@ -356,7 +439,11 @@ def run_pcs_diagnostics(event: Event) -> list[dict[str, object]]:
                     "message": f"PCS test {label}: fout na {monotonic() - started_at:.1f}s, {short_error(exc)}",
                 }
             )
-    return results
+    return results + skipped_results
+
+
+def _is_pcs_image_url(url: str) -> bool:
+    return urlparse(url).path.lower().startswith("/images/")
 
 
 def short_error(exc: Exception, limit: int = 180) -> str:
