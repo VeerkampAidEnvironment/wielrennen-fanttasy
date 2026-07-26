@@ -18,11 +18,15 @@ from tour_femmes.services.pcs import (
     PcsClient,
     enrich_missing_profiles,
     fetch_live_embed_html,
+    import_stage_results_from_html,
     import_stage_results,
     initialize_event_from_pcs,
+    initialize_event_from_html,
     normalize_event_reference,
     pcs_forbidden_hint,
     sync_startlist,
+    sync_startlist_from_html,
+    update_stage_from_html,
 )
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -298,6 +302,65 @@ def pcs_diagnostics(event_id: int):
     return redirect(url_for("admin.event_detail", event_id=event.id))
 
 
+@admin_bp.route("/events/<int:event_id>/manual-stages", methods=["POST"])
+@admin_required
+def manual_stages(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    try:
+        count = initialize_event_from_html(event, submitted_html())
+        db.session.commit()
+        flash(f"{count} etappes geladen uit geplakte PCS-HTML.", "success")
+    except ValueError as exc:
+        db.session.rollback()
+        flash(str(exc), "danger")
+    return redirect(url_for("admin.event_detail", event_id=event.id))
+
+
+@admin_bp.route("/events/<int:event_id>/manual-startlist", methods=["POST"])
+@admin_required
+def manual_startlist(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    try:
+        summary = sync_startlist_from_html(event, submitted_html())
+        db.session.commit()
+        flash(
+            (
+                f"Startlijst uit HTML verwerkt: {summary.seen_count} renners gezien, "
+                f"{len(summary.new_riders)} nieuw, {len(summary.restored_riders)} teruggezet, "
+                f"{len(summary.frozen_riders)} bevroren, {len(summary.priced_riders)} automatisch geprijsd."
+            ),
+            "success",
+        )
+        if summary.new_riders:
+            flash("Nieuwe renners: " + ", ".join(summary.new_riders[:30]), "info")
+    except ValueError as exc:
+        db.session.rollback()
+        flash(str(exc), "danger")
+    return redirect(url_for("admin.event_detail", event_id=event.id))
+
+
+@admin_bp.route("/events/<int:event_id>/manual-stage-html", methods=["POST"])
+@admin_required
+def manual_stage_html(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    stage_id = _int_or_default(request.form.get("stage_id"), 0)
+    stage = Stage.query.filter_by(id=stage_id, event_id=event.id).first_or_404()
+    import_kind = request.form.get("import_kind", "details")
+    try:
+        if import_kind == "results":
+            count = import_stage_results_from_html(stage, submitted_html(), submitted_classification_htmls())
+            db.session.commit()
+            flash(f"{count} uitslagregels uit PCS-HTML geladen en scores herberekend.", "success")
+        else:
+            update_stage_from_html(stage, submitted_html())
+            db.session.commit()
+            flash(f"Etappe {stage.number} bijgewerkt uit PCS-HTML.", "success")
+    except ValueError as exc:
+        db.session.rollback()
+        flash(str(exc), "danger")
+    return redirect(url_for("admin.event_detail", event_id=event.id))
+
+
 @admin_bp.route("/jobs/<job_id>")
 @admin_required
 def job_status(job_id: str):
@@ -449,6 +512,25 @@ def _is_pcs_image_url(url: str) -> bool:
 def short_error(exc: Exception, limit: int = 180) -> str:
     text = str(exc).replace("\n", " ")
     return text if len(text) <= limit else f"{text[:limit - 1]}..."
+
+
+def submitted_html() -> str:
+    upload = request.files.get("html_file")
+    if upload and upload.filename:
+        return upload.read().decode("utf-8", errors="replace").strip()
+    html = request.form.get("html", "").strip()
+    if not html:
+        raise ValueError("Plak PCS-HTML of upload een HTML-bestand.")
+    return html
+
+
+def submitted_classification_htmls() -> dict[str, str]:
+    return {
+        "gc": request.form.get("classification_gc", "").strip(),
+        "points": request.form.get("classification_points", "").strip(),
+        "mountains": request.form.get("classification_mountains", "").strip(),
+        "youth": request.form.get("classification_youth", "").strip(),
+    }
 
 
 def start_admin_job(title: str, redirect_url: str, work) -> AdminJob:

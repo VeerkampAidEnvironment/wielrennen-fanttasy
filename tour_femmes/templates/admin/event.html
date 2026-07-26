@@ -77,6 +77,100 @@
   <button type="button" class="secondary-button hidden" data-admin-job-refresh>Pagina vernieuwen</button>
 </section>
 
+<section class="manual-import-panel">
+  <div class="manual-import-head">
+    <div>
+      <p class="eyebrow">Fallback</p>
+      <h2>Handmatige PCS-import</h2>
+    </div>
+    <span class="muted">Voor PythonAnywhere wanneer PCS HTML blokkeert.</span>
+  </div>
+  <div class="manual-import-grid">
+    <details class="manual-import-card">
+      <summary>Etappes uit koerspagina</summary>
+      <form method="post" action="{{ url_for('admin.manual_stages', event_id=event.id) }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>
+          PCS koerspagina HTML
+          <textarea name="html" rows="7" placeholder="Plak hier de HTML van de PCS koerspagina"></textarea>
+        </label>
+        <label>
+          Of upload HTML-bestand
+          <input type="file" name="html_file" accept=".html,.htm,text/html">
+        </label>
+        <button type="submit" class="secondary-button">Etappes verwerken</button>
+      </form>
+    </details>
+
+    <details class="manual-import-card">
+      <summary>Startlijst uit startlijstpagina</summary>
+      <form method="post" action="{{ url_for('admin.manual_startlist', event_id=event.id) }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>
+          PCS startlijst HTML
+          <textarea name="html" rows="7" placeholder="Plak hier de HTML van de PCS startlijst"></textarea>
+        </label>
+        <label>
+          Of upload HTML-bestand
+          <input type="file" name="html_file" accept=".html,.htm,text/html">
+        </label>
+        <button type="submit" class="secondary-button">Startlijst verwerken</button>
+      </form>
+    </details>
+
+    <details class="manual-import-card">
+      <summary>Etappepagina of uitslag</summary>
+      <form method="post" action="{{ url_for('admin.manual_stage_html', event_id=event.id) }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-row two-columns">
+          <label>
+            Etappe
+            <select name="stage_id" required>
+              {% for stage in event.stages %}
+                <option value="{{ stage.id }}">Etappe {{ stage.number }} · {{ stage.name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>
+            Soort import
+            <select name="import_kind">
+              <option value="details">Etappegegevens/profiel</option>
+              <option value="results">Uitslag en scores</option>
+            </select>
+          </label>
+        </div>
+        <label>
+          PCS etappe-HTML
+          <textarea name="html" rows="7" placeholder="Plak hier de HTML van de PCS etappe- of uitslagpagina"></textarea>
+        </label>
+        <label>
+          Of upload HTML-bestand
+          <input type="file" name="html_file" accept=".html,.htm,text/html">
+        </label>
+        <div class="manual-classification-fields">
+          <label>
+            GC HTML
+            <textarea name="classification_gc" rows="3"></textarea>
+          </label>
+          <label>
+            Punten HTML
+            <textarea name="classification_points" rows="3"></textarea>
+          </label>
+          <label>
+            Berg HTML
+            <textarea name="classification_mountains" rows="3"></textarea>
+          </label>
+          <label>
+            Jongeren HTML
+            <textarea name="classification_youth" rows="3"></textarea>
+          </label>
+        </div>
+        <button type="submit" class="secondary-button">Etappe verwerken</button>
+      </form>
+    </details>
+  </div>
+</section>
+
 <section class="split-layout">
   <div>
     <h2>Etappes</h2>

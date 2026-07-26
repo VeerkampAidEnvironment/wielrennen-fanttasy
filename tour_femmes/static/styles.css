@@ -42,7 +42,8 @@ img {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -197,6 +198,7 @@ input[type="password"],
 input[type="search"],
 input[type="number"],
 input:not([type]),
+textarea,
 select {
   width: 100%;
   border: 1px solid var(--line);
@@ -207,9 +209,15 @@ select {
 }
 
 input:focus,
+textarea:focus,
 select:focus {
   outline: 3px solid rgba(181, 31, 49, 0.18);
   border-color: var(--accent);
+}
+
+textarea {
+  min-height: 96px;
+  resize: vertical;
 }
 
 .primary-button,
@@ -1718,6 +1726,10 @@ select:focus {
   gap: 10px;
 }
 
+.form-row.two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .simple-list {
   display: grid;
   gap: 8px;
@@ -1834,6 +1846,56 @@ select:focus {
 
 .user-delete-form {
   min-width: 280px;
+}
+
+.manual-import-panel {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.manual-import-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.manual-import-head h2 {
+  margin: 0;
+}
+
+.manual-import-grid,
+.manual-classification-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+}
+
+.manual-import-card {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.manual-import-card summary {
+  cursor: pointer;
+  padding: 14px 16px;
+  color: var(--text);
+  font-weight: 900;
+}
+
+.manual-import-card form {
+  display: grid;
+  gap: 10px;
+  padding: 0 16px 16px;
+}
+
+.manual-classification-fields {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
 }
 
 .stat-strip {
@@ -2881,6 +2943,10 @@ select:focus {
   .status-list div,
   .lineup-row,
   .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row.two-columns {
     grid-template-columns: 1fr;
   }
 

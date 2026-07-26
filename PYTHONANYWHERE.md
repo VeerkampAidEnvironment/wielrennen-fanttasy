@@ -140,6 +140,17 @@ For `HTTP 403` there are two different cases:
   `PCS_PROXY_IMAGES=false`, because visitors fetch them directly in their own
   browser instead of through PythonAnywhere.
 
+When PCS/Cloudflare blocks server-side HTML requests, use the fallback on the
+admin event page:
+
+1. Open the relevant PCS page in your normal browser.
+2. Save the page as HTML or copy the page source.
+3. In **Handmatige PCS-import**, upload/paste that HTML for etappes,
+   startlists, stage details, or results.
+
+The fallback uses the same parsers and database writes as the automatic PCS
+sync, but the PythonAnywhere server no longer has to fetch the PCS HTML itself.
+
 ## Important production notes
 
 - PythonAnywhere does not support background threads in web workers. Production

@@ -265,6 +265,27 @@ class PcsClient:
             sleep(self.request_delay_seconds - elapsed)
 
 
+class StaticHtmlPcsClient:
+    rate_limited = False
+
+    def __init__(self, html: str, base_url: str | None = None) -> None:
+        config = current_app.config if has_app_context() else {}
+        self.base_url = (base_url or config.get("PCS_BASE_URL", "https://www.procyclingstats.com")).rstrip("/")
+        self.html = html
+
+    def get_soup(self, _url: str) -> BeautifulSoup:
+        html = self.html.strip()
+        if not html:
+            raise ValueError("Plak eerst de HTML van de PCS-pagina.")
+        return BeautifulSoup(html, "html.parser")
+
+    def absolute_url(self, href: str) -> str:
+        return self.canonical_url(urljoin(f"{self.base_url}/", href))
+
+    def canonical_url(self, url: str) -> str:
+        return canonicalize_pcs_url(url, self.base_url)
+
+
 def retry_after_seconds(response: requests.Response, attempt: int, base_backoff: float = DEFAULT_PCS_429_BACKOFF_SECONDS) -> float:
     retry_after = response.headers.get("Retry-After")
     if retry_after and retry_after.isdigit():
@@ -330,6 +351,31 @@ def initialize_event_from_pcs(
 ) -> int:
     client = client or PcsClient()
     parsed_stages = parse_event_stages(client, event, progress=progress)
+    apply_parsed_stages(event, parsed_stages)
+    if progress:
+        progress(len(parsed_stages), len(parsed_stages), "Etappes", "Etappes opgeslagen in de database.")
+    return len(parsed_stages)
+
+
+def initialize_event_from_html(
+    event: Event,
+    html: str,
+    progress: ProgressCallback | None = None,
+) -> int:
+    client = StaticHtmlPcsClient(html)
+    soup = client.get_soup(event.pcs_url)
+    stage_urls, stage_names = parse_event_stage_links(client, event, soup)
+    parsed_stages = [
+        minimal_parsed_stage(number, stage_urls[number], name=stage_names.get(number))
+        for number in sorted(stage_urls)
+    ]
+    apply_parsed_stages(event, parsed_stages)
+    if progress:
+        progress(len(parsed_stages), len(parsed_stages), "Etappes", "Etappes opgeslagen in de database.")
+    return len(parsed_stages)
+
+
+def apply_parsed_stages(event: Event, parsed_stages: list[ParsedStage]) -> None:
     for parsed in parsed_stages:
         stage = Stage.query.filter_by(event_id=event.id, number=parsed.number).first()
         if not stage:
@@ -346,9 +392,6 @@ def initialize_event_from_pcs(
         stage.departure = parsed.departure
         stage.arrival = parsed.arrival
         stage.profile_image_url = parsed.profile_image_url
-    if progress:
-        progress(len(parsed_stages), len(parsed_stages), "Etappes", "Etappes opgeslagen in de database.")
-    return len(parsed_stages)
 
 
 def sync_startlist(
@@ -459,6 +502,14 @@ def sync_startlist(
     )
 
 
+def sync_startlist_from_html(
+    event: Event,
+    html: str,
+    progress: ProgressCallback | None = None,
+) -> StartlistSyncSummary:
+    return sync_startlist(event, client=StaticHtmlPcsClient(html), progress=progress)
+
+
 def enrich_missing_profiles(
     event: Event,
     client: PcsClient | None = None,
@@ -557,18 +608,7 @@ def parse_event_stages(
     if progress:
         progress(0, 0, "Etappes", "PCS koerspagina ophalen.")
     soup = client.get_soup(event.pcs_url)
-    stage_urls: dict[int, str] = {}
-    for anchor in soup.find_all("a", href=True):
-        absolute = client.absolute_url(anchor["href"])
-        match = PCS_STAGE_RE.search(urlparse(absolute).path)
-        if match:
-            stage_urls[int(match.group("number"))] = absolute
-
-    if not stage_urls:
-        text = soup.get_text(" ", strip=True)
-        for number, name in re.findall(r"Stage\s+(\d+)\s*\|\s*([^|]+?)(?=Stage\s+\d+|Final GC|$)", text):
-            stage_number = int(number)
-            stage_urls[stage_number] = f"{event.pcs_url}/stage-{stage_number}"
+    stage_urls, _stage_names = parse_event_stage_links(client, event, soup)
 
     total = len(stage_urls)
     if progress:
@@ -592,10 +632,50 @@ def parse_event_stages(
     return parsed
 
 
-def minimal_parsed_stage(number: int, stage_url: str) -> ParsedStage:
+def parse_event_stage_links(
+    client,
+    event: Event,
+    soup: BeautifulSoup,
+) -> tuple[dict[int, str], dict[int, str]]:
+    stage_urls: dict[int, str] = {}
+    stage_names: dict[int, str] = {}
+    for anchor in soup.find_all("a", href=True):
+        absolute = client.absolute_url(anchor["href"])
+        match = PCS_STAGE_RE.search(urlparse(absolute).path)
+        if not match:
+            continue
+        number = int(match.group("number"))
+        stage_urls[number] = absolute
+        label_name = stage_name_from_label(clean_text(anchor.get_text(" ", strip=True)), number)
+        if label_name:
+            stage_names[number] = label_name
+
+    if not stage_urls:
+        text = soup.get_text(" ", strip=True)
+        for number, name in re.findall(r"Stage\s+(\d+)\s*\|\s*([^|]+?)(?=Stage\s+\d+|Final GC|$)", text):
+            stage_number = int(number)
+            stage_urls[stage_number] = f"{event.pcs_url}/stage-{stage_number}"
+            stage_names[stage_number] = clean_text(name)
+
+    return stage_urls, stage_names
+
+
+def stage_name_from_label(label: str, number: int) -> str | None:
+    if not label:
+        return None
+    match = re.search(rf"Stage\s+{number}(?:\s+\([^)]+\))?\s*\|\s*(.+)$", label, re.I)
+    if match:
+        name = clean_text(match.group(1))
+        return name if name and "result" not in name.lower() else None
+    if is_stage_route(label):
+        return label
+    return None
+
+
+def minimal_parsed_stage(number: int, stage_url: str, name: str | None = None) -> ParsedStage:
     return ParsedStage(
         number=number,
-        name=f"Etappe {number}",
+        name=name or f"Etappe {number}",
         pcs_url=stage_url,
         live_url=f"{stage_url}/live",
     )
@@ -603,6 +683,10 @@ def minimal_parsed_stage(number: int, stage_url: str) -> ParsedStage:
 
 def parse_stage_page(client: PcsClient, stage_url: str, number: int) -> ParsedStage:
     soup = client.get_soup(stage_url)
+    return parse_stage_page_soup(client, stage_url, number, soup)
+
+
+def parse_stage_page_soup(client, stage_url: str, number: int, soup: BeautifulSoup) -> ParsedStage:
     text = soup.get_text("\n", strip=True)
     name = parse_stage_name(text, number)
     race_info = parse_label_values(text)
@@ -637,6 +721,13 @@ def parse_stage_page(client: PcsClient, stage_url: str, number: int) -> ParsedSt
         arrival=race_info.get("Arrival"),
         profile_image_url=profile_image_url,
     )
+
+
+def update_stage_from_html(stage: Stage, html: str) -> ParsedStage:
+    client = StaticHtmlPcsClient(html)
+    parsed = parse_stage_page_soup(client, stage.pcs_url, stage.number, client.get_soup(stage.pcs_url))
+    apply_parsed_stages(stage.event, [parsed])
+    return parsed
 
 
 def parse_startlist(soup: BeautifulSoup, base_url: str) -> list[ParsedRider]:
@@ -717,6 +808,26 @@ def update_rider_details(client: PcsClient, rider: Rider) -> bool:
 def import_stage_results(stage: Stage) -> int:
     client = PcsClient()
     soup = client.get_soup(stage.pcs_url)
+    count = upsert_stage_results(stage, soup)
+    import_stage_classifications(stage, client)
+    recalculate_stage_scores(stage)
+    return count
+
+
+def import_stage_results_from_html(
+    stage: Stage,
+    html: str,
+    classification_htmls: dict[str, str] | None = None,
+) -> int:
+    soup = StaticHtmlPcsClient(html).get_soup(stage.pcs_url)
+    count = upsert_stage_results(stage, soup)
+    if classification_htmls:
+        import_stage_classifications_from_htmls(stage, classification_htmls)
+    recalculate_stage_scores(stage)
+    return count
+
+
+def upsert_stage_results(stage: Stage, soup: BeautifulSoup) -> int:
     parsed_results = parse_stage_results(soup, stage)
     for parsed in parsed_results:
         result = StageResult.query.filter_by(
@@ -732,8 +843,6 @@ def import_stage_results(stage: Stage) -> int:
         result.raw_result = parsed.raw_result
         result.base_points = points_for_result(parsed.rank, parsed.status)
         result.imported_at = utcnow()
-    import_stage_classifications(stage, client)
-    recalculate_stage_scores(stage)
     return len(parsed_results)
 
 
@@ -756,6 +865,37 @@ def import_stage_classifications(stage: Stage, client: PcsClient) -> int:
                 continue
             raise
         parsed = parse_classification_results(soup, links_by_slug)
+        ClassificationResult.query.filter_by(
+            stage_id=stage.id,
+            classification=classification,
+        ).delete()
+        for event_rider_id, rank in parsed:
+            db.session.add(
+                ClassificationResult(
+                    stage=stage,
+                    event_rider_id=event_rider_id,
+                    classification=classification,
+                    rank=rank,
+                    is_final=is_final,
+                    imported_at=utcnow(),
+                )
+            )
+            imported += 1
+    return imported
+
+
+def import_stage_classifications_from_htmls(stage: Stage, classification_htmls: dict[str, str]) -> int:
+    imported = 0
+    links_by_slug = {
+        link.rider.pcs_slug: link.id
+        for link in EventRider.query.join(Rider).filter(EventRider.event_id == stage.event_id).all()
+    }
+    is_final = bool(stage.event.stages and stage.id == stage.event.stages[-1].id)
+    for classification in CLASSIFICATION_URL_SUFFIXES:
+        html = (classification_htmls.get(classification) or "").strip()
+        if not html:
+            continue
+        parsed = parse_classification_results(BeautifulSoup(html, "html.parser"), links_by_slug)
         ClassificationResult.query.filter_by(
             stage_id=stage.id,
             classification=classification,

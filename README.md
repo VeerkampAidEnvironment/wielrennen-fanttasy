@@ -68,6 +68,7 @@ For the production MySQL setup, WSGI configuration, and update procedure, see
 6. Users can now join the event and make selections.
 7. On the stage day, the LiveStats viewer refreshes automatically; admins can also force an immediate refresh.
 8. Once PCS has ranked results, admins can import results and scores are recalculated.
+9. If PCS blocks server-side HTML requests on PythonAnywhere, use the admin event page's manual PCS import fallback and paste/upload saved PCS HTML.
 
 ## Notes
 
