@@ -3,12 +3,12 @@ from __future__ import annotations
 import secrets
 from pathlib import Path
 
-from urllib.parse import urlparse
-
 from flask import Flask, abort, current_app, request, session, url_for
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect, text
+
+from tour_femmes.pcs_urls import canonicalize_pcs_url, is_configured_pcs_url
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -78,11 +78,13 @@ def _csrf_token() -> str:
 def _pcs_image_url(source_url: str | None) -> str:
     if not source_url:
         return ""
-    parsed = urlparse(source_url)
-    pcs_host = urlparse(current_app.config["PCS_BASE_URL"]).netloc.lower()
-    if parsed.scheme in {"http", "https"} and parsed.netloc.lower() == pcs_host:
-        return url_for("media.pcs_image", url=source_url)
-    return source_url
+    canonical_url = canonicalize_pcs_url(source_url, current_app.config["PCS_BASE_URL"])
+    if current_app.config.get("PCS_PROXY_IMAGES", True) and is_configured_pcs_url(
+        canonical_url,
+        current_app.config["PCS_BASE_URL"],
+    ):
+        return url_for("media.pcs_image", url=canonical_url)
+    return canonical_url
 
 
 def _ensure_schema(app: Flask) -> None:

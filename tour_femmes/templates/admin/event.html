@@ -31,6 +31,11 @@
     <small class="muted">Haalt maximaal 10 ontbrekende profielen per keer op. Dit is bewust losgekoppeld van de snelle startlijstcontrole.</small>
     <button type="submit" class="secondary-button">Ontbrekende profielen ophalen</button>
   </form>
+  <form method="post" action="{{ url_for('admin.pcs_diagnostics', event_id=event.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <small class="muted">Test vanaf deze server of PCS bereikbaar is.</small>
+    <button type="submit" class="secondary-button">PCS verbinding testen</button>
+  </form>
   <a class="secondary-button" href="{{ url_for('admin.prices', event_id=event.id) }}">Rennerprijzen beheren</a>
 </section>
 
@@ -58,6 +63,8 @@
           <th>#</th>
           <th>Naam</th>
           <th>Start</th>
+          <th>Status</th>
+          <th>Actie</th>
         </tr>
       </thead>
       <tbody>
@@ -66,9 +73,29 @@
             <td>{{ stage.number }}</td>
             <td>{{ stage.name }}</td>
             <td>{{ stage.starts_at.strftime('%d-%m-%Y %H:%M') if stage.starts_at else 'Onbekend' }}</td>
+            <td>
+              {% if stage.has_ranked_result() %}
+                Uitslag verwerkt
+              {% elif stage.is_locked() %}
+                Klaar voor uitslag
+              {% else %}
+                Nog niet gestart
+              {% endif %}
+            </td>
+            <td>
+              <div class="table-actions">
+                <a class="secondary-button compact-button" href="{{ url_for('events.stage', event_id=event.id, stage_id=stage.id) }}">Open</a>
+                <form method="post" action="{{ url_for('admin.import_results', stage_id=stage.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="secondary-button compact-button" {% if not stage.is_locked() %}disabled title="Kan pas nadat de etappe is gestart"{% endif %}>
+                    Uitslag laden
+                  </button>
+                </form>
+              </div>
+            </td>
           </tr>
         {% else %}
-          <tr><td colspan="3">Nog geen etappes geladen.</td></tr>
+          <tr><td colspan="5">Nog geen etappes geladen.</td></tr>
         {% endfor %}
       </tbody>
     </table>

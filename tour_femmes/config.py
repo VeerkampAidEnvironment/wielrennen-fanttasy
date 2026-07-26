@@ -35,4 +35,13 @@ class Config:
     PCS_MAX_RETRIES = int(os.getenv("PCS_MAX_RETRIES", "2"))
     PCS_429_BACKOFF_SECONDS = float(os.getenv("PCS_429_BACKOFF_SECONDS", "10"))
     PCS_IMAGE_REQUEST_DELAY_SECONDS = float(os.getenv("PCS_IMAGE_REQUEST_DELAY_SECONDS", "3"))
+    PCS_PROXY_IMAGES = env_bool("PCS_PROXY_IMAGES", True)
+    PCS_USER_AGENT = os.getenv(
+        "PCS_USER_AGENT",
+        (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/126.0 Safari/537.36"
+        ),
+    )
     APP_TIMEZONE = os.getenv("APP_TIMEZONE", "Europe/Amsterdam")

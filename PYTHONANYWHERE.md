@@ -42,6 +42,7 @@ PCS_BASE_URL=https://www.procyclingstats.com
 APP_TIMEZONE=Europe/Amsterdam
 AUTO_CREATE_SCHEMA=false
 INLINE_ADMIN_JOBS=true
+PCS_PROXY_IMAGES=false
 ```
 
 Generate the secret from the Bash console:
@@ -124,11 +125,19 @@ pip install -r requirements.txt
 Then reload the web app from PythonAnywhere's **Web** tab. Database content is
 stored separately in MySQL and is not replaced by `git pull`.
 
+After a reload, open an admin event page and click **PCS verbinding testen**.
+If a PCS request still fails, the flash message shows the failing endpoint and
+the PythonAnywhere error log contains the full request error.
+
 ## Important production notes
 
 - PythonAnywhere does not support background threads in web workers. Production
   uses `INLINE_ADMIN_JOBS=true`, so large PCS imports run inside the admin
   request. Use rider-detail imports sparingly.
+- Keep `PCS_BASE_URL=https://www.procyclingstats.com`. This exact host is on
+  the PythonAnywhere allowlist. `PCS_PROXY_IMAGES=false` lets visitors load PCS
+  images directly in their browser, avoiding slow server-side image proxy
+  requests from the single uWSGI worker.
 - PythonAnywhere closes idle MySQL connections after five minutes. The app uses
   SQLAlchemy connection pre-ping and a 280-second recycle interval.
 - Keep `.env` and database exports outside Git.

@@ -7,7 +7,6 @@ from threading import Lock
 from time import monotonic, sleep
 from typing import Callable
 from urllib.parse import urljoin, urlparse
-from zoneinfo import ZoneInfo
 
 import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
@@ -25,14 +24,21 @@ from tour_femmes.models import (
     utcnow,
 )
 from tour_femmes.scoring import points_for_result
+from tour_femmes.pcs_urls import canonicalize_pcs_url
 from tour_femmes.services.game import recalculate_stage_scores
 from tour_femmes.services.sporza_prices import load_sporza_price_catalog, sporza_edition_for_event
+from tour_femmes.timezones import app_timezone
 
 PCS_STAGE_RE = re.compile(r"/race/(?P<slug>[^/]+)/(?P<year>\d{4})/stage-(?P<number>\d+)")
 NON_RIDER_LINK_PARTS = {"results", "program", "h2h", "more", "statistics"}
 DEFAULT_PCS_REQUEST_DELAY_SECONDS = 4.0
 DEFAULT_PCS_MAX_RETRIES = 2
 DEFAULT_PCS_429_BACKOFF_SECONDS = 10.0
+DEFAULT_PCS_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/126.0 Safari/537.36"
+)
 PCS_LIVE_EMBED_CACHE_SECONDS = 20.0
 CLASSIFICATION_URL_SUFFIXES = {
     "gc": "gc",
@@ -173,19 +179,24 @@ class PcsClient:
         self.session = requests.Session()
         self.session.headers.update(
             {
-                "User-Agent": (
-                    "TourFemmesFantasy/0.1 "
-                    "(personal fantasy cycling app; contact site admin)"
-                )
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9,nl;q=0.8",
+                "Connection": "close",
+                "User-Agent": config.get("PCS_USER_AGENT", DEFAULT_PCS_USER_AGENT),
             }
         )
 
     def get_soup(self, url: str) -> BeautifulSoup:
         response = None
+        url = self.canonical_url(url)
         for attempt in range(self.max_retries):
             self.wait_for_rate_limit()
-            response = self.session.get(url, timeout=self.timeout)
-            self.last_request_at = monotonic()
+            try:
+                response = self.session.get(url, timeout=self.timeout)
+                self.last_request_at = monotonic()
+            except requests.RequestException as exc:
+                self.last_request_at = monotonic()
+                raise requests.RequestException(f"PCS-verzoek naar {url} mislukt: {exc}") from exc
             if response.status_code == 429:
                 self.rate_limited = True
                 if attempt == self.max_retries - 1:
@@ -205,7 +216,10 @@ class PcsClient:
         raise RuntimeError("PCS-verzoek mislukte voordat er een reactie terugkwam.")
 
     def absolute_url(self, href: str) -> str:
-        return urljoin(f"{self.base_url}/", href)
+        return self.canonical_url(urljoin(f"{self.base_url}/", href))
+
+    def canonical_url(self, url: str) -> str:
+        return canonicalize_pcs_url(url, self.base_url)
 
     def wait_for_rate_limit(self) -> None:
         elapsed = monotonic() - self.last_request_at
@@ -231,7 +245,8 @@ def normalize_event_reference(reference: str, year: int | None = None) -> tuple[
         if len(parts) >= 3 and parts[0] == "race":
             slug = parts[1]
             parsed_year = int(parts[2])
-            return slug, year or parsed_year, f"https://{parsed.netloc}/race/{slug}/{year or parsed_year}"
+            base = current_app.config.get("PCS_BASE_URL", "https://www.procyclingstats.com").rstrip("/")
+            return slug, year or parsed_year, f"{base}/race/{slug}/{year or parsed_year}"
         raise ValueError("Gebruik een PCS-koers-URL zoals https://www.procyclingstats.com/race/<slug>/<jaar>.")
 
     slug = reference.split("/")[0]
@@ -528,7 +543,11 @@ def parse_stage_page(client: PcsClient, stage_url: str, number: int) -> ParsedSt
     stage_time = parse_time(race_info.get("Start time"))
     starts_at = None
     if stage_date:
-        starts_at = datetime.combine(stage_date, stage_time or time(12, 0), tzinfo=ZoneInfo(current_app.config["APP_TIMEZONE"]))
+        starts_at = datetime.combine(
+            stage_date,
+            stage_time or time(12, 0),
+            tzinfo=app_timezone(current_app.config["APP_TIMEZONE"]),
+        )
 
     profile_image_url = None
     profile_heading = soup.find(string=re.compile(r"Race profile", re.I))
@@ -830,6 +849,7 @@ def build_live_embed_html(soup: BeautifulSoup, source_url: str) -> str:
             absolute_src = urljoin(f"{pcs_base_url}/", tag["src"])
             if _is_allowed_pcs_url(absolute_src, pcs_base_url):
                 tag["src"] = absolute_src
+                tag["referrerpolicy"] = "no-referrer"
             else:
                 tag.decompose()
 

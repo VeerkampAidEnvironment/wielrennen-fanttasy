@@ -96,6 +96,7 @@ def test_live_embed_keeps_livestats_and_removes_unsafe_page_content():
                 <ul class="ls5b-kpi"><li><span>KM to go</span><div>138.6</div></li></ul>
                 <div class="ls5b-left">
                   <form><input name="request"></form>
+                  <img src="/images/riders/example.jpg">
                   <ul class="timeline3">
                     <li class="event">A real race update</li>
                     <li class="event">advertisement</li>
@@ -123,6 +124,8 @@ def test_live_embed_keeps_livestats_and_removes_unsafe_page_content():
     assert "<form" not in html
     assert "onclick" not in html
     assert 'href="https://www.procyclingstats.com/rider/example"' in html
+    assert 'src="https://www.procyclingstats.com/images/riders/example.jpg"' in html
+    assert 'referrerpolicy="no-referrer"' in html
     assert '<meta http-equiv="refresh" content="30">' in html
 
 

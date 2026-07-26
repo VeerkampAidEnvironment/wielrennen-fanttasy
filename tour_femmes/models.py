@@ -3,14 +3,13 @@ from __future__ import annotations
 import re
 from datetime import datetime, timezone
 from typing import Iterable
-from zoneinfo import ZoneInfo
 
-from flask import current_app, has_app_context
 from flask_login import UserMixin
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from tour_femmes import db
+from tour_femmes.timezones import app_timezone, app_timezone_name
 
 
 def utcnow() -> datetime:
@@ -97,7 +96,7 @@ class Event(db.Model):
     ) -> Stage | None:
         """Return the only stage whose PCS live page may be shown today."""
         timezone_name = timezone_name or _app_timezone_name()
-        local_timezone = ZoneInfo(timezone_name)
+        local_timezone = app_timezone(timezone_name)
         local_now = _coerce_aware(now or utcnow()).astimezone(local_timezone)
         today_stages = [
             stage
@@ -416,13 +415,11 @@ NON_FINISH_STATUSES = {"DNF", "DNS", "DSQ", "OTL", "DF", "NR"}
 def _coerce_aware(value: datetime) -> datetime:
     if value.tzinfo:
         return value
-    return value.replace(tzinfo=ZoneInfo(_app_timezone_name()))
+    return value.replace(tzinfo=app_timezone(_app_timezone_name()))
 
 
 def _app_timezone_name() -> str:
-    if has_app_context():
-        return current_app.config.get("APP_TIMEZONE", "Europe/Amsterdam")
-    return "Europe/Amsterdam"
+    return app_timezone_name()
 
 
 def total_price(event_riders: Iterable[EventRider]) -> int:

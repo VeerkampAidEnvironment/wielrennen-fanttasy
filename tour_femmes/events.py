@@ -273,6 +273,7 @@ def stage_live_view(event_id: int, stage_id: int):
     try:
         html = fetch_live_embed_html(stage_obj)
     except (RequestException, RuntimeError) as exc:
+        current_app.logger.warning("PCS LiveStats fetch failed for stage %s: %s", stage_obj.id, exc)
         status_code = 502
         html = render_template(
             "events/live_embed_error.html",

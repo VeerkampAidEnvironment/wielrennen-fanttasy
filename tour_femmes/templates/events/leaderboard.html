@@ -166,7 +166,7 @@
                 <div class="stage-lineup-rider {{ 'captain' if lineup_rider.is_captain else '' }}">
                   <span class="stage-lineup-photo">
                     {% if rider.photo_url %}
-                      <img src="{{ pcs_image_url(rider.photo_url) }}" alt="" loading="lazy" decoding="async">
+                      <img src="{{ pcs_image_url(rider.photo_url) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
                     {% else %}
                       <span>{{ rider.name[:2] }}</span>
                     {% endif %}

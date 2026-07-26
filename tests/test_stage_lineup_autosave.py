@@ -294,3 +294,21 @@ def test_team_selection_tab_disappears_after_stage_one_starts():
     assert "data-team-selection-tab" not in stage_html
     assert "data-deadline-countdown" in team_html
     assert "data-deadline-countdown" in stage_html
+
+
+def test_admin_stage_page_shows_result_import_button():
+    app, user_id, event_id, stage_id, _event_rider_ids = make_app_with_lineup_context()
+    with app.app_context():
+        stage = db.session.get(Stage, stage_id)
+        stage.starts_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+        db.session.commit()
+
+    client = app.test_client()
+    login(client, user_id)
+    with client.session_transaction() as session:
+        session["admin_ok"] = True
+
+    stage_html = client.get(f"/events/{event_id}/stages/{stage_id}").get_data(as_text=True)
+
+    assert "Uitslag laden" in stage_html
+    assert f"/admin/stages/{stage_id}/import-results" in stage_html

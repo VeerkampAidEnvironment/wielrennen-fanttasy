@@ -110,7 +110,7 @@
         >
           <span class="my-team-photo">
             {% if rider.photo_url %}
-              <img src="{{ pcs_image_url(rider.photo_url) }}" alt="" loading="lazy" decoding="async">
+              <img src="{{ pcs_image_url(rider.photo_url) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
             {% else %}
               <span>{{ rider.name[:2] }}</span>
             {% endif %}
@@ -198,7 +198,7 @@
         <button type="button" class="team-filter-chip" data-team-chip value="{{ team.name }}">
           <span class="team-chip-image">
             {% if team.image_url %}
-              <img src="{{ pcs_image_url(team.image_url) }}" alt="" loading="lazy" decoding="async">
+              <img src="{{ pcs_image_url(team.image_url) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
             {% else %}
               <span>{{ team.name[:2] }}</span>
             {% endif %}
@@ -237,7 +237,7 @@
         >
         <span class="rider-card-media">
           {% if rider.photo_url %}
-            <img src="{{ pcs_image_url(rider.photo_url) }}" alt="" loading="lazy" decoding="async">
+            <img src="{{ pcs_image_url(rider.photo_url) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
           {% else %}
             <span class="rider-initials">{{ rider.name[:2] }}</span>
           {% endif %}
@@ -252,7 +252,7 @@
             <strong>{{ rider.name }}</strong>
             <small class="rider-team-line">
               {% if event_rider.team and event_rider.team.image_url %}
-                <img src="{{ pcs_image_url(event_rider.team.image_url) }}" alt="" loading="lazy" decoding="async">
+                <img src="{{ pcs_image_url(event_rider.team.image_url) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
               {% endif %}
               <span>{{ event_rider.team.name if event_rider.team else 'Geen ploeg' }}</span>
             </small>

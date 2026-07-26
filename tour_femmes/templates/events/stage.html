@@ -37,7 +37,7 @@
     >
     <span class="lineup-card-photo">
       {% if rider.photo_url %}
-        <img src="{{ pcs_image_url(rider.photo_url) }}" alt="" loading="lazy" decoding="async">
+        <img src="{{ pcs_image_url(rider.photo_url) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
       {% else %}
         <span>{{ rider.name[:2] }}</span>
       {% endif %}
@@ -72,6 +72,22 @@
     <p class="eyebrow">{{ event.name }}</p>
     <h1>Etappe {{ stage.number }}: {{ stage.name }}</h1>
   </div>
+  {% if session.get('admin_ok') %}
+    <div class="admin-stage-actions">
+      {% if live_available %}
+        <form method="post" action="{{ url_for('admin.import_live', stage_id=stage.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="secondary-button">Live verversen</button>
+        </form>
+      {% endif %}
+      <form method="post" action="{{ url_for('admin.import_results', stage_id=stage.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="primary-button" {% if not locked %}disabled title="Kan pas nadat de etappe is gestart"{% endif %}>
+          Uitslag laden
+        </button>
+      </form>
+    </div>
+  {% endif %}
   <div
     class="meter deadline-meter"
     {% if stage.starts_at %}
@@ -93,7 +109,7 @@
 {% if stage.profile_image_url %}
   <section class="stage-profile-panel">
     <h2>Etappeprofiel</h2>
-    <img class="stage-profile" src="{{ pcs_image_url(stage.profile_image_url) }}" alt="Profiel van etappe {{ stage.number }}" decoding="async">
+    <img class="stage-profile" src="{{ pcs_image_url(stage.profile_image_url) }}" alt="Profiel van etappe {{ stage.number }}" decoding="async" referrerpolicy="no-referrer">
   </section>
 {% endif %}
 
@@ -270,22 +286,6 @@
           {% endfor %}
         </tbody>
       </table>
-    {% endif %}
-    {% if session.get('admin_ok') %}
-      <div class="admin-inline">
-        {% if live_available %}
-          <form method="post" action="{{ url_for('admin.import_live', stage_id=stage.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="secondary-button">Live nu verversen</button>
-          </form>
-        {% endif %}
-        {% if locked %}
-          <form method="post" action="{{ url_for('admin.import_results', stage_id=stage.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="secondary-button">Uitslag laden</button>
-          </form>
-        {% endif %}
-      </div>
     {% endif %}
     </div>
   {% endif %}

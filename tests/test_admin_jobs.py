@@ -1,8 +1,9 @@
+from datetime import datetime, timedelta, timezone
 from time import monotonic, sleep
 
 from tour_femmes import create_app, db
 from tour_femmes.admin import JOBS, JOBS_LOCK, start_admin_job
-from tour_femmes.models import Event
+from tour_femmes.models import Event, Stage
 
 
 class TestConfig:
@@ -28,7 +29,14 @@ def make_admin_app():
             team_size=11,
             lineup_size=6,
         )
-        db.session.add(event)
+        stage = Stage(
+            event=event,
+            number=1,
+            name="Etappe 1",
+            starts_at=datetime.now(timezone.utc) - timedelta(hours=1),
+            pcs_url=f"{event.pcs_url}/stage-1",
+        )
+        db.session.add_all([event, stage])
         db.session.commit()
         return app, event.id
 
@@ -36,6 +44,7 @@ def make_admin_app():
 def login_admin(client):
     with client.session_transaction() as session:
         session["admin_ok"] = True
+        session["_csrf_token"] = "token"
 
 
 def test_admin_event_page_contains_loader_panel():
@@ -50,6 +59,29 @@ def test_admin_event_page_contains_loader_panel():
     assert "data-admin-job-form" in html
     assert "data-admin-job-panel" in html
     assert "data-admin-job-count" in html
+    assert "Uitslag laden" in html
+    assert "/admin/stages/" in html
+    assert "PCS verbinding testen" in html
+
+
+def test_admin_pcs_diagnostics_route_flashes_results(monkeypatch):
+    app, event_id = make_admin_app()
+    client = app.test_client()
+    login_admin(client)
+    monkeypatch.setattr(
+        "tour_femmes.admin.run_pcs_diagnostics",
+        lambda _event: [{"ok": True, "message": "PCS test Koerspagina: HTTP 200"}],
+    )
+
+    response = client.post(
+        f"/admin/events/{event_id}/pcs-diagnostics",
+        data={"csrf_token": "token"},
+        follow_redirects=True,
+    )
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "PCS test Koerspagina: HTTP 200" in html
 
 
 def test_admin_job_status_reports_completed_count():

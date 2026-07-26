@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from functools import wraps
 from threading import Lock, Thread
+from time import monotonic
 from uuid import uuid4
 
 import requests
@@ -224,6 +225,19 @@ def enrich_event_profiles(event_id: int):
     return redirect(url_for("admin.event_detail", event_id=event.id))
 
 
+@admin_bp.route("/events/<int:event_id>/pcs-diagnostics", methods=["POST"])
+@admin_required
+def pcs_diagnostics(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    results = run_pcs_diagnostics(event)
+    ok = all(result["ok"] for result in results)
+    for result in results:
+        flash(result["message"], "success" if result["ok"] else "warning")
+    if not ok:
+        flash("Controleer de PythonAnywhere errorlog voor de volledige PCS-foutmelding.", "warning")
+    return redirect(url_for("admin.event_detail", event_id=event.id))
+
+
 @admin_bp.route("/jobs/<job_id>")
 @admin_required
 def job_status(job_id: str):
@@ -301,6 +315,53 @@ def _int_or_default(value: str | None, default: int) -> int:
         return int(value or default)
     except ValueError:
         return default
+
+
+def run_pcs_diagnostics(event: Event) -> list[dict[str, object]]:
+    urls = [
+        ("Koerspagina", event.pcs_url),
+        ("Startlijst", f"{event.pcs_url}/startlist"),
+    ]
+    first_stage = event.first_stage()
+    if first_stage and first_stage.live_url:
+        urls.append(("LiveStats", first_stage.live_url))
+    if first_stage and first_stage.profile_image_url:
+        urls.append(("Afbeelding", first_stage.profile_image_url))
+
+    client = PcsClient(timeout=8, request_delay_seconds=0, max_retries=1, backoff_seconds=0)
+    results: list[dict[str, object]] = []
+    for label, url in urls:
+        canonical_url = client.canonical_url(url)
+        started_at = monotonic()
+        try:
+            response = client.session.get(canonical_url, timeout=8, stream=True)
+            elapsed = monotonic() - started_at
+            content_type = response.headers.get("Content-Type", "onbekend").split(";")[0]
+            ok = 200 <= response.status_code < 400
+            response.close()
+            results.append(
+                {
+                    "ok": ok,
+                    "message": (
+                        f"PCS test {label}: HTTP {response.status_code}, "
+                        f"{content_type}, {elapsed:.1f}s, {canonical_url}"
+                    ),
+                }
+            )
+        except requests.RequestException as exc:
+            current_app.logger.warning("PCS diagnostics failed for %s %s: %s", label, canonical_url, exc)
+            results.append(
+                {
+                    "ok": False,
+                    "message": f"PCS test {label}: fout na {monotonic() - started_at:.1f}s, {short_error(exc)}",
+                }
+            )
+    return results
+
+
+def short_error(exc: Exception, limit: int = 180) -> str:
+    text = str(exc).replace("\n", " ")
+    return text if len(text) <= limit else f"{text[:limit - 1]}..."
 
 
 def start_admin_job(title: str, redirect_url: str, work) -> AdminJob:

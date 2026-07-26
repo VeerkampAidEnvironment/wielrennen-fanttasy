@@ -950,6 +950,32 @@ select:focus {
   text-transform: uppercase;
 }
 
+.table-actions,
+.admin-stage-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.table-actions form,
+.admin-stage-actions form {
+  margin: 0;
+}
+
+.compact-button {
+  min-height: 34px;
+  padding: 7px 10px;
+  font-size: 0.86rem;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  box-shadow: none;
+}
+
 .leaderboard-table {
   min-width: 760px;
 }

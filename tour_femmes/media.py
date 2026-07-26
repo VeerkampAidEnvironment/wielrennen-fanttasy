@@ -9,6 +9,8 @@ from urllib.parse import urlparse
 import requests
 from flask import Blueprint, Response, abort, current_app, send_file
 
+from tour_femmes.pcs_urls import canonicalize_pcs_url, is_configured_pcs_url
+
 media_bp = Blueprint("media", __name__, url_prefix="/media")
 
 IMAGE_EXTENSIONS = {
@@ -64,8 +66,9 @@ def _download_image(source_url: str) -> requests.Response | None:
                 timeout=20,
                 headers={
                     "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.9,nl;q=0.8",
                     "Referer": current_app.config["PCS_BASE_URL"],
-                    "User-Agent": "TourFemmesFantasy/0.1 (local fantasy cycling app)",
+                    "User-Agent": current_app.config["PCS_USER_AGENT"],
                 },
             )
             LAST_IMAGE_REQUEST_AT = monotonic()
@@ -74,7 +77,8 @@ def _download_image(source_url: str) -> requests.Response | None:
                 return None
             response.raise_for_status()
             return response
-        except requests.RequestException:
+        except requests.RequestException as exc:
+            current_app.logger.warning("PCS image download failed: %s (%s)", source_url, exc)
             return None
 
 
@@ -86,9 +90,12 @@ def _validated_pcs_url() -> str:
     from flask import request
 
     source_url = request.args.get("url", "").strip()
+    source_url = canonicalize_pcs_url(source_url, current_app.config["PCS_BASE_URL"])
     parsed = urlparse(source_url)
-    pcs_host = urlparse(current_app.config["PCS_BASE_URL"]).netloc.lower()
-    if parsed.scheme not in {"http", "https"} or parsed.netloc.lower() != pcs_host:
+    if parsed.scheme not in {"http", "https"} or not is_configured_pcs_url(
+        source_url,
+        current_app.config["PCS_BASE_URL"],
+    ):
         abort(400)
     if not parsed.path.lower().startswith("/images/"):
         abort(400)
