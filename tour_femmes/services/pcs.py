@@ -7,7 +7,9 @@ from threading import Lock
 from time import monotonic, sleep
 from typing import Callable
 from urllib.parse import urljoin, urlparse
+from zoneinfo import ZoneInfo
 
+import cloudscraper
 import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
 from flask import current_app, has_app_context
@@ -24,23 +26,14 @@ from tour_femmes.models import (
     utcnow,
 )
 from tour_femmes.scoring import points_for_result
-from tour_femmes.pcs_urls import canonicalize_pcs_url
 from tour_femmes.services.game import recalculate_stage_scores
 from tour_femmes.services.sporza_prices import load_sporza_price_catalog, sporza_edition_for_event
-from tour_femmes.timezones import app_timezone
 
 PCS_STAGE_RE = re.compile(r"/race/(?P<slug>[^/]+)/(?P<year>\d{4})/stage-(?P<number>\d+)")
 NON_RIDER_LINK_PARTS = {"results", "program", "h2h", "more", "statistics"}
 DEFAULT_PCS_REQUEST_DELAY_SECONDS = 4.0
 DEFAULT_PCS_MAX_RETRIES = 2
 DEFAULT_PCS_429_BACKOFF_SECONDS = 10.0
-DEFAULT_PCS_USER_AGENT = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/126.0 Safari/537.36"
-)
-PCS_IMAGE_ACCEPT = "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
-PCS_HTML_ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
 PCS_LIVE_EMBED_CACHE_SECONDS = 20.0
 CLASSIFICATION_URL_SUFFIXES = {
     "gc": "gc",
@@ -150,6 +143,8 @@ class LiveUpdateItem:
 
 
 class PcsClient:
+    """Rate-limited PCS client backed by a persistent CloudScraper session."""
+
     def __init__(
         self,
         base_url: str | None = None,
@@ -178,22 +173,20 @@ class PcsClient:
             else config.get("PCS_429_BACKOFF_SECONDS", DEFAULT_PCS_429_BACKOFF_SECONDS)
         )
         self.rate_limited = False
-        self.user_agent = config.get("PCS_USER_AGENT", DEFAULT_PCS_USER_AGENT)
-        self.last_document_url = f"{self.base_url}/"
-        self.session = requests.Session()
-        self.session.headers.update(self.headers_for_url(self.last_document_url))
+        self.session: cloudscraper.CloudScraper = cloudscraper.create_scraper(
+            browser=config.get("PCS_CLOUDSCRAPER_BROWSER", "chrome"),
+        )
+        self.session.headers.setdefault(
+            "Accept-Language",
+            config.get("PCS_ACCEPT_LANGUAGE", "en-US,en;q=0.9"),
+        )
 
     def get_soup(self, url: str) -> BeautifulSoup:
         response = None
-        url = self.canonical_url(url)
         for attempt in range(self.max_retries):
             self.wait_for_rate_limit()
-            try:
-                response = self.session.get(url, timeout=self.timeout, headers=self.headers_for_url(url))
-                self.last_request_at = monotonic()
-            except requests.RequestException as exc:
-                self.last_request_at = monotonic()
-                raise requests.RequestException(f"PCS-verzoek naar {url} mislukt: {exc}") from exc
+            response = self.session.get(url, timeout=self.timeout)
+            self.last_request_at = monotonic()
             if response.status_code == 429:
                 self.rate_limited = True
                 if attempt == self.max_retries - 1:
@@ -207,57 +200,13 @@ class PcsClient:
                 sleep(retry_after_seconds(response, attempt, self.backoff_seconds))
                 continue
 
-            if response.status_code == 403:
-                raise requests.HTTPError(
-                    f"PCS gaf 403 Forbidden voor {url}. {pcs_forbidden_hint(response)}",
-                    response=response,
-                )
             response.raise_for_status()
-            self.last_document_url = url
             return BeautifulSoup(response.text, "html.parser")
 
         raise RuntimeError("PCS-verzoek mislukte voordat er een reactie terugkwam.")
 
-    def headers_for_url(self, url: str, image: bool = False) -> dict[str, str]:
-        referer = self.last_document_url or f"{self.base_url}/"
-        headers = {
-            "Accept": PCS_IMAGE_ACCEPT if image else PCS_HTML_ACCEPT,
-            "Accept-Language": "en-US,en;q=0.9,nl;q=0.8",
-            "Connection": "close",
-            "Referer": referer,
-            "User-Agent": self.user_agent,
-        }
-        if image:
-            headers.update(
-                {
-                    "Sec-Fetch-Dest": "image",
-                    "Sec-Fetch-Mode": "no-cors",
-                    "Sec-Fetch-Site": "same-origin",
-                }
-            )
-        else:
-            headers.update(
-                {
-                    "Cache-Control": "no-cache",
-                    "DNT": "1",
-                    "Pragma": "no-cache",
-                    "Sec-CH-UA": '"Not/A)Brand";v="8", "Chromium";v="126", "Google Chrome";v="126"',
-                    "Sec-CH-UA-Mobile": "?0",
-                    "Sec-CH-UA-Platform": '"Windows"',
-                    "Sec-Fetch-Dest": "document",
-                    "Sec-Fetch-Mode": "navigate",
-                    "Sec-Fetch-Site": "same-origin",
-                    "Sec-Fetch-User": "?1",
-                    "Upgrade-Insecure-Requests": "1",
-                }
-            )
-        return headers
-
     def absolute_url(self, href: str) -> str:
-        return self.canonical_url(urljoin(f"{self.base_url}/", href))
-
-    def canonical_url(self, url: str) -> str:
-        return canonicalize_pcs_url(url, self.base_url)
+        return urljoin(f"{self.base_url}/", href)
 
     def wait_for_rate_limit(self) -> None:
         elapsed = monotonic() - self.last_request_at
@@ -265,61 +214,11 @@ class PcsClient:
             sleep(self.request_delay_seconds - elapsed)
 
 
-class StaticHtmlPcsClient:
-    rate_limited = False
-
-    def __init__(self, html: str, base_url: str | None = None) -> None:
-        config = current_app.config if has_app_context() else {}
-        self.base_url = (base_url or config.get("PCS_BASE_URL", "https://www.procyclingstats.com")).rstrip("/")
-        self.html = html
-
-    def get_soup(self, _url: str) -> BeautifulSoup:
-        html = self.html.strip()
-        if not html:
-            raise ValueError("Plak eerst de HTML van de PCS-pagina.")
-        return BeautifulSoup(html, "html.parser")
-
-    def absolute_url(self, href: str) -> str:
-        return self.canonical_url(urljoin(f"{self.base_url}/", href))
-
-    def canonical_url(self, url: str) -> str:
-        return canonicalize_pcs_url(url, self.base_url)
-
-
 def retry_after_seconds(response: requests.Response, attempt: int, base_backoff: float = DEFAULT_PCS_429_BACKOFF_SECONDS) -> float:
     retry_after = response.headers.get("Retry-After")
     if retry_after and retry_after.isdigit():
         return min(float(retry_after), 180.0)
     return min(base_backoff * (attempt + 1), 180.0)
-
-
-def pcs_forbidden_hint(response: requests.Response, limit: int = 180) -> str:
-    text = ""
-    try:
-        text = clean_text(BeautifulSoup(response.text, "html.parser").get_text(" ", strip=True))
-    except Exception:
-        text = clean_text(response.text)
-
-    lower_text = text.lower()
-    if "access to arbitrary websites" in lower_text or "pythonanywhere" in lower_text:
-        source = "Herkomst lijkt PythonAnywhere-proxy/allowlist"
-    elif "cloudflare" in lower_text or response.headers.get("cf-ray"):
-        source = "Herkomst lijkt PCS/Cloudflare"
-    else:
-        source = "Herkomst lijkt PCS/server"
-
-    header_bits = []
-    for name in ("Server", "Via", "X-Cache", "CF-Ray"):
-        value = response.headers.get(name)
-        if value:
-            header_bits.append(f"{name}: {value}")
-
-    parts = [source]
-    if header_bits:
-        parts.append("; ".join(header_bits))
-    if text:
-        parts.append(f"body: {text[:limit]}")
-    return " | ".join(parts)
 
 
 def normalize_event_reference(reference: str, year: int | None = None) -> tuple[str, int, str]:
@@ -333,8 +232,7 @@ def normalize_event_reference(reference: str, year: int | None = None) -> tuple[
         if len(parts) >= 3 and parts[0] == "race":
             slug = parts[1]
             parsed_year = int(parts[2])
-            base = current_app.config.get("PCS_BASE_URL", "https://www.procyclingstats.com").rstrip("/")
-            return slug, year or parsed_year, f"{base}/race/{slug}/{year or parsed_year}"
+            return slug, year or parsed_year, f"https://{parsed.netloc}/race/{slug}/{year or parsed_year}"
         raise ValueError("Gebruik een PCS-koers-URL zoals https://www.procyclingstats.com/race/<slug>/<jaar>.")
 
     slug = reference.split("/")[0]
@@ -351,31 +249,6 @@ def initialize_event_from_pcs(
 ) -> int:
     client = client or PcsClient()
     parsed_stages = parse_event_stages(client, event, progress=progress)
-    apply_parsed_stages(event, parsed_stages)
-    if progress:
-        progress(len(parsed_stages), len(parsed_stages), "Etappes", "Etappes opgeslagen in de database.")
-    return len(parsed_stages)
-
-
-def initialize_event_from_html(
-    event: Event,
-    html: str,
-    progress: ProgressCallback | None = None,
-) -> int:
-    client = StaticHtmlPcsClient(html)
-    soup = client.get_soup(event.pcs_url)
-    stage_urls, stage_names = parse_event_stage_links(client, event, soup)
-    parsed_stages = [
-        minimal_parsed_stage(number, stage_urls[number], name=stage_names.get(number))
-        for number in sorted(stage_urls)
-    ]
-    apply_parsed_stages(event, parsed_stages)
-    if progress:
-        progress(len(parsed_stages), len(parsed_stages), "Etappes", "Etappes opgeslagen in de database.")
-    return len(parsed_stages)
-
-
-def apply_parsed_stages(event: Event, parsed_stages: list[ParsedStage]) -> None:
     for parsed in parsed_stages:
         stage = Stage.query.filter_by(event_id=event.id, number=parsed.number).first()
         if not stage:
@@ -392,6 +265,9 @@ def apply_parsed_stages(event: Event, parsed_stages: list[ParsedStage]) -> None:
         stage.departure = parsed.departure
         stage.arrival = parsed.arrival
         stage.profile_image_url = parsed.profile_image_url
+    if progress:
+        progress(len(parsed_stages), len(parsed_stages), "Etappes", "Etappes opgeslagen in de database.")
+    return len(parsed_stages)
 
 
 def sync_startlist(
@@ -502,14 +378,6 @@ def sync_startlist(
     )
 
 
-def sync_startlist_from_html(
-    event: Event,
-    html: str,
-    progress: ProgressCallback | None = None,
-) -> StartlistSyncSummary:
-    return sync_startlist(event, client=StaticHtmlPcsClient(html), progress=progress)
-
-
 def enrich_missing_profiles(
     event: Event,
     client: PcsClient | None = None,
@@ -608,7 +476,18 @@ def parse_event_stages(
     if progress:
         progress(0, 0, "Etappes", "PCS koerspagina ophalen.")
     soup = client.get_soup(event.pcs_url)
-    stage_urls, _stage_names = parse_event_stage_links(client, event, soup)
+    stage_urls: dict[int, str] = {}
+    for anchor in soup.find_all("a", href=True):
+        absolute = client.absolute_url(anchor["href"])
+        match = PCS_STAGE_RE.search(urlparse(absolute).path)
+        if match:
+            stage_urls[int(match.group("number"))] = absolute
+
+    if not stage_urls:
+        text = soup.get_text(" ", strip=True)
+        for number, name in re.findall(r"Stage\s+(\d+)\s*\|\s*([^|]+?)(?=Stage\s+\d+|Final GC|$)", text):
+            stage_number = int(number)
+            stage_urls[stage_number] = f"{event.pcs_url}/stage-{stage_number}"
 
     total = len(stage_urls)
     if progress:
@@ -632,50 +511,10 @@ def parse_event_stages(
     return parsed
 
 
-def parse_event_stage_links(
-    client,
-    event: Event,
-    soup: BeautifulSoup,
-) -> tuple[dict[int, str], dict[int, str]]:
-    stage_urls: dict[int, str] = {}
-    stage_names: dict[int, str] = {}
-    for anchor in soup.find_all("a", href=True):
-        absolute = client.absolute_url(anchor["href"])
-        match = PCS_STAGE_RE.search(urlparse(absolute).path)
-        if not match:
-            continue
-        number = int(match.group("number"))
-        stage_urls[number] = absolute
-        label_name = stage_name_from_label(clean_text(anchor.get_text(" ", strip=True)), number)
-        if label_name:
-            stage_names[number] = label_name
-
-    if not stage_urls:
-        text = soup.get_text(" ", strip=True)
-        for number, name in re.findall(r"Stage\s+(\d+)\s*\|\s*([^|]+?)(?=Stage\s+\d+|Final GC|$)", text):
-            stage_number = int(number)
-            stage_urls[stage_number] = f"{event.pcs_url}/stage-{stage_number}"
-            stage_names[stage_number] = clean_text(name)
-
-    return stage_urls, stage_names
-
-
-def stage_name_from_label(label: str, number: int) -> str | None:
-    if not label:
-        return None
-    match = re.search(rf"Stage\s+{number}(?:\s+\([^)]+\))?\s*\|\s*(.+)$", label, re.I)
-    if match:
-        name = clean_text(match.group(1))
-        return name if name and "result" not in name.lower() else None
-    if is_stage_route(label):
-        return label
-    return None
-
-
-def minimal_parsed_stage(number: int, stage_url: str, name: str | None = None) -> ParsedStage:
+def minimal_parsed_stage(number: int, stage_url: str) -> ParsedStage:
     return ParsedStage(
         number=number,
-        name=name or f"Etappe {number}",
+        name=f"Etappe {number}",
         pcs_url=stage_url,
         live_url=f"{stage_url}/live",
     )
@@ -683,10 +522,6 @@ def minimal_parsed_stage(number: int, stage_url: str, name: str | None = None) -
 
 def parse_stage_page(client: PcsClient, stage_url: str, number: int) -> ParsedStage:
     soup = client.get_soup(stage_url)
-    return parse_stage_page_soup(client, stage_url, number, soup)
-
-
-def parse_stage_page_soup(client, stage_url: str, number: int, soup: BeautifulSoup) -> ParsedStage:
     text = soup.get_text("\n", strip=True)
     name = parse_stage_name(text, number)
     race_info = parse_label_values(text)
@@ -694,11 +529,7 @@ def parse_stage_page_soup(client, stage_url: str, number: int, soup: BeautifulSo
     stage_time = parse_time(race_info.get("Start time"))
     starts_at = None
     if stage_date:
-        starts_at = datetime.combine(
-            stage_date,
-            stage_time or time(12, 0),
-            tzinfo=app_timezone(current_app.config["APP_TIMEZONE"]),
-        )
+        starts_at = datetime.combine(stage_date, stage_time or time(12, 0), tzinfo=ZoneInfo(current_app.config["APP_TIMEZONE"]))
 
     profile_image_url = None
     profile_heading = soup.find(string=re.compile(r"Race profile", re.I))
@@ -721,13 +552,6 @@ def parse_stage_page_soup(client, stage_url: str, number: int, soup: BeautifulSo
         arrival=race_info.get("Arrival"),
         profile_image_url=profile_image_url,
     )
-
-
-def update_stage_from_html(stage: Stage, html: str) -> ParsedStage:
-    client = StaticHtmlPcsClient(html)
-    parsed = parse_stage_page_soup(client, stage.pcs_url, stage.number, client.get_soup(stage.pcs_url))
-    apply_parsed_stages(stage.event, [parsed])
-    return parsed
 
 
 def parse_startlist(soup: BeautifulSoup, base_url: str) -> list[ParsedRider]:
@@ -808,26 +632,6 @@ def update_rider_details(client: PcsClient, rider: Rider) -> bool:
 def import_stage_results(stage: Stage) -> int:
     client = PcsClient()
     soup = client.get_soup(stage.pcs_url)
-    count = upsert_stage_results(stage, soup)
-    import_stage_classifications(stage, client)
-    recalculate_stage_scores(stage)
-    return count
-
-
-def import_stage_results_from_html(
-    stage: Stage,
-    html: str,
-    classification_htmls: dict[str, str] | None = None,
-) -> int:
-    soup = StaticHtmlPcsClient(html).get_soup(stage.pcs_url)
-    count = upsert_stage_results(stage, soup)
-    if classification_htmls:
-        import_stage_classifications_from_htmls(stage, classification_htmls)
-    recalculate_stage_scores(stage)
-    return count
-
-
-def upsert_stage_results(stage: Stage, soup: BeautifulSoup) -> int:
     parsed_results = parse_stage_results(soup, stage)
     for parsed in parsed_results:
         result = StageResult.query.filter_by(
@@ -843,6 +647,8 @@ def upsert_stage_results(stage: Stage, soup: BeautifulSoup) -> int:
         result.raw_result = parsed.raw_result
         result.base_points = points_for_result(parsed.rank, parsed.status)
         result.imported_at = utcnow()
+    import_stage_classifications(stage, client)
+    recalculate_stage_scores(stage)
     return len(parsed_results)
 
 
@@ -865,37 +671,6 @@ def import_stage_classifications(stage: Stage, client: PcsClient) -> int:
                 continue
             raise
         parsed = parse_classification_results(soup, links_by_slug)
-        ClassificationResult.query.filter_by(
-            stage_id=stage.id,
-            classification=classification,
-        ).delete()
-        for event_rider_id, rank in parsed:
-            db.session.add(
-                ClassificationResult(
-                    stage=stage,
-                    event_rider_id=event_rider_id,
-                    classification=classification,
-                    rank=rank,
-                    is_final=is_final,
-                    imported_at=utcnow(),
-                )
-            )
-            imported += 1
-    return imported
-
-
-def import_stage_classifications_from_htmls(stage: Stage, classification_htmls: dict[str, str]) -> int:
-    imported = 0
-    links_by_slug = {
-        link.rider.pcs_slug: link.id
-        for link in EventRider.query.join(Rider).filter(EventRider.event_id == stage.event_id).all()
-    }
-    is_final = bool(stage.event.stages and stage.id == stage.event.stages[-1].id)
-    for classification in CLASSIFICATION_URL_SUFFIXES:
-        html = (classification_htmls.get(classification) or "").strip()
-        if not html:
-            continue
-        parsed = parse_classification_results(BeautifulSoup(html, "html.parser"), links_by_slug)
         ClassificationResult.query.filter_by(
             stage_id=stage.id,
             classification=classification,
@@ -1056,7 +831,6 @@ def build_live_embed_html(soup: BeautifulSoup, source_url: str) -> str:
             absolute_src = urljoin(f"{pcs_base_url}/", tag["src"])
             if _is_allowed_pcs_url(absolute_src, pcs_base_url):
                 tag["src"] = absolute_src
-                tag["referrerpolicy"] = "no-referrer"
             else:
                 tag.decompose()
 
