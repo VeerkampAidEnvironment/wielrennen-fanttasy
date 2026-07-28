@@ -177,3 +177,18 @@ def test_leaderboard_total_and_stage_tabs_render_expected_details():
     assert "Leider na etappe" in stage_html
     assert "Opstelling verborgen tot de deadline" in future_html
     assert "Alpha Rider" not in future_html
+
+
+def test_event_overview_highlights_status_and_next_deadline():
+    app, user_id, _event_id = make_leaderboard_app()
+    client = app.test_client()
+    login(client, user_id)
+
+    html = client.get("/events").get_data(as_text=True)
+
+    assert "event-card-started" in html
+    assert "Volgende deadline" in html
+    assert "Etappe 2 sluit" in html
+    assert "data-deadline-at" in html
+    assert "Ingeschreven" in html
+    assert "Nog niet compleet" in html

@@ -17,30 +17,68 @@
   <div class="event-grid">
     {% for card in cards %}
       {% set event = card.event %}
-      <article class="event-card">
-        <div class="card-topline">
-          <span class="pill {{ 'started' if event.has_started(now) else 'pending' }}">{{ event.display_status(now) }}</span>
-          <span class="muted">{{ event.year }}</span>
+      {% set display_status = event.display_status(now) %}
+      {% set event_state = 'finished' if display_status == 'Afgelopen' else 'started' if event.has_started(now) else 'pending' %}
+      {% set lineup_ready = card.next_lineup_status in ['Compleet', 'Klaar'] %}
+      <article class="event-card event-card-{{ event_state }}">
+        <header class="event-card-header">
+          <div class="event-state-pill event-state-{{ event_state }}">
+            <span class="event-state-dot" aria-hidden="true"></span>
+            {{ display_status }}
+          </div>
+          <span class="event-card-year">{{ event.year }}</span>
+        </header>
+
+        <div class="event-card-title">
+          <p class="eyebrow">Koers</p>
+          <h2>{{ event.name }}</h2>
         </div>
-        <h2>{{ event.name }}</h2>
-        <dl class="status-list">
-          <div>
-            <dt>Start</dt>
-            <dd>{{ event.starts_at.strftime('%d-%m-%Y %H:%M') if event.starts_at else 'Onbekend' }}</dd>
+
+        {% if card.next_stage and card.next_stage.starts_at %}
+          <section
+            class="event-card-deadline"
+            data-deadline-at="{{ card.next_stage.deadline_timestamp_ms() }}"
+          >
+            <div class="event-deadline-main">
+              <small>Volgende deadline</small>
+              <strong data-deadline-countdown role="timer">Berekenen…</strong>
+            </div>
+            <div class="event-deadline-meta">
+              <span>
+                {% if event_state == 'pending' %}
+                  Teamselectie sluit
+                {% else %}
+                  Etappe {{ card.next_stage.number }} sluit
+                {% endif %}
+              </span>
+              <time>{{ card.next_stage.starts_at.strftime('%d-%m-%Y om %H:%M') }}</time>
+            </div>
+            <span class="deadline-state">Open</span>
+          </section>
+        {% else %}
+          <section class="event-card-deadline event-card-deadline-static">
+            <div class="event-deadline-main">
+              <small>Koersstatus</small>
+              <strong>{{ 'Koers afgerond' if event_state == 'finished' else 'Geen komende deadline' }}</strong>
+            </div>
+          </section>
+        {% endif %}
+
+        <div class="event-card-status-grid" aria-label="Jouw koersstatus">
+          <div class="{{ 'status-ok' if card.entry else 'status-action' }}">
+            <span>Deelname</span>
+            <strong>{{ 'Ingeschreven' if card.entry else 'Nog niet ingeschreven' }}</strong>
           </div>
-          <div>
-            <dt>Deelname</dt>
-            <dd>{{ 'Ingeschreven' if card.entry else 'Niet ingeschreven' }}</dd>
+          <div class="{{ 'status-ok' if card.selection_finished else 'status-action' }}">
+            <span>Teamselectie</span>
+            <strong>{{ 'Compleet' if card.selection_finished else 'Nog niet compleet' }}</strong>
           </div>
-          <div>
-            <dt>Teamselectie</dt>
-            <dd>{{ 'Compleet' if card.selection_finished else 'Nog niet compleet' }}</dd>
+          <div class="{{ 'status-ok' if lineup_ready else 'status-action' }}">
+            <span>Volgende opstelling</span>
+            <strong>{{ card.next_lineup_status }}</strong>
           </div>
-          <div>
-            <dt>Volgende etappe</dt>
-            <dd>{{ card.next_lineup_status }}</dd>
-          </div>
-        </dl>
+        </div>
+
         <div class="button-row">
           <a class="primary-button" href="{{ url_for('events.event_home', event_id=event.id) }}">Open koers</a>
           {% if not card.entry %}
