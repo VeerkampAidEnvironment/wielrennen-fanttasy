@@ -36,6 +36,14 @@ def test_pcs_client_uses_canonical_www_host():
     )
 
 
+def test_pcs_client_sends_normal_html_request_headers():
+    client = PcsClient(base_url="https://www.procyclingstats.com")
+
+    assert client.session.headers["User-Agent"].startswith("Mozilla/5.0")
+    assert "text/html" in client.session.headers["Accept"]
+    assert client.session.headers["Accept-Language"].startswith("en-US")
+
+
 def test_normalize_event_reference_uses_configured_base_for_pcs_urls():
     app = create_app(__name__ + ".TestConfig")
     with app.app_context():

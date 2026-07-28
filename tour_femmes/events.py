@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from flask import Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
-from requests import RequestException
 
 from tour_femmes import db
 from tour_femmes.models import Event, EventEntry, EventRider, Stage, StageLineup, TeamSelection, utcnow
@@ -27,8 +26,6 @@ from tour_femmes.services.game import (
     save_team_selection,
     validate_team_selection,
 )
-from tour_femmes.services.pcs import fetch_live_embed_html
-
 events_bp = Blueprint("events", __name__)
 
 
@@ -241,8 +238,6 @@ def stage(event_id: int, stage_id: int):
     team_riders = [link.event_rider for link in selection.riders]
     rider_history = build_rider_stage_history(event, stage_obj, team_riders)
     show_results = stage_obj.has_ranked_result()
-    live_stage = event.live_stage(timezone_name=current_app.config["APP_TIMEZONE"])
-    live_available = not show_results and live_stage is not None and live_stage.id == stage_obj.id
 
     return render_template(
         "events/stage.html",
@@ -256,42 +251,7 @@ def stage(event_id: int, stage_id: int):
         show_results=show_results,
         user_result=user_result,
         rider_history=rider_history,
-        live_available=live_available,
     )
-
-
-@events_bp.route("/events/<int:event_id>/stages/<int:stage_id>/live-view")
-@login_required
-def stage_live_view(event_id: int, stage_id: int):
-    event = Event.query.get_or_404(event_id)
-    stage_obj = Stage.query.filter_by(id=stage_id, event_id=event.id).first_or_404()
-    live_stage = event.live_stage(timezone_name=current_app.config["APP_TIMEZONE"])
-    if live_stage is None or live_stage.id != stage_obj.id or stage_obj.has_ranked_result():
-        abort(404)
-
-    status_code = 200
-    try:
-        html = fetch_live_embed_html(stage_obj)
-    except (RequestException, RuntimeError) as exc:
-        current_app.logger.warning("PCS LiveStats fetch failed for stage %s: %s", stage_obj.id, exc)
-        status_code = 502
-        html = render_template(
-            "events/live_embed_error.html",
-            message=f"PCS LiveStats is tijdelijk niet bereikbaar: {exc}",
-        )
-
-    response = current_app.make_response((html, status_code))
-    response.headers["Cache-Control"] = "no-store"
-    response.headers["Content-Security-Policy"] = (
-        "default-src 'none'; "
-        "style-src 'unsafe-inline' https://www.procyclingstats.com https://code.jquery.com; "
-        "img-src data: https://www.procyclingstats.com; "
-        "font-src https://www.procyclingstats.com https://fonts.gstatic.com data:; "
-        "frame-ancestors 'self'; form-action 'none';"
-    )
-    response.headers["Referrer-Policy"] = "no-referrer"
-    response.headers["X-Frame-Options"] = "SAMEORIGIN"
-    return response
 
 
 @events_bp.route("/events/<int:event_id>/leaderboard")

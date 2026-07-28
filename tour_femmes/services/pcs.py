@@ -7,9 +7,8 @@ from threading import Lock
 from time import monotonic, sleep
 from typing import Callable
 from urllib.parse import urljoin, urlparse
+import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
-from curl_cffi.requests import Response, Session
-from curl_cffi.requests.exceptions import HTTPError, RequestException
 from flask import current_app, has_app_context
 
 from tour_femmes import db
@@ -34,6 +33,11 @@ NON_RIDER_LINK_PARTS = {"results", "program", "h2h", "more", "statistics"}
 DEFAULT_PCS_REQUEST_DELAY_SECONDS = 4.0
 DEFAULT_PCS_MAX_RETRIES = 2
 DEFAULT_PCS_429_BACKOFF_SECONDS = 10.0
+DEFAULT_PCS_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/126.0 Safari/537.36"
+)
 PCS_LIVE_EMBED_CACHE_SECONDS = 20.0
 CLASSIFICATION_URL_SUFFIXES = {
     "gc": "gc",
@@ -143,7 +147,7 @@ class LiveUpdateItem:
 
 
 class PcsClient:
-    """Rate-limited PCS client backed by a persistent curl_cffi session."""
+    """Rate-limited PCS client backed by a persistent requests session."""
 
     def __init__(
         self,
@@ -173,14 +177,17 @@ class PcsClient:
             else config.get("PCS_429_BACKOFF_SECONDS", DEFAULT_PCS_429_BACKOFF_SECONDS)
         )
         self.rate_limited = False
-        self.session: Session = Session(
-            impersonate=config.get("PCS_CURL_CFFI_IMPERSONATE", "chrome"),
-            headers={
+        self.session: requests.Session = requests.Session()
+        self.session.headers.update(
+            {
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                 "Accept-Language": config.get(
                     "PCS_ACCEPT_LANGUAGE",
-                    "en-US,en;q=0.9",
+                    "en-US,en;q=0.9,nl;q=0.8",
                 ),
-            },
+                "Connection": "close",
+                "User-Agent": config.get("PCS_USER_AGENT", DEFAULT_PCS_USER_AGENT),
+            }
         )
 
     def get_soup(self, url: str) -> BeautifulSoup:
@@ -191,13 +198,13 @@ class PcsClient:
             try:
                 response = self.session.get(url, timeout=self.timeout)
                 self.last_request_at = monotonic()
-            except RequestException as exc:
+            except requests.RequestException as exc:
                 self.last_request_at = monotonic()
-                raise RequestException(f"PCS-verzoek naar {url} mislukt: {exc}") from exc
+                raise requests.RequestException(f"PCS-verzoek naar {url} mislukt: {exc}") from exc
             if response.status_code == 429:
                 self.rate_limited = True
                 if attempt == self.max_retries - 1:
-                    raise HTTPError(
+                    raise requests.HTTPError(
                         (
                             "PCS rate-limit bereikt (429). Wacht een paar minuten en probeer opnieuw; "
                             "deze app verlaagt automatisch het tempo voor volgende PCS-verzoeken."
@@ -224,7 +231,7 @@ class PcsClient:
             sleep(self.request_delay_seconds - elapsed)
 
 
-def retry_after_seconds(response: Response, attempt: int, base_backoff: float = DEFAULT_PCS_429_BACKOFF_SECONDS) -> float:
+def retry_after_seconds(response: requests.Response, attempt: int, base_backoff: float = DEFAULT_PCS_429_BACKOFF_SECONDS) -> float:
     retry_after = response.headers.get("Retry-After")
     if retry_after and retry_after.isdigit():
         return min(float(retry_after), 180.0)
@@ -465,7 +472,7 @@ def update_team_details(client: PcsClient, team: Team) -> bool:
         return False
     try:
         soup = client.get_soup(team.pcs_url)
-    except RequestException:
+    except requests.RequestException:
         return False
 
     team.image_url = parse_team_image_url(soup, client) or team.image_url
@@ -510,7 +517,7 @@ def parse_event_stages(
             progress(index - 1, total, "Etappes", f"Etappe {number} ophalen.")
         try:
             parsed.append(parse_stage_page(client, stage_urls[number], number))
-        except HTTPError as exc:
+        except requests.HTTPError as exc:
             if exc.response is not None and exc.response.status_code == 429:
                 parsed.append(minimal_parsed_stage(number, stage_urls[number]))
                 if progress:
@@ -617,7 +624,7 @@ def parse_startlist(soup: BeautifulSoup, base_url: str) -> list[ParsedRider]:
 def update_rider_details(client: PcsClient, rider: Rider) -> bool:
     try:
         soup = client.get_soup(rider.pcs_url)
-    except RequestException:
+    except requests.RequestException:
         return False
 
     text_lines = [clean_text(line) for line in soup.get_text("\n", strip=True).splitlines()]
@@ -678,7 +685,7 @@ def import_stage_classifications(stage: Stage, client: PcsClient) -> int:
         url = f"{stage.pcs_url}-{suffix}"
         try:
             soup = client.get_soup(url)
-        except HTTPError as exc:
+        except requests.HTTPError as exc:
             # PCS responds with 500 (rather than 404) for classification tabs
             # that do not exist for a particular race. Keep classifications
             # independent so one missing jersey never rolls back valid GC data.
@@ -1116,7 +1123,7 @@ def fetch_rider_grand_tour_results(
             continue
         try:
             stats_soup = client.get_soup(client.absolute_url(f"rider-in-race/{rider.pcs_slug}/{race_slug}"))
-        except RequestException:
+        except requests.RequestException:
             continue
 
         yearly_results = parse_rider_in_race_results(stats_soup)

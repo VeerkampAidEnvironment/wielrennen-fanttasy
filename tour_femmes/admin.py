@@ -2,23 +2,30 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from functools import wraps
+from pathlib import Path
+from tempfile import NamedTemporaryFile
 from threading import Lock, Thread
 from time import monotonic
 from uuid import uuid4
 
 import requests
 from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, session, url_for
+from flask_login import current_user, logout_user
 
 from tour_femmes import db
-from tour_femmes.models import Event, EventRider, Stage
+from tour_femmes.models import Event, EventRider, Stage, User
+from tour_femmes.services.deletion import delete_event_game, delete_user_account
 from tour_femmes.services.pcs import (
     PcsClient,
     enrich_missing_profiles,
-    fetch_live_embed_html,
     import_stage_results,
     initialize_event_from_pcs,
     normalize_event_reference,
     sync_startlist,
+)
+from tour_femmes.services.pcs_database_import import (
+    PcsDatabaseImportError,
+    import_pcs_database,
 )
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -111,7 +118,120 @@ def dashboard():
         return redirect(url_for("admin.event_detail", event_id=event.id))
 
     events = Event.query.order_by(Event.created_at.desc()).all()
-    return render_template("admin/dashboard.html", events=events)
+    return render_template("admin/dashboard.html", events=events, user_count=User.query.count())
+
+
+@admin_bp.route("/import-pcs-database", methods=["POST"])
+@admin_required
+def import_pcs_database_upload():
+    if _direct_pcs_imports_enabled():
+        flash(
+            "Database-upload is alleen bedoeld voor de online omgeving. "
+            "Werk PCS-gegevens hier lokaal rechtstreeks bij.",
+            "warning",
+        )
+        return redirect(url_for("admin.dashboard"))
+
+    if request.form.get("confirm_pcs_only") != "1":
+        flash("Bevestig eerst dat alleen koersdata wordt geïmporteerd.", "warning")
+        return redirect(url_for("admin.dashboard"))
+
+    upload = request.files.get("database")
+    if not upload or not upload.filename:
+        flash("Kies de lokale SQLite-database om te uploaden.", "danger")
+        return redirect(url_for("admin.dashboard"))
+
+    max_bytes = int(current_app.config.get("PCS_DATABASE_UPLOAD_MAX_BYTES", 64 * 1024 * 1024))
+    temporary_path: Path | None = None
+    try:
+        with NamedTemporaryFile(prefix="pcs-import-", suffix=".sqlite3", delete=False) as temporary:
+            temporary_path = Path(temporary.name)
+            total_bytes = 0
+            while chunk := upload.stream.read(1024 * 1024):
+                total_bytes += len(chunk)
+                if total_bytes > max_bytes:
+                    raise PcsDatabaseImportError(
+                        f"Het databasebestand is groter dan de limiet van {max_bytes // (1024 * 1024)} MB."
+                    )
+                temporary.write(chunk)
+
+        report = import_pcs_database(temporary_path)
+        db.session.commit()
+        flash(
+            "Lokale koersdata veilig geïmporteerd. " + report.summary()
+            + " Gebruikers, deelnames, teamselecties en etappeselecties zijn niet ingelezen of overschreven.",
+            "success",
+        )
+    except PcsDatabaseImportError as exc:
+        db.session.rollback()
+        flash(f"Database-import geweigerd: {exc}", "danger")
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Import van lokale PCS-database mislukt")
+        flash(
+            "Database-import mislukt. Er is niets opgeslagen; controleer de serverlog voor details.",
+            "danger",
+        )
+    finally:
+        if temporary_path:
+            temporary_path.unlink(missing_ok=True)
+    return redirect(url_for("admin.dashboard"))
+
+
+@admin_bp.route("/events/<int:event_id>/rename", methods=["POST"])
+@admin_required
+def rename_event(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    name = request.form.get("name", "").strip()
+    if not name:
+        flash("Koersnaam is verplicht.", "danger")
+        return redirect(request.referrer or url_for("admin.dashboard"))
+
+    event.name = name
+    db.session.commit()
+    flash("Koersnaam opgeslagen.", "success")
+    return redirect(request.referrer or url_for("admin.event_detail", event_id=event.id))
+
+
+@admin_bp.route("/events/<int:event_id>/delete", methods=["POST"])
+@admin_required
+def delete_event(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    confirmation = request.form.get("confirm_name", "").strip()
+    if confirmation not in {event.name, event.slug}:
+        flash("Typ de koersnaam exact over om deze koers te verwijderen.", "danger")
+        return redirect(request.referrer or url_for("admin.dashboard"))
+
+    event_name = event.name
+    delete_event_game(event)
+    db.session.commit()
+    flash(f"Koers '{event_name}' is verwijderd.", "success")
+    return redirect(url_for("admin.dashboard"))
+
+
+@admin_bp.route("/users")
+@admin_required
+def users():
+    users = User.query.order_by(User.username).all()
+    return render_template("admin/users.html", users=users)
+
+
+@admin_bp.route("/users/<int:user_id>/delete", methods=["POST"])
+@admin_required
+def delete_user(user_id: int):
+    user = User.query.get_or_404(user_id)
+    confirmation = request.form.get("confirm_username", "").strip()
+    if confirmation != user.username:
+        flash("Typ de gebruikersnaam exact over om deze gebruiker te verwijderen.", "danger")
+        return redirect(url_for("admin.users"))
+
+    username = user.username
+    if current_user.is_authenticated and current_user.id == user.id:
+        logout_user()
+    delete_user_account(user)
+    db.session.commit()
+    flash(f"Gebruiker '{username}' is verwijderd.", "success")
+    return redirect(url_for("admin.users"))
 
 
 @admin_bp.route("/events/<int:event_id>")
@@ -140,6 +260,8 @@ def event_detail(event_id: int):
 @admin_required
 def initialize_event(event_id: int):
     event = Event.query.get_or_404(event_id)
+    if blocked := _direct_pcs_blocked_response(event):
+        return blocked
     if _wants_json():
         job = start_admin_job(
             title="Etappes laden uit PCS",
@@ -162,6 +284,8 @@ def initialize_event(event_id: int):
 @admin_required
 def sync_event_startlist(event_id: int):
     event = Event.query.get_or_404(event_id)
+    if blocked := _direct_pcs_blocked_response(event):
+        return blocked
     if _wants_json():
         job = start_admin_job(
             title="Startlijst synchroniseren",
@@ -203,6 +327,8 @@ def sync_event_startlist(event_id: int):
 @admin_required
 def enrich_event_profiles(event_id: int):
     event = Event.query.get_or_404(event_id)
+    if blocked := _direct_pcs_blocked_response(event):
+        return blocked
     if _wants_json():
         job = start_admin_job(
             title="Ontbrekende rennerprofielen ophalen",
@@ -229,6 +355,8 @@ def enrich_event_profiles(event_id: int):
 @admin_required
 def pcs_diagnostics(event_id: int):
     event = Event.query.get_or_404(event_id)
+    if blocked := _direct_pcs_blocked_response(event):
+        return blocked
     results = run_pcs_diagnostics(event)
     ok = all(result["ok"] for result in results)
     for result in results:
@@ -277,26 +405,12 @@ def prices(event_id: int):
     return render_template("admin/prices.html", event=event, riders=riders)
 
 
-@admin_bp.route("/stages/<int:stage_id>/import-live", methods=["POST"])
-@admin_required
-def import_live(stage_id: int):
-    stage = Stage.query.get_or_404(stage_id)
-    live_stage = stage.event.live_stage(timezone_name=current_app.config["APP_TIMEZONE"])
-    if live_stage is None or live_stage.id != stage.id:
-        flash("LiveStats is alleen beschikbaar voor de etappe van vandaag.", "warning")
-        return redirect(url_for("events.stage", event_id=stage.event_id, stage_id=stage.id))
-    try:
-        fetch_live_embed_html(stage, force_refresh=True)
-        flash("PCS LiveStats is ververst.", "success")
-    except (requests.RequestException, RuntimeError) as exc:
-        flash(f"PCS live-import mislukt: {exc}", "danger")
-    return redirect(url_for("events.stage", event_id=stage.event_id, stage_id=stage.id))
-
-
 @admin_bp.route("/stages/<int:stage_id>/import-results", methods=["POST"])
 @admin_required
 def import_results(stage_id: int):
     stage = Stage.query.get_or_404(stage_id)
+    if blocked := _direct_pcs_blocked_response(stage.event, stage):
+        return blocked
     if not stage.is_locked():
         flash("Een uitslag kan pas worden geladen nadat de etappe is gestart.", "warning")
         return redirect(url_for("events.stage", event_id=stage.event_id, stage_id=stage.id))
@@ -323,8 +437,6 @@ def run_pcs_diagnostics(event: Event) -> list[dict[str, object]]:
         ("Startlijst", f"{event.pcs_url}/startlist"),
     ]
     first_stage = event.first_stage()
-    if first_stage and first_stage.live_url:
-        urls.append(("LiveStats", first_stage.live_url))
     if first_stage and first_stage.profile_image_url:
         urls.append(("Afbeelding", first_stage.profile_image_url))
 
@@ -481,3 +593,25 @@ def _wants_json() -> bool:
 
 def interactive_pcs_client() -> PcsClient:
     return PcsClient(timeout=15, request_delay_seconds=2.0, max_retries=2, backoff_seconds=20)
+
+
+def _direct_pcs_imports_enabled() -> bool:
+    configured = current_app.config.get("PCS_DIRECT_IMPORTS_ENABLED")
+    if configured is not None:
+        return bool(configured)
+    return db.engine.dialect.name == "sqlite"
+
+
+def _direct_pcs_blocked_response(event: Event, stage: Stage | None = None):
+    if _direct_pcs_imports_enabled():
+        return None
+    message = (
+        "Directe PCS-imports zijn op deze omgeving uitgeschakeld. "
+        "Laad de gegevens lokaal en upload daarna de lokale database via het adminoverzicht."
+    )
+    if _wants_json():
+        return jsonify({"ok": False, "message": message}), 403
+    flash(message, "warning")
+    if stage:
+        return redirect(url_for("events.stage", event_id=event.id, stage_id=stage.id))
+    return redirect(url_for("admin.event_detail", event_id=event.id))

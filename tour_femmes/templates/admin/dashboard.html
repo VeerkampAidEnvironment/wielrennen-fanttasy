@@ -8,6 +8,40 @@
   </div>
 </section>
 
+{% if not pcs_direct_imports_enabled %}
+<section class="admin-database-import">
+  <div>
+    <p class="eyebrow">Lokale synchronisatie</p>
+    <h2>Koersdata naar de online database</h2>
+    <p class="muted">
+      Upload hier <strong>instance/tour_femmes.sqlite3</strong> nadat je lokaal etappes,
+      startlijsten, rennerprofielen of uitslagen uit PCS hebt geladen.
+    </p>
+    <p class="database-import-safety">
+      Alleen koersen, etappes, ploegen, renners, prijzen, startlijsten en uitslagen worden verwerkt.
+      Accounts, deelnames, teamselecties en etappeselecties blijven onaangeraakt.
+    </p>
+  </div>
+  <form
+    class="database-import-form"
+    method="post"
+    action="{{ url_for('admin.import_pcs_database_upload') }}"
+    enctype="multipart/form-data"
+  >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>
+      Lokale SQLite-database
+      <input name="database" type="file" accept=".sqlite,.sqlite3,.db,application/vnd.sqlite3" required>
+    </label>
+    <label class="database-import-confirm">
+      <input name="confirm_pcs_only" type="checkbox" value="1" required>
+      Ik begrijp dat dit uitsluitend koersdata samenvoegt.
+    </label>
+    <button type="submit" class="primary-button">Koersdata uploaden</button>
+  </form>
+</section>
+{% endif %}
+
 <section class="admin-grid">
   <form class="admin-form" method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -42,13 +76,39 @@
   </form>
 
   <div>
-    <h2>Bestaande koersen</h2>
-    <div class="simple-list">
+    <div class="admin-management-head">
+      <div>
+        <h2>Bestaande koersen</h2>
+        <p class="muted">{{ events|length }} koersen actief in beheer.</p>
+      </div>
+      <a class="secondary-button" href="{{ url_for('admin.users') }}">Gebruikers beheren ({{ user_count }})</a>
+    </div>
+    <div class="admin-management-list">
       {% for event in events %}
-        <a href="{{ url_for('admin.event_detail', event_id=event.id) }}">
-          <strong>{{ event.name }}</strong>
-          <span>{{ event.year }} · {{ event.slug }}</span>
-        </a>
+        <article class="admin-management-item">
+          <header>
+            <a href="{{ url_for('admin.event_detail', event_id=event.id) }}">
+              <strong>{{ event.name }}</strong>
+              <span>{{ event.year }} &middot; {{ event.slug }}</span>
+            </a>
+          </header>
+          <form class="inline-edit-form" method="post" action="{{ url_for('admin.rename_event', event_id=event.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label>
+              Naam wijzigen
+              <input name="name" value="{{ event.name }}" required>
+            </label>
+            <button type="submit" class="secondary-button compact-button">Opslaan</button>
+          </form>
+          <form class="inline-edit-form danger-inline-form" method="post" action="{{ url_for('admin.delete_event', event_id=event.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label>
+              Koers verwijderen
+              <input name="confirm_name" placeholder="Typ {{ event.name }}" autocomplete="off" required>
+            </label>
+            <button type="submit" class="danger-button compact-button">Verwijderen</button>
+          </form>
+        </article>
       {% else %}
         <p class="muted">Nog geen koersen aangemaakt.</p>
       {% endfor %}

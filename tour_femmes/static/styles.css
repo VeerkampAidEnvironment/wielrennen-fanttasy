@@ -213,7 +213,8 @@ select:focus {
 }
 
 .primary-button,
-.secondary-button {
+.secondary-button,
+.danger-button {
   min-height: 42px;
   display: inline-flex;
   align-items: center;
@@ -245,6 +246,17 @@ select:focus {
 
 .secondary-button:hover {
   background: var(--surface-strong);
+  transform: translateY(-1px);
+}
+
+.danger-button {
+  background: var(--danger);
+  color: #fff;
+}
+
+.danger-button:hover {
+  background: #7f1d15;
+  color: #fff;
   transform: translateY(-1px);
 }
 
@@ -1470,154 +1482,6 @@ select:focus {
   font-weight: 800;
 }
 
-.pcs-live-panel {
-  margin-bottom: 28px;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--surface);
-  box-shadow: var(--shadow-soft);
-}
-
-.pcs-live-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 18px 20px;
-  border-bottom: 1px solid var(--line);
-  background:
-    linear-gradient(100deg, rgba(23, 108, 76, 0.08), transparent 42%),
-    var(--surface);
-}
-
-.pcs-live-head h2,
-.pcs-live-head p {
-  margin: 0;
-}
-
-.pcs-live-head h2 {
-  font-size: 1.25rem;
-}
-
-.pcs-live-head p {
-  margin-top: 3px;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-.pcs-live-kicker {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-  color: var(--green);
-  font-size: 0.75rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.live-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 999px;
-  background: #20a464;
-  box-shadow: 0 0 0 5px rgba(32, 164, 100, 0.14);
-  animation: live-pulse 1.8s ease-out infinite;
-}
-
-@keyframes live-pulse {
-  0%,
-  40% {
-    box-shadow: 0 0 0 4px rgba(32, 164, 100, 0.18);
-  }
-  100% {
-    box-shadow: 0 0 0 10px rgba(32, 164, 100, 0);
-  }
-}
-
-.pcs-live-window {
-  position: relative;
-  min-height: 980px;
-  background: #fff;
-}
-
-.pcs-live-frame {
-  display: block;
-  width: 100%;
-  height: 980px;
-  border: 0;
-  background: #fff;
-  opacity: 0;
-  transition: opacity 180ms ease;
-}
-
-.pcs-live-loading {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: var(--muted);
-  background: #f7f8f6;
-  font-weight: 800;
-}
-
-.loading-spinner {
-  width: 20px;
-  height: 20px;
-  border: 3px solid #d9e4da;
-  border-top-color: var(--green);
-  border-radius: 999px;
-  animation: live-spin 700ms linear infinite;
-}
-
-@keyframes live-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.pcs-live-window.loaded .pcs-live-frame {
-  opacity: 1;
-}
-
-.pcs-live-window.loaded .pcs-live-loading {
-  display: none;
-}
-
-.live-waiting-state {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-height: 150px;
-  padding: 28px;
-  background:
-    radial-gradient(circle at 8% 50%, rgba(33, 104, 143, 0.09), transparent 24%),
-    #f8faf8;
-}
-
-.live-waiting-state p {
-  margin: 4px 0 0;
-  color: var(--muted);
-}
-
-.live-waiting-icon {
-  display: grid;
-  flex: 0 0 auto;
-  width: 46px;
-  height: 46px;
-  place-items: center;
-  border: 1px solid #cad9d0;
-  border-radius: 999px;
-  background: #fff;
-  color: var(--green);
-  font-size: 1.5rem;
-}
-
 .split-layout.stage-selection-only {
   grid-template-columns: 1fr;
 }
@@ -1699,6 +1563,51 @@ select:focus {
   width: 100%;
 }
 
+.admin-database-import {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+  gap: 28px;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 22px;
+  border: 1px solid #b9d0c0;
+  border-left: 5px solid var(--green);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.admin-database-import h2,
+.admin-database-import p {
+  margin-top: 0;
+}
+
+.database-import-safety {
+  margin-bottom: 0;
+  color: #174f38;
+  font-weight: 750;
+}
+
+.database-import-form {
+  display: grid;
+  gap: 12px;
+  padding-left: 24px;
+  border-left: 1px solid var(--line);
+}
+
+.database-import-confirm {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 9px;
+  margin: 0;
+  font-weight: 650;
+}
+
+.database-import-confirm input {
+  margin-top: 3px;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1722,6 +1631,105 @@ select:focus {
 
 .simple-list span {
   color: var(--muted);
+}
+
+.account-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.account-card,
+.admin-management-item,
+.admin-users-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow-soft);
+}
+
+.account-card {
+  display: grid;
+  gap: 4px;
+  padding: 22px;
+}
+
+.account-card h2,
+.admin-management-head h2 {
+  margin: 0;
+}
+
+.danger-zone {
+  border-color: #efb8b0;
+  background: linear-gradient(180deg, #fff7f5 0%, var(--surface) 130px);
+}
+
+.admin-management-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.admin-management-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-management-item {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.event-admin-management {
+  margin-bottom: 24px;
+}
+
+.admin-management-item header {
+  display: grid;
+  gap: 2px;
+}
+
+.admin-management-item header a {
+  display: grid;
+  gap: 2px;
+  color: var(--text);
+}
+
+.admin-management-item header span {
+  color: var(--muted);
+}
+
+.inline-edit-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+  margin: 0;
+}
+
+.inline-edit-form label {
+  margin: 0;
+}
+
+.danger-inline-form {
+  padding-top: 12px;
+  border-top: 1px solid #f1c4be;
+}
+
+.admin-users-panel {
+  overflow-x: auto;
+}
+
+.admin-users-table {
+  box-shadow: none;
+}
+
+.user-delete-form {
+  min-width: 280px;
 }
 
 .stat-strip {
@@ -2727,15 +2735,21 @@ select:focus {
     display: grid;
   }
 
-  .pcs-live-head {
-    align-items: flex-start;
-    flex-direction: column;
+  .admin-management-head,
+  .inline-edit-form {
+    grid-template-columns: 1fr;
+    display: grid;
   }
 
-  .pcs-live-window,
-  .pcs-live-frame {
-    height: 720px;
-    min-height: 720px;
+  .admin-database-import {
+    grid-template-columns: 1fr;
+  }
+
+  .database-import-form {
+    padding-top: 18px;
+    padding-left: 0;
+    border-top: 1px solid var(--line);
+    border-left: 0;
   }
 
   .stage-classification-summary,

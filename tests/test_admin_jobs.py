@@ -62,6 +62,7 @@ def test_admin_event_page_contains_loader_panel():
     assert "Uitslag laden" in html
     assert "/admin/stages/" in html
     assert "PCS verbinding testen" in html
+    assert "Koersdata uploaden" not in html
 
 
 def test_admin_pcs_diagnostics_route_flashes_results(monkeypatch):

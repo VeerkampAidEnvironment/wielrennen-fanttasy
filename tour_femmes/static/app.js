@@ -996,9 +996,4 @@
     window.setInterval(updateDeadlines, 1000);
   }
 
-  document.querySelectorAll("[data-live-frame]").forEach((frame) => {
-    frame.addEventListener("load", () => {
-      frame.closest("[data-live-viewer]")?.classList.add("loaded");
-    });
-  });
 })();

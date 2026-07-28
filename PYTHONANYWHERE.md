@@ -43,6 +43,8 @@ APP_TIMEZONE=Europe/Amsterdam
 AUTO_CREATE_SCHEMA=false
 INLINE_ADMIN_JOBS=true
 PCS_PROXY_IMAGES=false
+PCS_DIRECT_IMPORTS_ENABLED=false
+PCS_DATABASE_UPLOAD_MAX_BYTES=67108864
 ```
 
 Generate the secret from the Bash console:
@@ -68,22 +70,25 @@ From the repository directory with the virtual environment active:
 flask --app run.py init-db
 ```
 
-To copy the existing local database instead, upload the local file
-`instance/tour_femmes.sqlite3` to:
+Do not replace the production MySQL database with the local SQLite database.
+Accounts and game choices live only in production once friends start playing.
 
-`/home/YOUR_USERNAME/tour_femmes_import.sqlite3`
+The normal PCS update flow is:
 
-Then run:
+1. Run the app locally.
+2. Load or refresh PCS stages, startlists, rider profiles, and results in the
+   local admin.
+3. Open the production admin dashboard.
+4. In **Koersdata naar de online database**, upload the local file
+   `instance/tour_femmes.sqlite3`.
+5. Wait for the success message before reloading the web app.
 
-```bash
-flask --app run.py import-sqlite --source ~/tour_femmes_import.sqlite3
-flask --app run.py db-stats
-rm ~/tour_femmes_import.sqlite3
-```
-
-The import refuses to run when the target contains any records, preventing an
-accidental duplicate or overwrite. Remove the uploaded SQLite copy only after
-the table counts have been checked.
+The upload reads only events, stages, teams, riders, event startlists, stage
+results, and classification results. It never reads or replaces users,
+participations, team selections, stage lineups, user scores, or awards from the
+local database. Existing production IDs are preserved. After result imports,
+scores and awards are recalculated from the production users' own lineups. The
+whole merge is committed as one transaction; a failure rolls it back.
 
 Do not run `seed-demo` for the real site unless demo accounts and data are
 actually wanted.
@@ -125,15 +130,13 @@ pip install -r requirements.txt
 Then reload the web app from PythonAnywhere's **Web** tab. Database content is
 stored separately in MySQL and is not replaced by `git pull`.
 
-After a reload, open an admin event page and click **PCS verbinding testen**.
-If a PCS request still fails, the flash message shows the failing endpoint and
-the PythonAnywhere error log contains the full request error.
+After a reload, the direct PCS buttons should be absent from production event
+admin pages. The database upload remains available on the admin dashboard.
 
 ## Important production notes
 
-- PythonAnywhere does not support background threads in web workers. Production
-  uses `INLINE_ADMIN_JOBS=true`, so large PCS imports run inside the admin
-  request. Use rider-detail imports sparingly.
+- Production uses `PCS_DIRECT_IMPORTS_ENABLED=false`; PCS requests and profile
+  jobs run only in the local app.
 - Keep `PCS_BASE_URL=https://www.procyclingstats.com`. This exact host is on
   the PythonAnywhere allowlist. `PCS_PROXY_IMAGES=false` lets visitors load PCS
   images directly in their browser, avoiding slow server-side image proxy
@@ -141,4 +144,6 @@ the PythonAnywhere error log contains the full request error.
 - PythonAnywhere closes idle MySQL connections after five minutes. The app uses
   SQLAlchemy connection pre-ping and a 280-second recycle interval.
 - Keep `.env` and database exports outside Git.
+- The uploaded SQLite file is stored only in a temporary server file and is
+  deleted after the import attempt.
 - Back up MySQL regularly with `mysqldump` from a PythonAnywhere Bash console.

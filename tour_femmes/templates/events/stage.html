@@ -72,14 +72,8 @@
     <p class="eyebrow">{{ event.name }}</p>
     <h1>Etappe {{ stage.number }}: {{ stage.name }}</h1>
   </div>
-  {% if session.get('admin_ok') %}
+  {% if session.get('admin_ok') and pcs_direct_imports_enabled %}
     <div class="admin-stage-actions">
-      {% if live_available %}
-        <form method="post" action="{{ url_for('admin.import_live', stage_id=stage.id) }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="secondary-button">Live verversen</button>
-        </form>
-      {% endif %}
       <form method="post" action="{{ url_for('admin.import_results', stage_id=stage.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="primary-button" {% if not locked %}disabled title="Kan pas nadat de etappe is gestart"{% endif %}>
@@ -110,61 +104,6 @@
   <section class="stage-profile-panel">
     <h2>Etappeprofiel</h2>
     <img class="stage-profile" src="{{ pcs_image_url(stage.profile_image_url) }}" alt="Profiel van etappe {{ stage.number }}" decoding="async" referrerpolicy="no-referrer">
-  </section>
-{% endif %}
-
-{% if not show_results %}
-  <section class="pcs-live-panel">
-    <div class="pcs-live-head">
-      <div>
-        <div class="pcs-live-kicker">
-          {% if live_available %}
-            <span class="live-dot" aria-hidden="true"></span>
-            Live via ProCyclingStats
-          {% else %}
-            Live viewer
-          {% endif %}
-        </div>
-        <h2>Koerssituatie en tijdlijn</h2>
-        {% if live_available %}
-          <p>De echte PCS LiveStats-pagina, automatisch iedere 30 seconden ververst.</p>
-        {% else %}
-          <p>Deze viewer blijft leeg tot de wedstrijddag van deze etappe.</p>
-        {% endif %}
-      </div>
-      {% if live_available and stage.live_url %}
-        <a class="secondary-button" href="{{ stage.live_url }}" target="_blank" rel="noopener noreferrer">Open volledig op PCS</a>
-      {% endif %}
-    </div>
-
-    {% if live_available %}
-      <div class="pcs-live-window" data-live-viewer>
-        <div class="pcs-live-loading" data-live-loading>
-          <span class="loading-spinner" aria-hidden="true"></span>
-          PCS LiveStats laden…
-        </div>
-        <iframe
-          class="pcs-live-frame"
-          data-live-frame
-          src="{{ url_for('events.stage_live_view', event_id=event.id, stage_id=stage.id) }}"
-          title="PCS LiveStats voor etappe {{ stage.number }}"
-          loading="eager"
-          referrerpolicy="no-referrer"
-          sandbox="allow-popups allow-popups-to-escape-sandbox"
-        ></iframe>
-      </div>
-    {% else %}
-      <div class="live-waiting-state">
-        <span class="live-waiting-icon" aria-hidden="true">◷</span>
-        <div>
-          <strong>Nog niet beschikbaar</strong>
-          <p>
-            Etappe {{ stage.number }} start
-            {{ stage.starts_at.strftime('op %d-%m-%Y om %H:%M') if stage.starts_at else 'op een nog onbekend tijdstip' }}.
-          </p>
-        </div>
-      </div>
-    {% endif %}
   </section>
 {% endif %}
 

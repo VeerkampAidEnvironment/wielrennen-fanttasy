@@ -16,6 +16,30 @@
   <div><strong>{{ frozen_count }}</strong><span>Bevroren renners</span></div>
 </section>
 
+<section class="admin-management-item event-admin-management">
+  <header>
+    <strong>Koers beheren</strong>
+    <span>{{ event.year }} &middot; {{ event.slug }}</span>
+  </header>
+  <form class="inline-edit-form" method="post" action="{{ url_for('admin.rename_event', event_id=event.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>
+      Naam wijzigen
+      <input name="name" value="{{ event.name }}" required>
+    </label>
+    <button type="submit" class="secondary-button compact-button">Opslaan</button>
+  </form>
+  <form class="inline-edit-form danger-inline-form" method="post" action="{{ url_for('admin.delete_event', event_id=event.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>
+      Koers verwijderen
+      <input name="confirm_name" placeholder="Typ {{ event.name }}" autocomplete="off" required>
+    </label>
+    <button type="submit" class="danger-button compact-button">Verwijderen</button>
+  </form>
+</section>
+
+{% if pcs_direct_imports_enabled %}
 <section class="admin-actions">
   <form method="post" action="{{ url_for('admin.initialize_event', event_id=event.id) }}" data-admin-job-form data-job-title="Etappes laden uit PCS">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -28,7 +52,7 @@
   </form>
   <form method="post" action="{{ url_for('admin.enrich_event_profiles', event_id=event.id) }}" data-admin-job-form data-job-title="Ontbrekende rennerprofielen ophalen">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <small class="muted">Haalt maximaal 10 ontbrekende profielen per keer op. Dit is bewust losgekoppeld van de snelle startlijstcontrole.</small>
+    <small class="muted">Haalt ontbrekende profielen op. Dit is bewust losgekoppeld van de snelle startlijstcontrole.</small>
     <button type="submit" class="secondary-button">Ontbrekende profielen ophalen</button>
   </form>
   <form method="post" action="{{ url_for('admin.pcs_diagnostics', event_id=event.id) }}">
@@ -53,6 +77,16 @@
   <p class="muted" data-admin-job-message>Starten...</p>
   <button type="button" class="secondary-button hidden" data-admin-job-refresh>Pagina vernieuwen</button>
 </section>
+{% else %}
+<section class="notice">
+  Directe PCS-imports zijn online uitgeschakeld. Werk deze koers lokaal bij en upload daarna de
+  lokale SQLite-database via het adminoverzicht.
+  <a href="{{ url_for('admin.dashboard') }}">Naar database-upload</a>
+</section>
+<section class="admin-actions">
+  <a class="secondary-button" href="{{ url_for('admin.prices', event_id=event.id) }}">Rennerprijzen beheren</a>
+</section>
+{% endif %}
 
 <section class="split-layout">
   <div>
@@ -85,12 +119,14 @@
             <td>
               <div class="table-actions">
                 <a class="secondary-button compact-button" href="{{ url_for('events.stage', event_id=event.id, stage_id=stage.id) }}">Open</a>
-                <form method="post" action="{{ url_for('admin.import_results', stage_id=stage.id) }}">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="secondary-button compact-button" {% if not stage.is_locked() %}disabled title="Kan pas nadat de etappe is gestart"{% endif %}>
-                    Uitslag laden
-                  </button>
-                </form>
+                {% if pcs_direct_imports_enabled %}
+                  <form method="post" action="{{ url_for('admin.import_results', stage_id=stage.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="secondary-button compact-button" {% if not stage.is_locked() %}disabled title="Kan pas nadat de etappe is gestart"{% endif %}>
+                      Uitslag laden
+                    </button>
+                  </form>
+                {% endif %}
               </div>
             </td>
           </tr>

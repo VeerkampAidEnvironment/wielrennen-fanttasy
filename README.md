@@ -10,9 +10,9 @@ A Flask fantasy cycling app for private games around ProCyclingStats-backed cycl
 - Per-stage lineups, defaulting to 6 riders from an 11-rider event team, with one captain for double points.
 - Weighted daily and final bonuses for the general, points, mountains, and youth classifications, including leader/winner teammate bonuses.
 - Automatic lineup locking when a stage start time passes.
-- Stage view that embeds a safe, auto-refreshing copy of the current day's PCS LiveStats dashboard until ranked results are imported.
+- Stage view with the route profile, the user's lineup, and imported results.
 - Event leaderboard with total scores, latest-stage scores, per-stage columns, a CSS yellow jersey marker for the current leader, and stage-win badges.
-- Admin pages protected by a simple password for creating events, initializing stages from PCS, syncing startlists, freezing removed riders, assigning prices, and importing live/results.
+- Admin pages protected by a simple password for creating events, managing users, loading PCS data locally, and safely merging local race data into production.
 - A database model covering users, events, stages, teams, riders, selections, lineups, results, scores, live updates, and awards.
 
 ## Setup
@@ -66,8 +66,9 @@ For the production MySQL setup, WSGI configuration, and update procedure, see
 4. Click `Sync current startlist`.
 5. Open `Assign rider prices`, price every active rider, and save.
 6. Users can now join the event and make selections.
-7. On the stage day, the LiveStats viewer refreshes automatically; admins can also force an immediate refresh.
-8. Once PCS has ranked results, admins can import results and scores are recalculated.
+7. Once PCS has ranked results, import them in the local admin; scores are recalculated locally.
+8. Open the production admin and upload `instance/tour_femmes.sqlite3`.
+9. Production merges only race data and recalculates scores from the online users' lineups.
 
 ## Notes
 
@@ -75,3 +76,5 @@ For the production MySQL setup, WSGI configuration, and update procedure, see
 - Event `team_size` and `lineup_size` are stored on each event. Defaults are 11 and 6.
 - PCS scraping is best-effort around their current URL patterns and page text. If PCS markup changes, importer errors should be handled in admin rather than silently changing game data.
 - Use PCS responsibly and avoid aggressive automated polling.
+- Direct PCS imports are intended for local development. Set `PCS_DIRECT_IMPORTS_ENABLED=false` in production.
+- The production database upload never reads user, participation, team-selection, or stage-lineup tables from the local SQLite file.
