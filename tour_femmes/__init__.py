@@ -42,7 +42,6 @@ def create_app(config_object: str | None = None) -> Flask:
         return {
             "csrf_token": _csrf_token,
             "pcs_image_url": _pcs_image_url,
-            "pcs_direct_imports_enabled": _pcs_direct_imports_enabled(),
         }
 
     @app.before_request
@@ -86,13 +85,6 @@ def _pcs_image_url(source_url: str | None) -> str:
     ):
         return url_for("media.pcs_image", url=canonical_url)
     return canonical_url
-
-
-def _pcs_direct_imports_enabled() -> bool:
-    configured = current_app.config.get("PCS_DIRECT_IMPORTS_ENABLED")
-    if configured is not None:
-        return bool(configured)
-    return db.engine.dialect.name == "sqlite"
 
 
 def _ensure_schema(app: Flask) -> None:

@@ -33,7 +33,6 @@ class TestConfig:
     TESTING = True
     ADMIN_PASSWORD = "admin"
     PCS_BASE_URL = "https://www.procyclingstats.com"
-    PCS_DIRECT_IMPORTS_ENABLED = False
     PCS_DATABASE_UPLOAD_MAX_BYTES = 8 * 1024 * 1024
     APP_TIMEZONE = "Europe/Amsterdam"
 
@@ -115,7 +114,7 @@ def test_admin_upload_rejects_non_sqlite_file():
     assert "geen geldige SQLite-database" in response.get_data(as_text=True)
 
 
-def test_online_admin_hides_and_blocks_direct_pcs_actions():
+def test_admin_shows_database_upload_and_direct_pcs_actions(monkeypatch):
     app = create_app(__name__ + ".TestConfig")
     with app.app_context():
         event = Event(
@@ -135,20 +134,18 @@ def test_online_admin_hides_and_blocks_direct_pcs_actions():
     dashboard_html = client.get("/admin/").get_data(as_text=True)
 
     assert page.status_code == 200
-    assert "Etappes laden uit PCS" not in html
-    assert "Startlijst snel bijwerken" not in html
-    assert "Naar database-upload" in html
+    assert "Etappes laden uit PCS" in html
+    assert "Startlijst snel bijwerken" in html
     assert "Koersdata uploaden" in dashboard_html
 
-    blocked = client.post(
+    monkeypatch.setattr("tour_femmes.admin.initialize_event_from_pcs", lambda *_args, **_kwargs: 0)
+    allowed = client.post(
         f"/admin/events/{event_id}/initialize",
         data={"csrf_token": "token"},
         follow_redirects=True,
     )
-    assert blocked.status_code == 200
-    assert "Directe PCS-imports zijn op deze omgeving uitgeschakeld" in blocked.get_data(
-        as_text=True
-    )
+    assert allowed.status_code == 200
+    assert "0 etappes geladen uit PCS" in allowed.get_data(as_text=True)
 
 
 def _seed_target_database() -> dict[str, int]:

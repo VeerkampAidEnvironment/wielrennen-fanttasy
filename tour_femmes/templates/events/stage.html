@@ -72,7 +72,7 @@
     <p class="eyebrow">{{ event.name }}</p>
     <h1>Etappe {{ stage.number }}: {{ stage.name }}</h1>
   </div>
-  {% if session.get('admin_ok') and pcs_direct_imports_enabled %}
+  {% if session.get('admin_ok') %}
     <div class="admin-stage-actions">
       <form method="post" action="{{ url_for('admin.import_results', stage_id=stage.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

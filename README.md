@@ -76,5 +76,5 @@ For the production MySQL setup, WSGI configuration, and update procedure, see
 - Event `team_size` and `lineup_size` are stored on each event. Defaults are 11 and 6.
 - PCS scraping is best-effort around their current URL patterns and page text. If PCS markup changes, importer errors should be handled in admin rather than silently changing game data.
 - Use PCS responsibly and avoid aggressive automated polling.
-- Direct PCS imports are intended for local development. Set `PCS_DIRECT_IMPORTS_ENABLED=false` in production.
+- Both direct PCS actions and the database upload are available in every admin environment. On PythonAnywhere, use the database upload whenever PCS rejects a direct request.
 - The production database upload never reads user, participation, team-selection, or stage-lineup tables from the local SQLite file.

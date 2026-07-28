@@ -29,10 +29,6 @@ class Config:
     }
     AUTO_CREATE_SCHEMA = env_bool("AUTO_CREATE_SCHEMA", True)
     INLINE_ADMIN_JOBS = env_bool("INLINE_ADMIN_JOBS", False)
-    PCS_DIRECT_IMPORTS_ENABLED = env_bool(
-        "PCS_DIRECT_IMPORTS_ENABLED",
-        SQLALCHEMY_DATABASE_URI.startswith("sqlite"),
-    )
     PCS_DATABASE_UPLOAD_MAX_BYTES = int(
         os.getenv("PCS_DATABASE_UPLOAD_MAX_BYTES", str(64 * 1024 * 1024))
     )

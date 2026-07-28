@@ -43,7 +43,6 @@ APP_TIMEZONE=Europe/Amsterdam
 AUTO_CREATE_SCHEMA=false
 INLINE_ADMIN_JOBS=true
 PCS_PROXY_IMAGES=false
-PCS_DIRECT_IMPORTS_ENABLED=false
 PCS_DATABASE_UPLOAD_MAX_BYTES=67108864
 ```
 
@@ -130,13 +129,15 @@ pip install -r requirements.txt
 Then reload the web app from PythonAnywhere's **Web** tab. Database content is
 stored separately in MySQL and is not replaced by `git pull`.
 
-After a reload, the direct PCS buttons should be absent from production event
-admin pages. The database upload remains available on the admin dashboard.
+After a reload, both the direct PCS buttons and the database upload are
+available in production admin. If PCS rejects a direct server-side request,
+load the data locally and use the database upload.
 
 ## Important production notes
 
-- Production uses `PCS_DIRECT_IMPORTS_ENABLED=false`; PCS requests and profile
-  jobs run only in the local app.
+- Direct PCS requests remain available in production, but PythonAnywhere may
+  still receive a PCS or Cloudflare 403. The database upload is the reliable
+  fallback for that situation.
 - Keep `PCS_BASE_URL=https://www.procyclingstats.com`. This exact host is on
   the PythonAnywhere allowlist. `PCS_PROXY_IMAGES=false` lets visitors load PCS
   images directly in their browser, avoiding slow server-side image proxy

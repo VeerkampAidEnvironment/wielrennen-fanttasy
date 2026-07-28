@@ -124,14 +124,6 @@ def dashboard():
 @admin_bp.route("/import-pcs-database", methods=["POST"])
 @admin_required
 def import_pcs_database_upload():
-    if _direct_pcs_imports_enabled():
-        flash(
-            "Database-upload is alleen bedoeld voor de online omgeving. "
-            "Werk PCS-gegevens hier lokaal rechtstreeks bij.",
-            "warning",
-        )
-        return redirect(url_for("admin.dashboard"))
-
     if request.form.get("confirm_pcs_only") != "1":
         flash("Bevestig eerst dat alleen koersdata wordt geïmporteerd.", "warning")
         return redirect(url_for("admin.dashboard"))
@@ -260,8 +252,6 @@ def event_detail(event_id: int):
 @admin_required
 def initialize_event(event_id: int):
     event = Event.query.get_or_404(event_id)
-    if blocked := _direct_pcs_blocked_response(event):
-        return blocked
     if _wants_json():
         job = start_admin_job(
             title="Etappes laden uit PCS",
@@ -284,8 +274,6 @@ def initialize_event(event_id: int):
 @admin_required
 def sync_event_startlist(event_id: int):
     event = Event.query.get_or_404(event_id)
-    if blocked := _direct_pcs_blocked_response(event):
-        return blocked
     if _wants_json():
         job = start_admin_job(
             title="Startlijst synchroniseren",
@@ -327,8 +315,6 @@ def sync_event_startlist(event_id: int):
 @admin_required
 def enrich_event_profiles(event_id: int):
     event = Event.query.get_or_404(event_id)
-    if blocked := _direct_pcs_blocked_response(event):
-        return blocked
     if _wants_json():
         job = start_admin_job(
             title="Ontbrekende rennerprofielen ophalen",
@@ -355,8 +341,6 @@ def enrich_event_profiles(event_id: int):
 @admin_required
 def pcs_diagnostics(event_id: int):
     event = Event.query.get_or_404(event_id)
-    if blocked := _direct_pcs_blocked_response(event):
-        return blocked
     results = run_pcs_diagnostics(event)
     ok = all(result["ok"] for result in results)
     for result in results:
@@ -409,8 +393,6 @@ def prices(event_id: int):
 @admin_required
 def import_results(stage_id: int):
     stage = Stage.query.get_or_404(stage_id)
-    if blocked := _direct_pcs_blocked_response(stage.event, stage):
-        return blocked
     if not stage.is_locked():
         flash("Een uitslag kan pas worden geladen nadat de etappe is gestart.", "warning")
         return redirect(url_for("events.stage", event_id=stage.event_id, stage_id=stage.id))
@@ -593,25 +575,3 @@ def _wants_json() -> bool:
 
 def interactive_pcs_client() -> PcsClient:
     return PcsClient(timeout=15, request_delay_seconds=2.0, max_retries=2, backoff_seconds=20)
-
-
-def _direct_pcs_imports_enabled() -> bool:
-    configured = current_app.config.get("PCS_DIRECT_IMPORTS_ENABLED")
-    if configured is not None:
-        return bool(configured)
-    return db.engine.dialect.name == "sqlite"
-
-
-def _direct_pcs_blocked_response(event: Event, stage: Stage | None = None):
-    if _direct_pcs_imports_enabled():
-        return None
-    message = (
-        "Directe PCS-imports zijn op deze omgeving uitgeschakeld. "
-        "Laad de gegevens lokaal en upload daarna de lokale database via het adminoverzicht."
-    )
-    if _wants_json():
-        return jsonify({"ok": False, "message": message}), 403
-    flash(message, "warning")
-    if stage:
-        return redirect(url_for("events.stage", event_id=event.id, stage_id=stage.id))
-    return redirect(url_for("admin.event_detail", event_id=event.id))

@@ -39,7 +39,6 @@
   </form>
 </section>
 
-{% if pcs_direct_imports_enabled %}
 <section class="admin-actions">
   <form method="post" action="{{ url_for('admin.initialize_event', event_id=event.id) }}" data-admin-job-form data-job-title="Etappes laden uit PCS">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -77,16 +76,6 @@
   <p class="muted" data-admin-job-message>Starten...</p>
   <button type="button" class="secondary-button hidden" data-admin-job-refresh>Pagina vernieuwen</button>
 </section>
-{% else %}
-<section class="notice">
-  Directe PCS-imports zijn online uitgeschakeld. Werk deze koers lokaal bij en upload daarna de
-  lokale SQLite-database via het adminoverzicht.
-  <a href="{{ url_for('admin.dashboard') }}">Naar database-upload</a>
-</section>
-<section class="admin-actions">
-  <a class="secondary-button" href="{{ url_for('admin.prices', event_id=event.id) }}">Rennerprijzen beheren</a>
-</section>
-{% endif %}
 
 <section class="split-layout">
   <div>
@@ -119,14 +108,12 @@
             <td>
               <div class="table-actions">
                 <a class="secondary-button compact-button" href="{{ url_for('events.stage', event_id=event.id, stage_id=stage.id) }}">Open</a>
-                {% if pcs_direct_imports_enabled %}
-                  <form method="post" action="{{ url_for('admin.import_results', stage_id=stage.id) }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="secondary-button compact-button" {% if not stage.is_locked() %}disabled title="Kan pas nadat de etappe is gestart"{% endif %}>
-                      Uitslag laden
-                    </button>
-                  </form>
-                {% endif %}
+                <form method="post" action="{{ url_for('admin.import_results', stage_id=stage.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="secondary-button compact-button" {% if not stage.is_locked() %}disabled title="Kan pas nadat de etappe is gestart"{% endif %}>
+                    Uitslag laden
+                  </button>
+                </form>
               </div>
             </td>
           </tr>
