@@ -317,6 +317,15 @@ select:focus {
   gap: 18px;
 }
 
+.event-overview-head {
+  margin-bottom: 18px;
+}
+
+.section-head.event-overview-head h1 {
+  font-size: 2.4rem;
+  line-height: 1.08;
+}
+
 .event-card,
 .empty-state,
 .score-panel {
@@ -479,7 +488,7 @@ select:focus {
 }
 
 .event-card-title {
-  padding: 18px 18px 0;
+  padding: 14px 18px 0;
 }
 
 .event-card-title .eyebrow {
@@ -497,7 +506,7 @@ select:focus {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px 14px;
-  min-height: 116px;
+  min-height: 104px;
   margin: 0 18px;
   padding: 15px 16px;
   border: 1px solid #c7d8ce;
@@ -572,6 +581,8 @@ select:focus {
 }
 
 .event-card-deadline .deadline-state {
+  grid-column: 2;
+  grid-row: 1;
   align-self: start;
   padding: 4px 7px;
   border-radius: 5px;
@@ -645,8 +656,23 @@ select:focus {
 }
 
 @media (max-width: 620px) {
+  .section-head.event-overview-head h1 {
+    font-size: 2rem;
+    overflow-wrap: anywhere;
+  }
+
   .event-card {
     min-height: 0;
+  }
+
+  .event-card .event-card-title h2 {
+    font-size: 1.25rem;
+    overflow-wrap: anywhere;
+  }
+
+  .event-deadline-main strong {
+    font-size: 1.2rem;
+    overflow-wrap: anywhere;
   }
 
   .event-card-status-grid {
