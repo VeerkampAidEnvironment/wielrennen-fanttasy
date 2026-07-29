@@ -9,7 +9,7 @@
     form.querySelectorAll(".rider-card").forEach((card) => {
       const box = card.querySelector('input[name="riders"]');
       card.classList.toggle("selected", Boolean(box && box.checked));
-      card.classList.toggle("in-selected-team", Boolean(box && box.checked));
+      card.classList.remove("in-selected-team");
       if (box) {
         card.setAttribute("aria-pressed", box.checked ? "true" : "false");
       }
@@ -183,9 +183,9 @@
       const matchesSearch = !search || (card.dataset.riderName || "").includes(search);
       const matchesTeam = !team || card.dataset.team === team;
       const matchesPrice = price >= priceRange.min && price <= priceRange.max;
-      const visible = !selected && matchesSearch && matchesTeam && matchesPrice;
+      const visible = matchesSearch && matchesTeam && matchesPrice;
       card.classList.toggle("filtered-out", !visible);
-      if (visible) {
+      if (visible && !selected) {
         visibleCount += 1;
       }
     });
