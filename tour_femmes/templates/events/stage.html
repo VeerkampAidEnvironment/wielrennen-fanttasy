@@ -59,10 +59,10 @@
     {% if not locked %}
       <span class="lineup-card-actions">
         <button type="button" class="mini-action" data-toggle-lineup>{{ 'Verwijderen' if selected else 'Toevoegen' }}</button>
-        <button type="button" class="mini-action captain-action" data-toggle-captain>{{ 'Kopman gekozen' if is_captain else 'Kopman' }}</button>
+        <button type="button" class="mini-action captain-action" data-toggle-captain>{{ 'Kopvrouw gekozen' if is_captain else 'Kopvrouw' }}</button>
       </span>
     {% else %}
-      <span class="lineup-card-status">{{ 'Kopman' if is_captain else 'Geselecteerd' if selected else 'Bank' }}</span>
+      <span class="lineup-card-status">{{ 'Kopvrouw' if is_captain else 'Geselecteerd' if selected else 'Bank' }}</span>
     {% endif %}
   </article>
 {% endmacro %}
@@ -122,7 +122,7 @@
               <h3>Opgestelde renners</h3>
               <p class="muted"><strong data-count>{{ selected_ids|length }}</strong> / {{ event.lineup_size }} renners</p>
             </div>
-            <div class="captain-meter" data-captain-meter>{{ 'Kopman gekozen' if captain_id else 'Geen kopman' }}</div>
+            <div class="captain-meter" data-captain-meter>{{ 'Kopvrouw gekozen' if captain_id else 'Geen Kopvrouw' }}</div>
           </div>
           <div class="lineup-selected-grid" data-selected-lineup>
             {% for event_rider in team_riders if event_rider.id in selected_ids %}
@@ -164,7 +164,7 @@
         <div class="score-panel">
           <span>Jouw etappescore</span>
           <strong>{{ user_result.score }}</strong>
-          <small>Kopmanbonus {{ user_result.captain_bonus }}</small>
+          <small>Kopvrouwbonus {{ user_result.captain_bonus }}</small>
         </div>
         {% if user_result.rider_scores %}
           <div class="score-breakdown">
@@ -175,7 +175,7 @@
                   <th>Renner</th>
                   <th>Uitslag</th>
                   <th>Basis</th>
-                  <th>Kopman</th>
+                  <th>Kopvrouw</th>
                   <th>Klassementen</th>
                   <th>Ploeggenoten</th>
                   <th>Totaal</th>
@@ -186,7 +186,7 @@
                   <tr>
                     <td>
                       {{ rider_score.event_rider.rider.name }}
-                      {% if rider_score.captain_bonus %}<span class="captain-pill">Kopman</span>{% endif %}
+                      {% if rider_score.captain_bonus %}<span class="captain-pill">Kopvrouw</span>{% endif %}
                     </td>
                     <td>{{ '#' ~ rider_score.rank if rider_score.rank else rider_score.status }}</td>
                     <td>{{ rider_score.base_points }}</td>
