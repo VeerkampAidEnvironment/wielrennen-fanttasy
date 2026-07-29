@@ -2569,8 +2569,8 @@ select:focus {
 
 .rider-card {
   position: relative;
-  min-height: 410px;
-  height: 410px;
+  min-height: 460px;
+  height: 460px;
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
@@ -2736,10 +2736,17 @@ select:focus {
 }
 
 .rider-card .rider-main strong {
-  font-size: 1.16rem;
-  line-height: 1.2;
+  display: block;
   padding-right: 84px;
+  line-height: 1.15;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  font-size: clamp(0.88rem, 0.9vw + 0.75rem, 1.16rem);
 }
+
 
 .rider-team-line {
   display: flex;
@@ -2760,6 +2767,8 @@ select:focus {
 }
 
 .rider-team-line span {
+  display: block;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2801,7 +2810,7 @@ select:focus {
 }
 
 .profile-section {
-  margin-top: auto;
+  margin-top: 8px;
 }
 
 .details-toggle {
@@ -2812,6 +2821,7 @@ select:focus {
   color: var(--muted);
   font-weight: 900;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .details-toggle:hover {
@@ -2831,9 +2841,9 @@ select:focus {
   color: var(--text);
   font-weight: 900;
   text-align: center;
+  flex-shrink: 0;
   transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
 }
-
 .section-label {
   color: var(--muted);
   font-size: 0.72rem;
@@ -3119,9 +3129,10 @@ select:focus {
   .rider-card {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr;
-    min-height: auto;
+    height: auto;
+    min-height: 520px;
   }
-
+  
   .rider-card-media {
     width: 64px;
     height: 64px;
