@@ -806,8 +806,15 @@ select:focus {
 }
 
 .rider-card.selected {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px rgba(181, 31, 49, 0.12);
+  border-color: var(--green);
+  box-shadow: 0 0 0 5px rgba(23, 108, 76, 0.18), var(--shadow);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(23, 108, 76, 0.14) 0,
+      rgba(255, 255, 255, 0) 118px
+    ),
+    #fff;
 }
 
 .rider-card.disabled {
@@ -2591,7 +2598,7 @@ select:focus {
 }
 
 .rider-card.in-selected-team {
-  display: none;
+  display: grid;
 }
 
 .rider-card:hover {
@@ -2718,6 +2725,23 @@ select:focus {
   border: solid #fff;
   border-width: 0 3px 3px 0;
   transform: rotate(45deg);
+}
+
+.rider-card.selected::before {
+  content: "✓ IN TEAM";
+  position: absolute;
+  top: 14px;
+  right: 92px;
+  z-index: 5;
+
+  padding: 5px 10px;
+  border-radius: 999px;
+
+  background: var(--green);
+  color: white;
+
+  font-size: 0.72rem;
+  font-weight: 900;
 }
 
 .rider-card-body {
