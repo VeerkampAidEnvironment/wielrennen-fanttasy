@@ -12,6 +12,7 @@ A Flask fantasy cycling app for private games around ProCyclingStats-backed cycl
 - Automatic lineup locking when a stage start time passes.
 - Stage view with the route profile, the user's lineup, and imported results.
 - Event leaderboard with total scores, latest-stage scores, per-stage columns, a CSS yellow jersey marker for the current leader, and stage-win badges.
+- Event-specific private subleagues with shareable join codes and dedicated total and stage classifications.
 - Admin pages protected by a simple password for creating events, managing users, loading PCS data locally, and safely merging local race data into production.
 - A database model covering users, events, stages, teams, riders, selections, lineups, results, scores, live updates, and awards.
 

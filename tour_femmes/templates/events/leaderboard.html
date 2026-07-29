@@ -4,15 +4,50 @@
 {% set active = 'leaderboard' %}
 {% include "events/_event_nav.html" with context %}
 
+<section class="classification-scope" aria-labelledby="classification-scope-label">
+  <span id="classification-scope-label">Klassement</span>
+  <nav class="classification-scope-options" aria-label="Kies een klassement">
+    <a
+      class="{{ 'active' if not selected_subleague else '' }}"
+      href="{{ url_for('events.leaderboard', event_id=event.id, stage=selected_stage.number) if selected_stage else url_for('events.leaderboard', event_id=event.id) }}"
+      aria-current="{{ 'page' if not selected_subleague else 'false' }}"
+    >
+      Algemeen
+    </a>
+    {% for subleague in joined_subleagues %}
+      <a
+        class="{{ 'active' if selected_subleague and selected_subleague.id == subleague.id else '' }}"
+        href="{{ url_for('events.leaderboard', event_id=event.id, stage=selected_stage.number, league=subleague.id) if selected_stage else url_for('events.leaderboard', event_id=event.id, league=subleague.id) }}"
+        aria-current="{{ 'page' if selected_subleague and selected_subleague.id == subleague.id else 'false' }}"
+      >
+        {{ subleague.name }}
+      </a>
+    {% endfor %}
+  </nav>
+</section>
+
 <section class="section-head classification-heading">
   <div>
     <p class="eyebrow">{{ event.name }}</p>
-    <h1>{{ 'Etappe ' ~ selected_stage.number if selected_stage else 'Algemeen klassement' }}</h1>
+    <h1>
+      {% if selected_stage %}
+        Etappe {{ selected_stage.number }}
+      {% elif selected_subleague %}
+        {{ selected_subleague.name }}
+      {% else %}
+        Algemeen klassement
+      {% endif %}
+    </h1>
     <p class="muted">
       {% if selected_stage %}
         {{ selected_stage.name }} · scores en opstellingen per deelnemer
+        {% if selected_subleague %}· {{ selected_subleague.name }}{% endif %}
       {% else %}
-        De actuele stand, etappewinnaars en leiders na iedere verreden etappe
+        {% if selected_subleague %}
+          De actuele stand binnen deze subcompetitie
+        {% else %}
+          De actuele stand, etappewinnaars en leiders na iedere verreden etappe
+        {% endif %}
       {% endif %}
     </p>
   </div>
@@ -21,7 +56,7 @@
 <nav class="classification-tabs" aria-label="Klassementsweergave">
   <a
     class="{{ 'active' if not selected_stage else '' }}"
-    href="{{ url_for('events.leaderboard', event_id=event.id) }}"
+    href="{{ url_for('events.leaderboard', event_id=event.id, league=selected_subleague.id) if selected_subleague else url_for('events.leaderboard', event_id=event.id) }}"
     aria-current="{{ 'page' if not selected_stage else 'false' }}"
   >
     Totaal
@@ -29,7 +64,7 @@
   {% for stage in event.stages %}
     <a
       class="{{ 'active' if selected_stage and selected_stage.id == stage.id else '' }}"
-      href="{{ url_for('events.leaderboard', event_id=event.id, stage=stage.number) }}"
+      href="{{ url_for('events.leaderboard', event_id=event.id, stage=stage.number, league=selected_subleague.id) if selected_subleague else url_for('events.leaderboard', event_id=event.id, stage=stage.number) }}"
       aria-current="{{ 'page' if selected_stage and selected_stage.id == stage.id else 'false' }}"
     >
       Etappe {{ stage.number }}
@@ -43,7 +78,13 @@
     <span><span class="jersey-badge" aria-hidden="true"></span> Leider na etappe</span>
   </div>
 
-  <div class="table-scroll classification-table-wrap">
+  <div
+    class="table-scroll classification-table-wrap"
+    role="region"
+    aria-label="{{ selected_subleague.name if selected_subleague else 'Algemeen klassement' }}"
+    tabindex="0"
+    data-classification-scroll
+  >
     <table class="data-table leaderboard-table classification-table">
       <thead>
         <tr>

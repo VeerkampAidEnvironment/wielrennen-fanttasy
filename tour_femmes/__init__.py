@@ -30,6 +30,8 @@ def create_app(config_object: str | None = None) -> Flask:
     login_manager.init_app(app)
     if app.config.get("AUTO_CREATE_SCHEMA", True):
         _ensure_schema(app)
+    else:
+        _ensure_subleague_schema(app)
 
     from tour_femmes.models import User
     from tour_femmes.services.historical_scores import historical_scores_for_rider
@@ -163,5 +165,17 @@ def _ensure_schema(app: Flask) -> None:
         # Do not leave a connection opened during application startup.
         db.session.remove()
         # Disposing an in-memory SQLite engine deletes the test database.
+        if db.engine.dialect.name != "sqlite":
+            db.engine.dispose()
+
+
+def _ensure_subleague_schema(app: Flask) -> None:
+    """Create user-managed group tables without altering imported race tables."""
+    with app.app_context():
+        from tour_femmes.models import Subleague, SubleagueMember
+
+        Subleague.__table__.create(bind=db.engine, checkfirst=True)
+        SubleagueMember.__table__.create(bind=db.engine, checkfirst=True)
+        db.session.remove()
         if db.engine.dialect.name != "sqlite":
             db.engine.dispose()

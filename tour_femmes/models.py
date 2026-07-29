@@ -29,6 +29,17 @@ class User(UserMixin, db.Model):
     team_selections = db.relationship("TeamSelection", back_populates="user", cascade="all, delete-orphan")
     stage_lineups = db.relationship("StageLineup", back_populates="user", cascade="all, delete-orphan")
     stage_scores = db.relationship("UserStageScore", back_populates="user", cascade="all, delete-orphan")
+    owned_subleagues = db.relationship(
+        "Subleague",
+        back_populates="owner",
+        cascade="all, delete-orphan",
+        foreign_keys="Subleague.owner_id",
+    )
+    subleague_memberships = db.relationship(
+        "SubleagueMember",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
 
 class Event(db.Model):
@@ -54,6 +65,7 @@ class Event(db.Model):
     event_riders = db.relationship("EventRider", back_populates="event", cascade="all, delete-orphan")
     entries = db.relationship("EventEntry", back_populates="event", cascade="all, delete-orphan")
     awards = db.relationship("Award", back_populates="event", cascade="all, delete-orphan")
+    subleagues = db.relationship("Subleague", back_populates="event", cascade="all, delete-orphan")
 
     __table_args__ = (UniqueConstraint("slug", "year", name="uq_event_slug_year"),)
 
@@ -267,6 +279,47 @@ class EventEntry(db.Model):
     event = db.relationship("Event", back_populates="entries")
 
     __table_args__ = (UniqueConstraint("user_id", "event_id", name="uq_entry_user_event"),)
+
+
+class Subleague(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey("event.id"), nullable=False, index=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    name = db.Column(db.String(80), nullable=False)
+    join_code = db.Column(db.String(12), unique=True, nullable=False, index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+
+    event = db.relationship("Event", back_populates="subleagues")
+    owner = db.relationship(
+        "User",
+        back_populates="owned_subleagues",
+        foreign_keys=[owner_id],
+    )
+    memberships = db.relationship(
+        "SubleagueMember",
+        back_populates="subleague",
+        cascade="all, delete-orphan",
+        order_by="SubleagueMember.joined_at",
+    )
+
+    __table_args__ = (UniqueConstraint("event_id", "name", name="uq_subleague_event_name"),)
+
+    def member_ids(self) -> set[int]:
+        return {membership.user_id for membership in self.memberships}
+
+
+class SubleagueMember(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    subleague_id = db.Column(db.Integer, db.ForeignKey("subleague.id"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    joined_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+
+    subleague = db.relationship("Subleague", back_populates="memberships")
+    user = db.relationship("User", back_populates="subleague_memberships")
+
+    __table_args__ = (
+        UniqueConstraint("subleague_id", "user_id", name="uq_subleague_member"),
+    )
 
 
 class TeamSelection(db.Model):

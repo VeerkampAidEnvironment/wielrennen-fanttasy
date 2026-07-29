@@ -13,6 +13,8 @@ from tour_femmes.models import (
     StageLineup,
     StageLineupRider,
     StageResult,
+    Subleague,
+    SubleagueMember,
     Team,
     TeamSelection,
     TeamSelectionRider,
@@ -37,6 +39,9 @@ def delete_event_game(event: Event) -> dict[str, int]:
         db.session.query(UserStageScore.id)
         .join(Stage, UserStageScore.stage_id == Stage.id)
         .filter(Stage.event_id == event_id)
+    )
+    subleague_ids = _ids(
+        db.session.query(Subleague.id).filter(Subleague.event_id == event_id)
     )
 
     counts = {
@@ -74,6 +79,12 @@ def delete_event_game(event: Event) -> dict[str, int]:
                 | _in(ClassificationResult.event_rider_id, event_rider_ids)
             )
         ),
+        "subleague_members": _delete(
+            SubleagueMember.query.filter(_in(SubleagueMember.subleague_id, subleague_ids))
+        ),
+        "subleagues": _delete(
+            Subleague.query.filter(Subleague.event_id == event_id)
+        ),
         "entries": _delete(EventEntry.query.filter(EventEntry.event_id == event_id)),
         "stages": _delete(Stage.query.filter(Stage.event_id == event_id)),
         "event_riders": _delete(EventRider.query.filter(EventRider.event_id == event_id)),
@@ -91,6 +102,9 @@ def delete_user_account(user: User) -> dict[str, int]:
     selection_ids = _ids(db.session.query(TeamSelection.id).filter(TeamSelection.user_id == user_id))
     lineup_ids = _ids(db.session.query(StageLineup.id).filter(StageLineup.user_id == user_id))
     score_ids = _ids(db.session.query(UserStageScore.id).filter(UserStageScore.user_id == user_id))
+    owned_subleague_ids = _ids(
+        db.session.query(Subleague.id).filter(Subleague.owner_id == user_id)
+    )
 
     counts = {
         "awards": _delete(Award.query.filter(Award.user_id == user_id)),
@@ -104,6 +118,15 @@ def delete_user_account(user: User) -> dict[str, int]:
             TeamSelectionRider.query.filter(_in(TeamSelectionRider.selection_id, selection_ids))
         ),
         "selections": _delete(TeamSelection.query.filter(TeamSelection.user_id == user_id)),
+        "subleague_members": _delete(
+            SubleagueMember.query.filter(
+                (SubleagueMember.user_id == user_id)
+                | _in(SubleagueMember.subleague_id, owned_subleague_ids)
+            )
+        ),
+        "subleagues": _delete(
+            Subleague.query.filter(Subleague.owner_id == user_id)
+        ),
         "entries": _delete(EventEntry.query.filter(EventEntry.user_id == user_id)),
     }
     db.session.delete(user)

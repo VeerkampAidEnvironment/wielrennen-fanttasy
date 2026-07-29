@@ -4,8 +4,6 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 
-from sqlalchemy import func
-
 from tour_femmes import db
 from tour_femmes.models import (
     Award,
@@ -425,7 +423,10 @@ def recalculate_event_awards(event: Event) -> None:
                     )
 
 
-def build_leaderboard(event: Event) -> list[LeaderboardRow]:
+def build_leaderboard(
+    event: Event,
+    user_ids: set[int] | None = None,
+) -> list[LeaderboardRow]:
     stages = list(event.stages)
     latest_stage = latest_finished_stage(event)
     scores_by_user: dict[int, dict[int, int]] = defaultdict(dict)
@@ -440,41 +441,51 @@ def build_leaderboard(event: Event) -> list[LeaderboardRow]:
         scores_by_user[score.user_id][score.stage.number] = score.score
         totals[score.user_id] += score.score
 
-    stage_win_counts = dict(
-        db.session.query(Award.user_id, func.count(Award.id))
-        .filter(Award.event_id == event.id, Award.award_type == "stage_win")
-        .group_by(Award.user_id)
-        .all()
-    )
     stage_win_numbers: dict[int, set[int]] = defaultdict(set)
     yellow_stage_numbers: dict[int, set[int]] = defaultdict(set)
-    award_rows = (
-        Award.query.join(Stage, Award.stage_id == Stage.id)
-        .filter(
-            Award.event_id == event.id,
-            Award.award_type.in_(("stage_win", "yellow_jersey")),
+    if user_ids is None:
+        award_rows = (
+            Award.query.join(Stage, Award.stage_id == Stage.id)
+            .filter(
+                Award.event_id == event.id,
+                Award.award_type.in_(("stage_win", "yellow_jersey")),
+            )
+            .all()
         )
-        .all()
-    )
-    for award in award_rows:
-        if award.award_type == "stage_win":
-            stage_win_numbers[award.user_id].add(award.stage.number)
-        elif award.award_type == "yellow_jersey":
-            yellow_stage_numbers[award.user_id].add(award.stage.number)
+        for award in award_rows:
+            if award.award_type == "stage_win":
+                stage_win_numbers[award.user_id].add(award.stage.number)
+            elif award.award_type == "yellow_jersey":
+                yellow_stage_numbers[award.user_id].add(award.stage.number)
+        yellow_user_ids = current_yellow_user_ids(event)
+    else:
+        stage_win_numbers, yellow_stage_numbers = _relative_awards(
+            stages,
+            scores_by_user,
+            user_ids,
+        )
+        yellow_user_ids = {
+            user_id
+            for user_id, stage_numbers in yellow_stage_numbers.items()
+            if latest_stage and latest_stage.number in stage_numbers
+        }
 
-    yellow_user_ids = current_yellow_user_ids(event)
-    entries = EventEntry.query.filter_by(event_id=event.id, status="active").all()
+    entry_query = EventEntry.query.filter_by(event_id=event.id, status="active")
+    if user_ids is not None:
+        entry_query = entry_query.filter(EventEntry.user_id.in_(user_ids))
+    entries = entry_query.all()
     rows = []
     for entry in entries:
         latest_score = scores_by_user[entry.user_id].get(latest_stage.number, 0) if latest_stage else 0
+        user_stage_wins = stage_win_numbers[entry.user_id]
         rows.append(
             LeaderboardRow(
                 user=entry.user,
                 total_score=totals[entry.user_id],
                 latest_stage_score=latest_score,
                 stage_scores={stage.number: scores_by_user[entry.user_id].get(stage.number, 0) for stage in stages},
-                stage_wins=stage_win_counts.get(entry.user_id, 0),
-                stage_win_numbers=frozenset(stage_win_numbers[entry.user_id]),
+                stage_wins=len(user_stage_wins),
+                stage_win_numbers=frozenset(user_stage_wins),
                 yellow_stage_numbers=frozenset(yellow_stage_numbers[entry.user_id]),
                 is_yellow=entry.user_id in yellow_user_ids,
             )
@@ -483,16 +494,32 @@ def build_leaderboard(event: Event) -> list[LeaderboardRow]:
     return rows
 
 
-def build_stage_leaderboard(event: Event, stage: Stage) -> list[StageLeaderboardRow]:
-    entries = EventEntry.query.filter_by(event_id=event.id, status="active").all()
+def build_stage_leaderboard(
+    event: Event,
+    stage: Stage,
+    user_ids: set[int] | None = None,
+) -> list[StageLeaderboardRow]:
+    entry_query = EventEntry.query.filter_by(event_id=event.id, status="active")
+    if user_ids is not None:
+        entry_query = entry_query.filter(EventEntry.user_id.in_(user_ids))
+    entries = entry_query.all()
     lineups = StageLineup.query.filter_by(stage_id=stage.id).all()
     scores = UserStageScore.query.filter_by(stage_id=stage.id).all()
     lineup_by_user = {lineup.user_id: lineup for lineup in lineups}
     score_by_user = {score.user_id: score for score in scores}
 
-    awards = Award.query.filter_by(event_id=event.id, stage_id=stage.id).all()
-    stage_winner_ids = {award.user_id for award in awards if award.award_type == "stage_win"}
-    yellow_user_ids = {award.user_id for award in awards if award.award_type == "yellow_jersey"}
+    if user_ids is None:
+        awards = Award.query.filter_by(event_id=event.id, stage_id=stage.id).all()
+        stage_winner_ids = {award.user_id for award in awards if award.award_type == "stage_win"}
+        yellow_user_ids = {award.user_id for award in awards if award.award_type == "yellow_jersey"}
+    else:
+        total_rows = build_leaderboard(event, user_ids)
+        stage_winner_ids = {
+            row.user.id for row in total_rows if stage.number in row.stage_win_numbers
+        }
+        yellow_user_ids = {
+            row.user.id for row in total_rows if stage.number in row.yellow_stage_numbers
+        }
 
     rows = []
     for entry in entries:
@@ -540,6 +567,41 @@ def build_stage_leaderboard(event: Event, stage: Stage) -> list[StageLeaderboard
 
     rows.sort(key=lambda row: (-row.score, row.user.username.lower()))
     return rows
+
+
+def _relative_awards(
+    stages: list[Stage],
+    scores_by_user: dict[int, dict[int, int]],
+    user_ids: set[int],
+) -> tuple[dict[int, set[int]], dict[int, set[int]]]:
+    stage_win_numbers: dict[int, set[int]] = defaultdict(set)
+    yellow_stage_numbers: dict[int, set[int]] = defaultdict(set)
+    running_totals: dict[int, int] = defaultdict(int)
+
+    for stage in stages:
+        if not stage.has_ranked_result():
+            continue
+        stage_scores = {
+            user_id: scores_by_user[user_id][stage.number]
+            for user_id in user_ids
+            if stage.number in scores_by_user[user_id]
+        }
+        if stage_scores:
+            winning_score = max(stage_scores.values())
+            if winning_score > 0:
+                for user_id, score in stage_scores.items():
+                    if score == winning_score:
+                        stage_win_numbers[user_id].add(stage.number)
+            for user_id, score in stage_scores.items():
+                running_totals[user_id] += score
+        if running_totals:
+            leading_score = max(running_totals.values())
+            if leading_score > 0:
+                for user_id, total in running_totals.items():
+                    if total == leading_score:
+                        yellow_stage_numbers[user_id].add(stage.number)
+
+    return stage_win_numbers, yellow_stage_numbers
 
 
 def build_rider_stage_history(

@@ -170,6 +170,8 @@ def test_leaderboard_total_and_stage_tabs_render_expected_details():
     assert "Totaal" in total_html
     assert "Huidige leider" in total_html
     assert "Winnaar van etappe 1" in total_html
+    assert "data-classification-scroll" in total_html
+    assert 'aria-label="Algemeen klassement"' in total_html
     assert "scores en opstellingen per deelnemer" in stage_html
     assert "Alpha Rider" in stage_html
     assert "Beta Rider" in stage_html

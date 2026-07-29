@@ -1,10 +1,23 @@
 from __future__ import annotations
 
+import secrets
+
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import func
 
 from tour_femmes import db
-from tour_femmes.models import Event, EventEntry, EventRider, Stage, StageLineup, TeamSelection, utcnow
+from tour_femmes.models import (
+    Event,
+    EventEntry,
+    EventRider,
+    Stage,
+    StageLineup,
+    Subleague,
+    SubleagueMember,
+    TeamSelection,
+    utcnow,
+)
 from tour_femmes.scoring import (
     CLASSIFICATION_LABELS,
     DAILY_CLASSIFICATION_POINTS,
@@ -27,6 +40,7 @@ from tour_femmes.services.game import (
     validate_team_selection,
 )
 events_bp = Blueprint("events", __name__)
+SUBLEAGUE_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
 
 @events_bp.route("/events")
@@ -258,6 +272,25 @@ def stage(event_id: int, stage_id: int):
 @login_required
 def leaderboard(event_id: int):
     event = Event.query.get_or_404(event_id)
+    joined_subleagues = (
+        Subleague.query.join(SubleagueMember)
+        .filter(
+            Subleague.event_id == event.id,
+            SubleagueMember.user_id == current_user.id,
+        )
+        .order_by(func.lower(Subleague.name))
+        .all()
+    )
+    selected_subleague = None
+    selected_subleague_id = request.args.get("league", type=int)
+    if selected_subleague_id is not None:
+        selected_subleague = next(
+            (league for league in joined_subleagues if league.id == selected_subleague_id),
+            None,
+        )
+        if selected_subleague is None:
+            abort(404)
+
     selected_stage = None
     selected_stage_number = request.args.get("stage", type=int)
     if selected_stage_number is not None:
@@ -268,16 +301,154 @@ def leaderboard(event_id: int):
         if selected_stage is None:
             abort(404)
 
-    rows = build_leaderboard(event) if selected_stage is None else []
-    stage_rows = build_stage_leaderboard(event, selected_stage) if selected_stage else []
+    member_ids = selected_subleague.member_ids() if selected_subleague else None
+    rows = build_leaderboard(event, member_ids) if selected_stage is None else []
+    stage_rows = (
+        build_stage_leaderboard(event, selected_stage, member_ids)
+        if selected_stage
+        else []
+    )
     return render_template(
         "events/leaderboard.html",
         event=event,
         rows=rows,
+        joined_subleagues=joined_subleagues,
+        selected_subleague=selected_subleague,
         selected_stage=selected_stage,
         stage_rows=stage_rows,
         lineups_visible=selected_stage.is_locked() if selected_stage else False,
     )
+
+
+@events_bp.route("/events/<int:event_id>/subleagues")
+@login_required
+def subleagues(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    entry = EventEntry.query.filter_by(
+        user_id=current_user.id,
+        event_id=event.id,
+        status="active",
+    ).first()
+    joined_subleagues = (
+        Subleague.query.join(SubleagueMember)
+        .filter(
+            Subleague.event_id == event.id,
+            SubleagueMember.user_id == current_user.id,
+        )
+        .order_by(func.lower(Subleague.name))
+        .all()
+    )
+    return render_template(
+        "events/subleagues.html",
+        event=event,
+        entry=entry,
+        joined_subleagues=joined_subleagues,
+    )
+
+
+@events_bp.route("/events/<int:event_id>/subleagues/create", methods=["POST"])
+@login_required
+def create_subleague(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    if not _is_event_participant(event):
+        flash("Schrijf je eerst in voor deze koers.", "warning")
+        return redirect(url_for("events.subleagues", event_id=event.id))
+
+    name = " ".join(request.form.get("name", "").split())
+    if len(name) < 2 or len(name) > 80:
+        flash("Een subcompetitienaam moet tussen 2 en 80 tekens lang zijn.", "danger")
+        return redirect(url_for("events.subleagues", event_id=event.id))
+    existing = Subleague.query.filter(
+        Subleague.event_id == event.id,
+        func.lower(Subleague.name) == name.lower(),
+    ).first()
+    if existing:
+        flash("Binnen deze koers bestaat al een subcompetitie met die naam.", "danger")
+        return redirect(url_for("events.subleagues", event_id=event.id))
+
+    subleague = Subleague(
+        event=event,
+        owner=current_user,
+        name=name,
+        join_code=_generate_subleague_code(),
+    )
+    subleague.memberships.append(SubleagueMember(user=current_user))
+    db.session.add(subleague)
+    db.session.commit()
+    flash(f"Subcompetitie {name} is aangemaakt.", "success")
+    return redirect(url_for("events.subleagues", event_id=event.id))
+
+
+@events_bp.route("/events/<int:event_id>/subleagues/join", methods=["POST"])
+@login_required
+def join_subleague(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    if not _is_event_participant(event):
+        flash("Schrijf je eerst in voor deze koers.", "warning")
+        return redirect(url_for("events.subleagues", event_id=event.id))
+
+    join_code = _normalize_subleague_code(request.form.get("join_code", ""))
+    subleague = Subleague.query.filter_by(
+        event_id=event.id,
+        join_code=join_code,
+    ).first()
+    if not subleague:
+        flash("Deze deelnamecode is niet geldig voor deze koers.", "danger")
+        return redirect(url_for("events.subleagues", event_id=event.id))
+    membership = SubleagueMember.query.filter_by(
+        subleague_id=subleague.id,
+        user_id=current_user.id,
+    ).first()
+    if membership:
+        flash(f"Je neemt al deel aan {subleague.name}.", "info")
+        return redirect(url_for("events.subleagues", event_id=event.id))
+
+    db.session.add(SubleagueMember(subleague=subleague, user=current_user))
+    db.session.commit()
+    flash(f"Je bent toegevoegd aan {subleague.name}.", "success")
+    return redirect(url_for("events.subleagues", event_id=event.id))
+
+
+@events_bp.route(
+    "/events/<int:event_id>/subleagues/<int:subleague_id>/leave",
+    methods=["POST"],
+)
+@login_required
+def leave_subleague(event_id: int, subleague_id: int):
+    event = Event.query.get_or_404(event_id)
+    subleague = Subleague.query.filter_by(id=subleague_id, event_id=event.id).first_or_404()
+    if subleague.owner_id == current_user.id:
+        flash("Als beheerder kun je deze subcompetitie verwijderen, maar niet verlaten.", "warning")
+        return redirect(url_for("events.subleagues", event_id=event.id))
+    membership = SubleagueMember.query.filter_by(
+        subleague_id=subleague.id,
+        user_id=current_user.id,
+    ).first_or_404()
+    db.session.delete(membership)
+    db.session.commit()
+    flash(f"Je hebt {subleague.name} verlaten.", "success")
+    return redirect(url_for("events.subleagues", event_id=event.id))
+
+
+@events_bp.route(
+    "/events/<int:event_id>/subleagues/<int:subleague_id>/delete",
+    methods=["POST"],
+)
+@login_required
+def delete_subleague(event_id: int, subleague_id: int):
+    event = Event.query.get_or_404(event_id)
+    subleague = Subleague.query.filter_by(id=subleague_id, event_id=event.id).first_or_404()
+    if subleague.owner_id != current_user.id:
+        abort(403)
+    if request.form.get("confirm_name", "").strip() != subleague.name:
+        flash("Typ de naam van de subcompetitie exact over om deze te verwijderen.", "danger")
+        return redirect(url_for("events.subleagues", event_id=event.id))
+
+    name = subleague.name
+    db.session.delete(subleague)
+    db.session.commit()
+    flash(f"Subcompetitie {name} is verwijderd.", "success")
+    return redirect(url_for("events.subleagues", event_id=event.id))
 
 
 @events_bp.route("/events/<int:event_id>/scoring")
@@ -299,6 +470,27 @@ def scoring(event_id: int):
 
 def _selection_finished(event: Event, selection: TeamSelection | None) -> bool:
     return bool(selection and len(selection.riders) == event.team_size and selection.total_price <= event.budget)
+
+
+def _is_event_participant(event: Event) -> bool:
+    return bool(
+        EventEntry.query.filter_by(
+            user_id=current_user.id,
+            event_id=event.id,
+            status="active",
+        ).first()
+    )
+
+
+def _generate_subleague_code() -> str:
+    while True:
+        code = "".join(secrets.choice(SUBLEAGUE_CODE_ALPHABET) for _ in range(8))
+        if not Subleague.query.filter_by(join_code=code).first():
+            return code
+
+
+def _normalize_subleague_code(value: str) -> str:
+    return "".join(character for character in value.upper() if character.isalnum())
 
 
 def _wants_json() -> bool:

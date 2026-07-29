@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}{{ event.name }} Subcompetities{% endblock %}
+{% block body %}
+{% set active = 'subleagues' %}
+{% include "events/_event_nav.html" with context %}
+
+<section class="section-head subleague-heading">
+  <div>
+    <p class="eyebrow">{{ event.name }}</p>
+    <h1>Subcompetities</h1>
+    <p class="muted">Jouw privéklassementen binnen deze koers.</p>
+  </div>
+</section>
+
+{% if not entry %}
+  <div class="notice subleague-entry-notice">
+    <strong>Je doet nog niet mee aan deze koers.</strong>
+    <form method="post" action="{{ url_for('events.join', event_id=event.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="primary-button compact-button">Meedoen</button>
+    </form>
+  </div>
+{% else %}
+  <section class="subleague-action-grid" aria-label="Subcompetitie beheren">
+    <form
+      class="subleague-action-panel"
+      method="post"
+      action="{{ url_for('events.create_subleague', event_id=event.id) }}"
+    >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <header>
+        <p class="eyebrow">Nieuwe groep</p>
+        <h2>Subcompetitie maken</h2>
+      </header>
+      <label>
+        Naam
+        <input
+          name="name"
+          maxlength="80"
+          autocomplete="off"
+          placeholder="Bijvoorbeeld Vriendenklassement"
+          required
+        >
+      </label>
+      <button type="submit" class="primary-button">Aanmaken</button>
+    </form>
+
+    <form
+      class="subleague-action-panel subleague-join-panel"
+      method="post"
+      action="{{ url_for('events.join_subleague', event_id=event.id) }}"
+    >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <header>
+        <p class="eyebrow">Deelnamecode</p>
+        <h2>Aansluiten</h2>
+      </header>
+      <label>
+        Code
+        <input
+          class="subleague-code-input"
+          name="join_code"
+          maxlength="12"
+          autocomplete="off"
+          autocapitalize="characters"
+          placeholder="ABCD2345"
+          required
+        >
+      </label>
+      <button type="submit" class="secondary-button">Deelnemen</button>
+    </form>
+  </section>
+{% endif %}
+
+<section class="subleague-list-section">
+  <header class="subleague-list-heading">
+    <div>
+      <p class="eyebrow">Mijn groepen</p>
+      <h2>Jouw subcompetities</h2>
+    </div>
+    <span class="subleague-count">{{ joined_subleagues|length }}</span>
+  </header>
+
+  {% if joined_subleagues %}
+    <div class="subleague-list">
+      {% for subleague in joined_subleagues %}
+        <article class="subleague-card">
+          <header class="subleague-card-head">
+            <div>
+              <div class="subleague-title-row">
+                <h3>{{ subleague.name }}</h3>
+                {% if subleague.owner_id == current_user.id %}
+                  <span class="subleague-owner-label">Beheerder</span>
+                {% endif %}
+              </div>
+              <span class="subleague-member-count">
+                {{ subleague.memberships|length }} {{ 'deelnemer' if subleague.memberships|length == 1 else 'deelnemers' }}
+              </span>
+            </div>
+            <div class="subleague-code">
+              <span>Code</span>
+              <strong>{{ subleague.join_code }}</strong>
+            </div>
+          </header>
+
+          <div class="subleague-members" aria-label="Deelnemers">
+            {% for membership in subleague.memberships %}
+              <span
+                class="subleague-member"
+                title="{{ membership.user.username }}{% if membership.user_id == subleague.owner_id %}, beheerder{% endif %}"
+              >
+                <span aria-hidden="true">{{ membership.user.username[:2]|upper }}</span>
+                <strong>{{ membership.user.username }}</strong>
+              </span>
+            {% endfor %}
+          </div>
+
+          <footer class="subleague-card-actions">
+            <a
+              class="primary-button"
+              href="{{ url_for('events.leaderboard', event_id=event.id, league=subleague.id) }}"
+            >
+              Bekijk klassement
+            </a>
+            {% if subleague.owner_id == current_user.id %}
+              <details class="subleague-delete">
+                <summary>Verwijderen</summary>
+                <form
+                  method="post"
+                  action="{{ url_for('events.delete_subleague', event_id=event.id, subleague_id=subleague.id) }}"
+                >
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <label>
+                    Bevestig met de naam
+                    <input name="confirm_name" autocomplete="off" required>
+                  </label>
+                  <button type="submit" class="danger-button compact-button">Definitief verwijderen</button>
+                </form>
+              </details>
+            {% else %}
+              <form
+                method="post"
+                action="{{ url_for('events.leave_subleague', event_id=event.id, subleague_id=subleague.id) }}"
+              >
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="secondary-button">Verlaten</button>
+              </form>
+            {% endif %}
+          </footer>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state subleague-empty">
+      <h2>Nog geen subcompetities</h2>
+      <p class="muted">Maak een groep aan of sluit aan met een deelnamecode.</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
