@@ -44,6 +44,63 @@ def test_pcs_client_sends_normal_html_request_headers():
     assert client.session.headers["Accept-Language"].startswith("en-US")
 
 
+def test_pcs_image_request_uses_local_cache_before_network(monkeypatch):
+    app = create_app(__name__ + ".TestConfig")
+    with app.app_context():
+        client = PcsClient(base_url="https://www.procyclingstats.com")
+        monkeypatch.setattr(
+            "tour_femmes.services.pcs.load_cached_pcs_image",
+            lambda _url: (b"cached-image", "image/jpeg"),
+        )
+        monkeypatch.setattr(
+            client.session,
+            "get",
+            lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("network used")),
+        )
+
+        assert client.get_image("https://www.procyclingstats.com/images/riders/test.jpg") == (
+            b"cached-image",
+            "image/jpeg",
+        )
+
+
+def test_pcs_image_request_uses_pcs_referer(monkeypatch):
+    app = create_app(__name__ + ".TestConfig")
+    captured = {}
+
+    class ImageResponse:
+        status_code = 200
+        content = b"image"
+        headers = {"Content-Type": "image/jpeg"}
+
+        def raise_for_status(self):
+            return None
+
+    with app.app_context():
+        client = PcsClient(base_url="https://www.procyclingstats.com", request_delay_seconds=0)
+        monkeypatch.setattr(
+            "tour_femmes.services.pcs.load_cached_pcs_image",
+            lambda _url: None,
+        )
+        monkeypatch.setattr(
+            "tour_femmes.services.pcs.store_cached_pcs_image",
+            lambda *_args: None,
+        )
+
+        def fake_get(_url, **kwargs):
+            captured.update(kwargs["headers"])
+            return ImageResponse()
+
+        monkeypatch.setattr(client.session, "get", fake_get)
+
+        assert client.get_image("https://www.procyclingstats.com/images/riders/test.jpg") == (
+            b"image",
+            "image/jpeg",
+        )
+
+    assert captured["Referer"] == "https://www.procyclingstats.com"
+
+
 def test_normalize_event_reference_uses_configured_base_for_pcs_urls():
     app = create_app(__name__ + ".TestConfig")
     with app.app_context():

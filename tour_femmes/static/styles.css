@@ -2820,7 +2820,8 @@ select:focus {
 }
 
 .best-results-section,
-.grand-tour-section {
+.grand-tour-section,
+.historical-score-section {
   min-height: 0;
   overflow: hidden;
 }
@@ -2926,6 +2927,32 @@ select:focus {
   display: block;
   color: var(--accent-dark);
   font-size: 0.78rem;
+}
+
+.historical-score-list {
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+
+.historical-score-row {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 30px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.historical-score-row strong {
+  color: var(--text);
+}
+
+.historical-score-row span:last-child {
+  color: var(--accent-dark);
+  font-weight: 900;
 }
 
 .profile-bars {

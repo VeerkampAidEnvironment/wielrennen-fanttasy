@@ -54,6 +54,11 @@
     <small class="muted">Haalt ontbrekende profielen op. Dit is bewust losgekoppeld van de snelle startlijstcontrole.</small>
     <button type="submit" class="secondary-button">Ontbrekende profielen ophalen</button>
   </form>
+  <form method="post" action="{{ url_for('admin.sync_images', event_id=event.id) }}" data-admin-job-form data-job-title="Afbeeldingen lokaal opslaan">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <small class="muted">Slaat bekende renner- en ploegafbeeldingen op in de lokale database voor de online upload.</small>
+    <button type="submit" class="secondary-button">Afbeeldingen lokaal opslaan</button>
+  </form>
   <form method="post" action="{{ url_for('admin.pcs_diagnostics', event_id=event.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <small class="muted">Test vanaf deze server of PCS bereikbaar is.</small>

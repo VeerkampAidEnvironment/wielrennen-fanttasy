@@ -36,8 +36,8 @@
       {% if locked or not selected %}disabled{% endif %}
     >
     <span class="lineup-card-photo">
-      {% if rider.photo_url %}
-        <img src="{{ pcs_image_url(rider.photo_url) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+      {% if rider.photo_mime or rider.photo_url %}
+        <img src="{{ rider_photo_url(rider) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
       {% else %}
         <span>{{ rider.name[:2] }}</span>
       {% endif %}
@@ -100,10 +100,16 @@
   </div>
 </section>
 
-{% if stage.profile_image_url %}
+{% if stage.profile_image_mime or stage.profile_image_url %}
   <section class="stage-profile-panel">
     <h2>Etappeprofiel</h2>
-    <img class="stage-profile" src="{{ pcs_image_url(stage.profile_image_url) }}" alt="Profiel van etappe {{ stage.number }}" decoding="async" referrerpolicy="no-referrer">
+    <img
+      class="stage-profile"
+      src="{{ url_for('media.stage_profile', stage_id=stage.id) if stage.profile_image_mime else pcs_image_url(stage.profile_image_url) }}"
+      alt="Profiel van etappe {{ stage.number }}"
+      decoding="async"
+      referrerpolicy="no-referrer"
+    >
   </section>
 {% endif %}
 

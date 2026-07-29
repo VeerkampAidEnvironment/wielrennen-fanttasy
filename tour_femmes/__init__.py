@@ -32,6 +32,7 @@ def create_app(config_object: str | None = None) -> Flask:
         _ensure_schema(app)
 
     from tour_femmes.models import User
+    from tour_femmes.services.historical_scores import historical_scores_for_rider
 
     @login_manager.user_loader
     def load_user(user_id: str) -> User | None:
@@ -42,6 +43,9 @@ def create_app(config_object: str | None = None) -> Flask:
         return {
             "csrf_token": _csrf_token,
             "pcs_image_url": _pcs_image_url,
+            "rider_photo_url": _rider_photo_url,
+            "team_image_url": _team_image_url,
+            "historical_rider_scores": historical_scores_for_rider,
         }
 
     @app.before_request
@@ -87,6 +91,18 @@ def _pcs_image_url(source_url: str | None) -> str:
     return canonical_url
 
 
+def _rider_photo_url(rider) -> str:
+    if rider.photo_mime:
+        return url_for("media.rider_photo", rider_id=rider.id)
+    return _pcs_image_url(rider.photo_url)
+
+
+def _team_image_url(team) -> str:
+    if team.image_mime:
+        return url_for("media.team_image", team_id=team.id)
+    return _pcs_image_url(team.image_url)
+
+
 def _ensure_schema(app: Flask) -> None:
     with app.app_context():
         from tour_femmes import models as _models  # noqa: F401
@@ -97,7 +113,32 @@ def _ensure_schema(app: Flask) -> None:
             team_columns = {column["name"] for column in inspector.get_columns("team")}
             if "image_url" not in team_columns:
                 db.session.execute(text("ALTER TABLE team ADD COLUMN image_url VARCHAR(500)"))
-                db.session.commit()
+            if "image_data" not in team_columns:
+                binary_type = "MEDIUMBLOB" if db.engine.dialect.name == "mysql" else "BLOB"
+                db.session.execute(text(f"ALTER TABLE team ADD COLUMN image_data {binary_type}"))
+            if "image_mime" not in team_columns:
+                db.session.execute(text("ALTER TABLE team ADD COLUMN image_mime VARCHAR(80)"))
+            db.session.commit()
+        if inspector.has_table("rider"):
+            rider_columns = {column["name"] for column in inspector.get_columns("rider")}
+            if "photo_data" not in rider_columns:
+                binary_type = "MEDIUMBLOB" if db.engine.dialect.name == "mysql" else "BLOB"
+                db.session.execute(text(f"ALTER TABLE rider ADD COLUMN photo_data {binary_type}"))
+            if "photo_mime" not in rider_columns:
+                db.session.execute(text("ALTER TABLE rider ADD COLUMN photo_mime VARCHAR(80)"))
+            db.session.commit()
+        if inspector.has_table("stage"):
+            stage_columns = {column["name"] for column in inspector.get_columns("stage")}
+            if "profile_image_data" not in stage_columns:
+                binary_type = "MEDIUMBLOB" if db.engine.dialect.name == "mysql" else "BLOB"
+                db.session.execute(
+                    text(f"ALTER TABLE stage ADD COLUMN profile_image_data {binary_type}")
+                )
+            if "profile_image_mime" not in stage_columns:
+                db.session.execute(
+                    text("ALTER TABLE stage ADD COLUMN profile_image_mime VARCHAR(80)")
+                )
+            db.session.commit()
         if inspector.has_table("user_stage_rider_score"):
             score_columns = {
                 column["name"]

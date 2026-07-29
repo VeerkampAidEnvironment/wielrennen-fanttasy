@@ -61,6 +61,8 @@ def make_app_with_lineup_context():
             starts_at=datetime.now(timezone.utc) + timedelta(days=1),
             pcs_url=f"{event.pcs_url}/stage-1",
             profile_image_url="https://www.procyclingstats.com/images/profiles/test-stage-profile.jpg",
+            profile_image_data=b"stored-stage-profile",
+            profile_image_mime="image/jpeg",
         )
         team = Team(
             event=event,
@@ -73,10 +75,16 @@ def make_app_with_lineup_context():
         event_riders = []
         for index in range(11):
             rider = Rider(
-                name=f"Renner {index}",
-                pcs_slug=f"renner-{index}",
-                pcs_url=f"https://www.procyclingstats.com/rider/renner-{index}",
+                name="VOS Marianne" if index == 0 else f"Renner {index}",
+                pcs_slug="marianne-vos" if index == 0 else f"renner-{index}",
+                pcs_url=(
+                    "https://www.procyclingstats.com/rider/marianne-vos"
+                    if index == 0
+                    else f"https://www.procyclingstats.com/rider/renner-{index}"
+                ),
                 photo_url=f"https://www.procyclingstats.com/images/riders/test-renner-{index}.jpg",
+                photo_data=f"rider-{index}".encode(),
+                photo_mime="image/jpeg",
             )
             event_rider = EventRider(event=event, rider=rider, team=team, price=1)
             db.session.add_all([rider, event_rider])
@@ -99,6 +107,35 @@ def login(client, user_id):
         session["_user_id"] = str(user_id)
         session["_fresh"] = True
         session["_csrf_token"] = "token"
+
+
+def test_stage_profile_is_served_from_own_database():
+    app, _user_id, _event_id, stage_id, _event_rider_ids = make_app_with_lineup_context()
+    response = app.test_client().get(f"/media/stage-profile/{stage_id}")
+
+    assert response.status_code == 200
+    assert response.content_type == "image/jpeg"
+    assert response.data == b"stored-stage-profile"
+
+
+def test_rider_and_team_images_are_served_from_own_database():
+    app, _user_id, _event_id, _stage_id, event_rider_ids = make_app_with_lineup_context()
+    with app.app_context():
+        event_rider = db.session.get(EventRider, event_rider_ids[0])
+        event_rider.team.image_data = b"stored-team-image"
+        event_rider.team.image_mime = "image/png"
+        rider_id = event_rider.rider.id
+        team_id = event_rider.team.id
+        db.session.commit()
+
+    client = app.test_client()
+    rider_response = client.get(f"/media/rider-photo/{rider_id}")
+    team_response = client.get(f"/media/team-image/{team_id}")
+
+    assert rider_response.status_code == 200
+    assert rider_response.data == b"rider-0"
+    assert team_response.status_code == 200
+    assert team_response.data == b"stored-team-image"
 
 
 def test_stage_lineup_fetch_autosaves_concept_and_complete_lineup():
@@ -243,7 +280,7 @@ def test_final_gc_rewards_daily_lineup_and_full_team_teammates():
         assert reserve_teammate.final_teammate_points == FINAL_WINNER_TEAMMATE_POINTS["gc"]
 
 
-def test_scoring_rules_are_on_separate_tab_and_images_use_proxy():
+def test_scoring_rules_are_on_separate_tab_and_images_use_database_routes():
     app, user_id, event_id, stage_id, _event_rider_ids = make_app_with_lineup_context()
     client = app.test_client()
     login(client, user_id)
@@ -254,7 +291,8 @@ def test_scoring_rules_are_on_separate_tab_and_images_use_proxy():
     assert stage_response.status_code == 200
     assert "Etappeprofiel" in stage_html
     assert "Puntentelling</h2>" not in stage_html
-    assert "/media/pcs-image?url=" in stage_html
+    assert f"/media/stage-profile/{stage_id}" in stage_html
+    assert "/media/rider-photo/" in stage_html
     assert "Teamselectie" in stage_html
     assert "data-team-selection-tab" in stage_html
     assert "data-deadline-at=" in stage_html
@@ -272,7 +310,9 @@ def test_scoring_rules_are_on_separate_tab_and_images_use_proxy():
 
     assert team_response.status_code == 200
     assert "Mijn team" in team_html
-    assert "/media/pcs-image?url=" in team_html
+    assert "/media/rider-photo/" in team_html
+    assert "Tour-scores 2022-2025" in team_html
+    assert "754 ptn" in team_html
     assert "data-deadline-at=" in team_html
     assert "data-hide-team-tab-on-expiry" in team_html
 

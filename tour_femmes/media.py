@@ -1,24 +1,23 @@
 from __future__ import annotations
 
-import hashlib
 from threading import Lock
-from pathlib import Path
 from time import monotonic, sleep
 from urllib.parse import urlparse
 
 import requests
 from flask import Blueprint, Response, abort, current_app, send_file
 
+from tour_femmes import db
+from tour_femmes.models import Rider, Stage, Team
+from tour_femmes.pcs_image_cache import (
+    IMAGE_EXTENSIONS,
+    pcs_image_cache_path,
+    store_cached_pcs_image,
+)
 from tour_femmes.pcs_urls import canonicalize_pcs_url, is_configured_pcs_url
 
 media_bp = Blueprint("media", __name__, url_prefix="/media")
 
-IMAGE_EXTENSIONS = {
-    "image/jpeg": ".jpg",
-    "image/png": ".png",
-    "image/webp": ".webp",
-    "image/gif": ".gif",
-}
 IMAGE_DOWNLOAD_LOCK = Lock()
 LAST_IMAGE_REQUEST_AT = 0.0
 IMAGE_COOLDOWN_UNTIL = 0.0
@@ -29,10 +28,49 @@ TRANSPARENT_PIXEL = (
 )
 
 
+@media_bp.route("/stage-profile/<int:stage_id>")
+def stage_profile(stage_id: int):
+    stage = db.session.get(Stage, stage_id)
+    if not stage or not stage.profile_image_data:
+        abort(404)
+
+    return Response(
+        stage.profile_image_data,
+        mimetype=stage.profile_image_mime or "image/jpeg",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
+@media_bp.route("/rider-photo/<int:rider_id>")
+def rider_photo(rider_id: int):
+    rider = db.session.get(Rider, rider_id)
+    if not rider or not rider.photo_data:
+        abort(404)
+
+    return Response(
+        rider.photo_data,
+        mimetype=rider.photo_mime or "image/jpeg",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
+@media_bp.route("/team-image/<int:team_id>")
+def team_image(team_id: int):
+    team = db.session.get(Team, team_id)
+    if not team or not team.image_data:
+        abort(404)
+
+    return Response(
+        team.image_data,
+        mimetype=team.image_mime or "image/png",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
 @media_bp.route("/pcs-image")
 def pcs_image():
     source_url = _validated_pcs_url()
-    cache_path = _cache_path(source_url)
+    cache_path = pcs_image_cache_path(source_url)
     cache_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not cache_path.exists():
@@ -42,7 +80,7 @@ def pcs_image():
         content_type = response.headers.get("Content-Type", "").split(";")[0].lower()
         if content_type not in IMAGE_EXTENSIONS:
             return _fallback_image()
-        cache_path.write_bytes(response.content)
+        store_cached_pcs_image(source_url, response.content)
 
     return send_file(cache_path, max_age=86400)
 
@@ -100,10 +138,3 @@ def _validated_pcs_url() -> str:
     if not parsed.path.lower().startswith("/images/"):
         abort(400)
     return source_url
-
-
-def _cache_path(source_url: str) -> Path:
-    digest = hashlib.sha256(source_url.encode("utf-8")).hexdigest()
-    parsed_ext = Path(urlparse(source_url).path).suffix.lower()
-    extension = parsed_ext if parsed_ext in {".jpg", ".jpeg", ".png", ".webp", ".gif"} else ".img"
-    return Path(current_app.instance_path) / "pcs-image-cache" / f"{digest}{extension}"

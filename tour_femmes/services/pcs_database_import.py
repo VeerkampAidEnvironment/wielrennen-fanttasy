@@ -77,14 +77,18 @@ STAGE_PCS_FIELDS = (
     "departure",
     "arrival",
     "profile_image_url",
+    "profile_image_data",
+    "profile_image_mime",
     "is_finished",
     "results_imported_at",
 )
-TEAM_PCS_FIELDS = ("pcs_url", "image_url", "category")
+TEAM_PCS_FIELDS = ("pcs_url", "image_url", "image_data", "image_mime", "category")
 RIDER_PCS_FIELDS = (
     "pcs_url",
     "name",
     "photo_url",
+    "photo_data",
+    "photo_mime",
     "nationality",
     "date_of_birth",
     "height_m",

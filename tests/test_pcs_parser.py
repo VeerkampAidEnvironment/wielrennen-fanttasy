@@ -12,12 +12,29 @@ from tour_femmes.services.pcs import (
     parse_classification_results,
     parse_rider_in_race_results,
     parse_specialties,
+    parse_stage_page,
     parse_stage_name,
     parse_startlist,
     parse_team_image_url,
     parse_top_results,
     retry_after_seconds,
 )
+
+
+class StagePageClient:
+    def __init__(self, html: str):
+        self.soup = BeautifulSoup(html, "html.parser")
+        self.image_urls = []
+
+    def get_soup(self, _url):
+        return self.soup
+
+    def absolute_url(self, href):
+        return f"https://www.procyclingstats.com/{href.lstrip('/')}"
+
+    def get_image(self, url):
+        self.image_urls.append(url)
+        return b"profile-bytes", "image/jpeg"
 
 
 def test_parse_startlist_groups_riders_under_current_team():
@@ -146,6 +163,37 @@ def test_parse_stage_race_info_keeps_august_intact():
 
     assert values["Date"] == "01 August 2026"
     assert parse_date(values["Date"]) == date(2026, 8, 1)
+
+
+def test_parse_stage_page_downloads_profile_image_into_database_payload():
+    from tour_femmes import create_app
+
+    app = create_app("tests.test_pcs_urls.TestConfig")
+    client = StagePageClient(
+        """
+        <main>
+          <h1>Stage 1 | Lausanne-Lausanne</h1>
+          <dl>
+            <dt>Date:</dt><dd>01 August 2026</dd>
+            <dt>Start time:</dt><dd>14:40</dd>
+          </dl>
+          <h2>Race profile</h2>
+          <img src="images/profiles/example-stage-profile-n2.jpg">
+        </main>
+        """
+    )
+
+    with app.app_context():
+        parsed = parse_stage_page(
+            client,
+            "https://www.procyclingstats.com/race/example/2026/stage-1",
+            1,
+        )
+
+    assert parsed.profile_image_url.endswith("example-stage-profile-n2.jpg")
+    assert parsed.profile_image_data == b"profile-bytes"
+    assert parsed.profile_image_mime == "image/jpeg"
+    assert client.image_urls == [parsed.profile_image_url]
 
 
 def test_parse_structured_top_results_and_grand_tours():

@@ -21,6 +21,7 @@ from tour_femmes.services.pcs import (
     import_stage_results,
     initialize_event_from_pcs,
     normalize_event_reference,
+    sync_event_images,
     sync_startlist,
 )
 from tour_femmes.services.pcs_database_import import (
@@ -133,7 +134,7 @@ def import_pcs_database_upload():
         flash("Kies de lokale SQLite-database om te uploaden.", "danger")
         return redirect(url_for("admin.dashboard"))
 
-    max_bytes = int(current_app.config.get("PCS_DATABASE_UPLOAD_MAX_BYTES", 64 * 1024 * 1024))
+    max_bytes = int(current_app.config.get("PCS_DATABASE_UPLOAD_MAX_BYTES", 128 * 1024 * 1024))
     temporary_path: Path | None = None
     try:
         with NamedTemporaryFile(prefix="pcs-import-", suffix=".sqlite3", delete=False) as temporary:
@@ -350,6 +351,24 @@ def pcs_diagnostics(event_id: int):
     return redirect(url_for("admin.event_detail", event_id=event.id))
 
 
+@admin_bp.route("/events/<int:event_id>/sync-images", methods=["POST"])
+@admin_required
+def sync_images(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    if _wants_json():
+        job = start_admin_job(
+            title="Afbeeldingen lokaal opslaan",
+            redirect_url=url_for("admin.event_detail", event_id=event.id),
+            work=lambda progress: sync_images_job(event.id, progress),
+        )
+        return jsonify(asdict(job))
+
+    summary = sync_event_images(event, client=interactive_pcs_client())
+    db.session.commit()
+    flash(image_sync_message(summary), "success" if not summary.failed_images else "warning")
+    return redirect(url_for("admin.event_detail", event_id=event.id))
+
+
 @admin_bp.route("/jobs/<job_id>")
 @admin_required
 def job_status(job_id: str):
@@ -563,6 +582,32 @@ def enrich_profiles_job(event_id: int, progress) -> str:
     )
     if summary.rate_limited:
         message += " PCS gaf een rate-limit; probeer later opnieuw."
+    return message
+
+
+def sync_images_job(event_id: int, progress) -> str:
+    event = db.session.get(Event, event_id)
+    if not event:
+        raise ValueError("Koers niet gevonden.")
+    summary = sync_event_images(
+        event,
+        client=interactive_pcs_client(),
+        progress=progress,
+    )
+    return image_sync_message(summary)
+
+
+def image_sync_message(summary) -> str:
+    message = (
+        f"{summary.rider_images_loaded} rennerfoto's en "
+        f"{summary.team_images_loaded} ploegafbeeldingen lokaal opgeslagen."
+    )
+    if summary.failed_images:
+        message += f" {summary.failed_images} afbeeldingen konden niet worden opgehaald."
+    if summary.remaining_images:
+        message += f" {summary.remaining_images} afbeeldingen resterend."
+    if summary.rate_limited:
+        message += " PCS gaf een rate-limit; probeer het resterende deel later opnieuw."
     return message
 
 

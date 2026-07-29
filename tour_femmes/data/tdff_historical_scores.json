@@ -1,0 +1,4223 @@
+{
+  "meta": {
+    "source": "tour_de_france_femmes_2022_2025_scoring_tables.xlsx",
+    "competition": "Tour de France Femmes",
+    "years": [
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "rows": 596
+  },
+  "riders": {
+    "agnieszka skalniak sojka": [
+      {
+        "year": 2025,
+        "rank": 91,
+        "points": 0,
+        "team": "CANYON//SRAM ZONDACRYPTO"
+      },
+      {
+        "year": 2024,
+        "rank": 30,
+        "points": 96,
+        "team": "CANYON//SRAM RACING"
+      },
+      {
+        "year": 2023,
+        "rank": 35,
+        "points": 61,
+        "team": "CANYON//SRAM RACING"
+      }
+    ],
+    "alba teruel": [
+      {
+        "year": 2025,
+        "rank": 92,
+        "points": 0,
+        "team": "LABORAL KUTXA - FUNDACION EUSKADI"
+      }
+    ],
+    "alena amialiusik": [
+      {
+        "year": 2023,
+        "rank": 90,
+        "points": 0,
+        "team": "UAE TEAM ADQ"
+      },
+      {
+        "year": 2022,
+        "rank": 38,
+        "points": 65,
+        "team": "CANYON // SRAM RACING"
+      }
+    ],
+    "alexandra manly": [
+      {
+        "year": 2023,
+        "rank": 49,
+        "points": 38,
+        "team": "TEAM JAYCO ALULA"
+      },
+      {
+        "year": 2022,
+        "rank": 54,
+        "points": 30,
+        "team": "TEAM BIKEEXCHANGE-JAYCO"
+      }
+    ],
+    "alice arzuffi": [
+      {
+        "year": 2025,
+        "rank": 93,
+        "points": 0,
+        "team": "LABORAL KUTXA - FUNDACION EUSKADI"
+      },
+      {
+        "year": 2024,
+        "rank": 77,
+        "points": 16,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 34,
+        "points": 62,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 91,
+        "points": 0,
+        "team": "VALCAR - TRAVEL & SERVICE"
+      }
+    ],
+    "alice barnes": [
+      {
+        "year": 2023,
+        "rank": 91,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      }
+    ],
+    "alice towers": [
+      {
+        "year": 2024,
+        "rank": 31,
+        "points": 96,
+        "team": "CANYON//SRAM RACING"
+      },
+      {
+        "year": 2023,
+        "rank": 32,
+        "points": 69,
+        "team": "CANYON//SRAM RACING"
+      }
+    ],
+    "alicia gonzalez blanco": [
+      {
+        "year": 2025,
+        "rank": 55,
+        "points": 31,
+        "team": "ST MICHEL - PREFERENCE HOME - AUBER93"
+      }
+    ],
+    "alison avoine": [
+      {
+        "year": 2025,
+        "rank": 94,
+        "points": 0,
+        "team": "ST MICHEL - PREFERENCE HOME - AUBER93"
+      },
+      {
+        "year": 2024,
+        "rank": 97,
+        "points": 0,
+        "team": "ST MICHEL - MAVIC - AUBER93"
+      },
+      {
+        "year": 2022,
+        "rank": 92,
+        "points": 0,
+        "team": "ST-MICHEL AUBER 93"
+      }
+    ],
+    "alison jackson": [
+      {
+        "year": 2025,
+        "rank": 87,
+        "points": 4,
+        "team": "EF EDUCATION - OATLY"
+      },
+      {
+        "year": 2024,
+        "rank": 98,
+        "points": 0,
+        "team": "EF - OATLY - CANNONDALE"
+      },
+      {
+        "year": 2023,
+        "rank": 75,
+        "points": 8,
+        "team": "EF EDUCATION - TIBCO - SVB"
+      }
+    ],
+    "ally wollaston": [
+      {
+        "year": 2025,
+        "rank": 23,
+        "points": 135,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2022,
+        "rank": 93,
+        "points": 0,
+        "team": "AG INSURANCE-NXTG TEAM"
+      }
+    ],
+    "amalie dideriksen": [
+      {
+        "year": 2025,
+        "rank": 58,
+        "points": 25,
+        "team": "COFIDIS WOMEN TEAM"
+      }
+    ],
+    "amanda spratt": [
+      {
+        "year": 2024,
+        "rank": 99,
+        "points": 0,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2023,
+        "rank": 50,
+        "points": 37,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2022,
+        "rank": 94,
+        "points": 0,
+        "team": "TEAM BIKEEXCHANGE-JAYCO"
+      }
+    ],
+    "amandine fouquenet": [
+      {
+        "year": 2024,
+        "rank": 100,
+        "points": 0,
+        "team": "ARKEA - B&B HOTELS WOMEN"
+      },
+      {
+        "year": 2023,
+        "rank": 92,
+        "points": 0,
+        "team": "ARKEA PRO CYCLING TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 95,
+        "points": 0,
+        "team": "ARKEA PRO CYCLING TEAM"
+      }
+    ],
+    "amber kraak": [
+      {
+        "year": 2025,
+        "rank": 41,
+        "points": 68,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2024,
+        "rank": 101,
+        "points": 0,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2023,
+        "rank": 71,
+        "points": 10,
+        "team": "TEAM JUMBO-VISMA"
+      }
+    ],
+    "amber pate": [
+      {
+        "year": 2024,
+        "rank": 102,
+        "points": 0,
+        "team": "LIV-ALULA-JAYCO"
+      },
+      {
+        "year": 2023,
+        "rank": 93,
+        "points": 0,
+        "team": "TEAM JAYCO ALULA"
+      }
+    ],
+    "ana vitoria gouvea vieira almeida magalhaes": [
+      {
+        "year": 2025,
+        "rank": 95,
+        "points": 0,
+        "team": "MOVISTAR TEAM"
+      }
+    ],
+    "anais morichon": [
+      {
+        "year": 2023,
+        "rank": 95,
+        "points": 0,
+        "team": "ARKEA PRO CYCLING TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 96,
+        "points": 0,
+        "team": "ARKEA PRO CYCLING TEAM"
+      }
+    ],
+    "anastasiya kolesava": [
+      {
+        "year": 2023,
+        "rank": 94,
+        "points": 0,
+        "team": "ARKEA PRO CYCLING TEAM"
+      }
+    ],
+    "ane santesteban": [
+      {
+        "year": 2025,
+        "rank": 88,
+        "points": 4,
+        "team": "LABORAL KUTXA - FUNDACION EUSKADI"
+      },
+      {
+        "year": 2024,
+        "rank": 72,
+        "points": 18,
+        "team": "LABORAL KUTXA - FUNDACION EUSKADI"
+      },
+      {
+        "year": 2023,
+        "rank": 21,
+        "points": 121,
+        "team": "TEAM JAYCO ALULA"
+      },
+      {
+        "year": 2022,
+        "rank": 97,
+        "points": 0,
+        "team": "TEAM BIKEEXCHANGE-JAYCO"
+      }
+    ],
+    "anna henderson": [
+      {
+        "year": 2024,
+        "rank": 66,
+        "points": 24,
+        "team": "TEAM VISMA | LEASE A BIKE"
+      },
+      {
+        "year": 2023,
+        "rank": 76,
+        "points": 8,
+        "team": "TEAM JUMBO-VISMA"
+      },
+      {
+        "year": 2022,
+        "rank": 20,
+        "points": 138,
+        "team": "TEAM JUMBO VISMA"
+      }
+    ],
+    "anna van der breggen": [
+      {
+        "year": 2025,
+        "rank": 7,
+        "points": 397,
+        "team": "TEAM SD WORX - PROTIME"
+      }
+    ],
+    "anna van wersch": [
+      {
+        "year": 2024,
+        "rank": 103,
+        "points": 0,
+        "team": "LOTTO DSTNY LADIES"
+      }
+    ],
+    "anne dorthe ysland": [
+      {
+        "year": 2022,
+        "rank": 63,
+        "points": 15,
+        "team": "UNO-X PRO CYCLING TEAM"
+      }
+    ],
+    "anne van rooijen": [
+      {
+        "year": 2022,
+        "rank": 47,
+        "points": 36,
+        "team": "PARKHOTEL VALKENBURG"
+      }
+    ],
+    "anneke dijkstra": [
+      {
+        "year": 2025,
+        "rank": 96,
+        "points": 0,
+        "team": "VOLKERWESSELS CYCLING TEAM"
+      }
+    ],
+    "annemiek van vleuten": [
+      {
+        "year": 2023,
+        "rank": 6,
+        "points": 365,
+        "team": "MOVISTAR TEAM WOMEN"
+      },
+      {
+        "year": 2022,
+        "rank": 3,
+        "points": 559,
+        "team": "MOVISTAR TEAM WOMEN"
+      }
+    ],
+    "anniina ahtosalo": [
+      {
+        "year": 2024,
+        "rank": 13,
+        "points": 177,
+        "team": "UNO-X MOBILITY"
+      }
+    ],
+    "anouska koster": [
+      {
+        "year": 2024,
+        "rank": 79,
+        "points": 12,
+        "team": "UNO-X MOBILITY"
+      },
+      {
+        "year": 2023,
+        "rank": 20,
+        "points": 143,
+        "team": "UNO-X PRO CYCLING TEAM"
+      }
+    ],
+    "antri christoforou": [
+      {
+        "year": 2024,
+        "rank": 104,
+        "points": 0,
+        "team": "ROLAND"
+      },
+      {
+        "year": 2023,
+        "rank": 96,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      },
+      {
+        "year": 2022,
+        "rank": 98,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      }
+    ],
+    "anya louw": [
+      {
+        "year": 2024,
+        "rank": 90,
+        "points": 6,
+        "team": "AG INSURANCE - SOUDAL TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 85,
+        "points": 4,
+        "team": "AG INSURANCE-NXTG TEAM"
+      }
+    ],
+    "april tacey": [
+      {
+        "year": 2023,
+        "rank": 97,
+        "points": 0,
+        "team": "LIFEPLUS WAHOO"
+      }
+    ],
+    "arianna fidanza": [
+      {
+        "year": 2023,
+        "rank": 43,
+        "points": 46,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      }
+    ],
+    "arlenis sierra canadilla": [
+      {
+        "year": 2022,
+        "rank": 24,
+        "points": 104,
+        "team": "MOVISTAR TEAM WOMEN"
+      }
+    ],
+    "ashleigh moolman pasio": [
+      {
+        "year": 2023,
+        "rank": 4,
+        "points": 509,
+        "team": "AG INSURANCE - SOUDAL QUICK-STEP TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 27,
+        "points": 103,
+        "team": "TEAM SD WORX"
+      }
+    ],
+    "aude biannic": [
+      {
+        "year": 2025,
+        "rank": 97,
+        "points": 0,
+        "team": "MOVISTAR TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 61,
+        "points": 20,
+        "team": "MOVISTAR TEAM WOMEN"
+      },
+      {
+        "year": 2022,
+        "rank": 30,
+        "points": 88,
+        "team": "MOVISTAR TEAM WOMEN"
+      }
+    ],
+    "audrey cordon ragot": [
+      {
+        "year": 2024,
+        "rank": 105,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      },
+      {
+        "year": 2023,
+        "rank": 67,
+        "points": 15,
+        "team": "HUMAN POWERED HEALTH"
+      },
+      {
+        "year": 2022,
+        "rank": 58,
+        "points": 22,
+        "team": "TREK - SEGAFREDO"
+      }
+    ],
+    "audrey de keersmaeker": [
+      {
+        "year": 2024,
+        "rank": 106,
+        "points": 0,
+        "team": "LOTTO DSTNY LADIES"
+      }
+    ],
+    "babette van der wolf": [
+      {
+        "year": 2023,
+        "rank": 79,
+        "points": 6,
+        "team": "LIFEPLUS WAHOO"
+      }
+    ],
+    "barbara fonseca": [
+      {
+        "year": 2022,
+        "rank": 99,
+        "points": 0,
+        "team": "ST-MICHEL AUBER 93"
+      }
+    ],
+    "barbara guarischi": [
+      {
+        "year": 2024,
+        "rank": 53,
+        "points": 51,
+        "team": "TEAM SD WORX - PROTIME"
+      }
+    ],
+    "barbara malcotti": [
+      {
+        "year": 2025,
+        "rank": 84,
+        "points": 6,
+        "team": "HUMAN POWERED HEALTH"
+      },
+      {
+        "year": 2024,
+        "rank": 107,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      },
+      {
+        "year": 2023,
+        "rank": 98,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      },
+      {
+        "year": 2022,
+        "rank": 100,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      }
+    ],
+    "becky storrie": [
+      {
+        "year": 2024,
+        "rank": 36,
+        "points": 88,
+        "team": "TEAM DSM-FIRMENICH POSTNL"
+      }
+    ],
+    "blanka vas": [
+      {
+        "year": 2025,
+        "rank": 28,
+        "points": 104,
+        "team": "TEAM SD WORX - PROTIME"
+      },
+      {
+        "year": 2024,
+        "rank": 11,
+        "points": 214,
+        "team": "TEAM SD WORX - PROTIME"
+      }
+    ],
+    "brodie chapman": [
+      {
+        "year": 2025,
+        "rank": 56,
+        "points": 31,
+        "team": "UAE TEAM ADQ"
+      }
+    ],
+    "camille fahy": [
+      {
+        "year": 2024,
+        "rank": 108,
+        "points": 0,
+        "team": "ST MICHEL - MAVIC - AUBER93"
+      },
+      {
+        "year": 2023,
+        "rank": 99,
+        "points": 0,
+        "team": "ST MICHEL - MAVIC - AUBER93"
+      }
+    ],
+    "carina schrempf": [
+      {
+        "year": 2024,
+        "rank": 48,
+        "points": 58,
+        "team": "FENIX-DECEUNINCK"
+      }
+    ],
+    "caroline andersson": [
+      {
+        "year": 2024,
+        "rank": 93,
+        "points": 3,
+        "team": "LIV-ALULA-JAYCO"
+      },
+      {
+        "year": 2023,
+        "rank": 59,
+        "points": 24,
+        "team": "LIV RACING TEQFIND"
+      }
+    ],
+    "caroline baur": [
+      {
+        "year": 2022,
+        "rank": 101,
+        "points": 0,
+        "team": "ROLAND COGEAS EDELWEISS SQUAD"
+      }
+    ],
+    "catalina soto campos": [
+      {
+        "year": 2025,
+        "rank": 98,
+        "points": 0,
+        "team": "LABORAL KUTXA - FUNDACION EUSKADI"
+      },
+      {
+        "year": 2024,
+        "rank": 62,
+        "points": 26,
+        "team": "LABORAL KUTXA - FUNDACION EUSKADI"
+      }
+    ],
+    "cecilie ludwig": [
+      {
+        "year": 2025,
+        "rank": 99,
+        "points": 0,
+        "team": "CANYON//SRAM ZONDACRYPTO"
+      },
+      {
+        "year": 2024,
+        "rank": 109,
+        "points": 0,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2023,
+        "rank": 18,
+        "points": 149,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2022,
+        "rank": 10,
+        "points": 284,
+        "team": "FDJ SUEZ FUTUROSCOPE"
+      }
+    ],
+    "cedrine kerbaol": [
+      {
+        "year": 2025,
+        "rank": 14,
+        "points": 220,
+        "team": "EF EDUCATION - OATLY"
+      },
+      {
+        "year": 2024,
+        "rank": 5,
+        "points": 362,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 22,
+        "points": 116,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      }
+    ],
+    "celia le mouel": [
+      {
+        "year": 2025,
+        "rank": 89,
+        "points": 4,
+        "team": "CERATIZIT PRO CYCLING TEAM"
+      },
+      {
+        "year": 2024,
+        "rank": 110,
+        "points": 0,
+        "team": "ST MICHEL - MAVIC - AUBER93"
+      },
+      {
+        "year": 2023,
+        "rank": 57,
+        "points": 26,
+        "team": "ST MICHEL - MAVIC - AUBER93"
+      }
+    ],
+    "chantal van den broek blaak": [
+      {
+        "year": 2022,
+        "rank": 48,
+        "points": 36,
+        "team": "TEAM SD WORX"
+      }
+    ],
+    "charlotte kool": [
+      {
+        "year": 2025,
+        "rank": 100,
+        "points": 0,
+        "team": "TEAM PICNIC POSTNL"
+      },
+      {
+        "year": 2024,
+        "rank": 9,
+        "points": 292,
+        "team": "TEAM DSM-FIRMENICH POSTNL"
+      },
+      {
+        "year": 2023,
+        "rank": 16,
+        "points": 185,
+        "team": "TEAM DSM-FIRMENICH"
+      },
+      {
+        "year": 2022,
+        "rank": 53,
+        "points": 32,
+        "team": "TEAM DSM"
+      }
+    ],
+    "chiara consonni": [
+      {
+        "year": 2023,
+        "rank": 26,
+        "points": 93,
+        "team": "UAE TEAM ADQ"
+      }
+    ],
+    "chloe dygert": [
+      {
+        "year": 2025,
+        "rank": 51,
+        "points": 53,
+        "team": "CANYON//SRAM ZONDACRYPTO"
+      },
+      {
+        "year": 2024,
+        "rank": 22,
+        "points": 130,
+        "team": "CANYON//SRAM RACING"
+      }
+    ],
+    "christina schweinberger": [
+      {
+        "year": 2025,
+        "rank": 101,
+        "points": 0,
+        "team": "FENIX-DECEUNINCK"
+      },
+      {
+        "year": 2024,
+        "rank": 111,
+        "points": 0,
+        "team": "FENIX-DECEUNINCK"
+      },
+      {
+        "year": 2023,
+        "rank": 29,
+        "points": 83,
+        "team": "FENIX-DECEUNINCK"
+      },
+      {
+        "year": 2022,
+        "rank": 67,
+        "points": 12,
+        "team": "PLANTUR-PURA"
+      }
+    ],
+    "christine majerus": [
+      {
+        "year": 2024,
+        "rank": 49,
+        "points": 58,
+        "team": "TEAM SD WORX - PROTIME"
+      },
+      {
+        "year": 2023,
+        "rank": 8,
+        "points": 298,
+        "team": "TEAM SD WORX"
+      },
+      {
+        "year": 2022,
+        "rank": 49,
+        "points": 36,
+        "team": "TEAM SD WORX"
+      }
+    ],
+    "claire steels": [
+      {
+        "year": 2023,
+        "rank": 86,
+        "points": 2,
+        "team": "ISRAEL PREMIER TECH ROLAND"
+      }
+    ],
+    "clara emond": [
+      {
+        "year": 2024,
+        "rank": 112,
+        "points": 0,
+        "team": "EF - OATLY - CANNONDALE"
+      },
+      {
+        "year": 2023,
+        "rank": 100,
+        "points": 0,
+        "team": "ARKEA PRO CYCLING TEAM"
+      }
+    ],
+    "clara koppenburg": [
+      {
+        "year": 2025,
+        "rank": 59,
+        "points": 24,
+        "team": "COFIDIS WOMEN TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 68,
+        "points": 15,
+        "team": "COFIDIS WOMEN TEAM"
+      }
+    ],
+    "clemence latimier": [
+      {
+        "year": 2025,
+        "rank": 64,
+        "points": 23,
+        "team": "ARKEA - B&B HOTELS WOMAN"
+      }
+    ],
+    "constance valentin": [
+      {
+        "year": 2025,
+        "rank": 102,
+        "points": 0,
+        "team": "WINSPACE ORANGE SEAL"
+      }
+    ],
+    "coralie demay": [
+      {
+        "year": 2024,
+        "rank": 113,
+        "points": 0,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2023,
+        "rank": 65,
+        "points": 19,
+        "team": "ST MICHEL - MAVIC - AUBER93"
+      },
+      {
+        "year": 2022,
+        "rank": 62,
+        "points": 18,
+        "team": "ST-MICHEL AUBER 93"
+      }
+    ],
+    "coryn labecki": [
+      {
+        "year": 2023,
+        "rank": 101,
+        "points": 0,
+        "team": "TEAM JUMBO-VISMA"
+      }
+    ],
+    "cristina tonetti": [
+      {
+        "year": 2024,
+        "rank": 67,
+        "points": 24,
+        "team": "LABORAL KUTXA - FUNDACION EUSKADI"
+      }
+    ],
+    "daniek hengeveld": [
+      {
+        "year": 2025,
+        "rank": 103,
+        "points": 0,
+        "team": "CERATIZIT PRO CYCLING TEAM"
+      }
+    ],
+    "danielle de francesco": [
+      {
+        "year": 2023,
+        "rank": 102,
+        "points": 0,
+        "team": "ARKEA PRO CYCLING TEAM"
+      }
+    ],
+    "daria pikulik": [
+      {
+        "year": 2024,
+        "rank": 57,
+        "points": 38,
+        "team": "HUMAN POWERED HEALTH"
+      }
+    ],
+    "debora silvestri": [
+      {
+        "year": 2024,
+        "rank": 73,
+        "points": 18,
+        "team": "LABORAL KUTXA - FUNDACION EUSKADI"
+      }
+    ],
+    "demi vollering": [
+      {
+        "year": 2025,
+        "rank": 2,
+        "points": 828,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2024,
+        "rank": 1,
+        "points": 718,
+        "team": "TEAM SD WORX - PROTIME"
+      },
+      {
+        "year": 2023,
+        "rank": 2,
+        "points": 949,
+        "team": "TEAM SD WORX"
+      },
+      {
+        "year": 2022,
+        "rank": 2,
+        "points": 581,
+        "team": "TEAM SD WORX"
+      }
+    ],
+    "dilyxine miermont": [
+      {
+        "year": 2025,
+        "rank": 104,
+        "points": 0,
+        "team": "CERATIZIT PRO CYCLING TEAM"
+      },
+      {
+        "year": 2024,
+        "rank": 114,
+        "points": 0,
+        "team": "ST MICHEL - MAVIC - AUBER93"
+      },
+      {
+        "year": 2023,
+        "rank": 103,
+        "points": 0,
+        "team": "ST MICHEL - MAVIC - AUBER93"
+      }
+    ],
+    "dominika wlodarczyk": [
+      {
+        "year": 2025,
+        "rank": 8,
+        "points": 327,
+        "team": "UAE TEAM ADQ"
+      }
+    ],
+    "elena cecchini": [
+      {
+        "year": 2025,
+        "rank": 29,
+        "points": 104,
+        "team": "TEAM SD WORX - PROTIME"
+      },
+      {
+        "year": 2023,
+        "rank": 9,
+        "points": 290,
+        "team": "TEAM SD WORX"
+      }
+    ],
+    "elena hartmann": [
+      {
+        "year": 2025,
+        "rank": 105,
+        "points": 0,
+        "team": "CERATIZIT PRO CYCLING TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 104,
+        "points": 0,
+        "team": "ISRAEL PREMIER TECH ROLAND"
+      }
+    ],
+    "elena pirrone": [
+      {
+        "year": 2025,
+        "rank": 106,
+        "points": 0,
+        "team": "ROLAND LE DEVOLUY"
+      },
+      {
+        "year": 2024,
+        "rank": 96,
+        "points": 1,
+        "team": "ROLAND"
+      }
+    ],
+    "eleonora gasparrini": [
+      {
+        "year": 2025,
+        "rank": 107,
+        "points": 0,
+        "team": "UAE TEAM ADQ"
+      },
+      {
+        "year": 2023,
+        "rank": 33,
+        "points": 64,
+        "team": "UAE TEAM ADQ"
+      },
+      {
+        "year": 2022,
+        "rank": 86,
+        "points": 4,
+        "team": "VALCAR - TRAVEL & SERVICE"
+      }
+    ],
+    "eline jansen": [
+      {
+        "year": 2025,
+        "rank": 25,
+        "points": 119,
+        "team": "VOLKERWESSELS CYCLING TEAM"
+      }
+    ],
+    "elisa balsamo": [
+      {
+        "year": 2025,
+        "rank": 108,
+        "points": 0,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2024,
+        "rank": 18,
+        "points": 140,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2023,
+        "rank": 45,
+        "points": 45,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2022,
+        "rank": 11,
+        "points": 212,
+        "team": "TREK - SEGAFREDO"
+      }
+    ],
+    "elisa longo borghini": [
+      {
+        "year": 2025,
+        "rank": 109,
+        "points": 0,
+        "team": "UAE TEAM ADQ"
+      },
+      {
+        "year": 2023,
+        "rank": 23,
+        "points": 116,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2022,
+        "rank": 6,
+        "points": 437,
+        "team": "TREK - SEGAFREDO"
+      }
+    ],
+    "elise chabbey": [
+      {
+        "year": 2025,
+        "rank": 15,
+        "points": 214,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2024,
+        "rank": 115,
+        "points": 0,
+        "team": "CANYON//SRAM RACING"
+      },
+      {
+        "year": 2023,
+        "rank": 40,
+        "points": 48,
+        "team": "CANYON//SRAM RACING"
+      },
+      {
+        "year": 2022,
+        "rank": 46,
+        "points": 37,
+        "team": "CANYON // SRAM RACING"
+      }
+    ],
+    "elise uijen": [
+      {
+        "year": 2023,
+        "rank": 105,
+        "points": 0,
+        "team": "TEAM DSM-FIRMENICH"
+      }
+    ],
+    "elizabeth deignan": [
+      {
+        "year": 2024,
+        "rank": 116,
+        "points": 0,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2023,
+        "rank": 87,
+        "points": 2,
+        "team": "LIDL - TREK"
+      }
+    ],
+    "elizabeth holden": [
+      {
+        "year": 2024,
+        "rank": 117,
+        "points": 0,
+        "team": "UAE TEAM ADQ"
+      },
+      {
+        "year": 2023,
+        "rank": 106,
+        "points": 0,
+        "team": "UAE TEAM ADQ"
+      },
+      {
+        "year": 2022,
+        "rank": 74,
+        "points": 8,
+        "team": "LE COL-WAHOO"
+      }
+    ],
+    "elizabeth stannard": [
+      {
+        "year": 2023,
+        "rank": 107,
+        "points": 0,
+        "team": "ISRAEL PREMIER TECH ROLAND"
+      }
+    ],
+    "ella wyllie": [
+      {
+        "year": 2025,
+        "rank": 67,
+        "points": 16,
+        "team": "LIV-ALULA-JAYCO"
+      },
+      {
+        "year": 2023,
+        "rank": 25,
+        "points": 98,
+        "team": "LIFEPLUS WAHOO"
+      }
+    ],
+    "ellen van dijk": [
+      {
+        "year": 2024,
+        "rank": 58,
+        "points": 38,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2022,
+        "rank": 59,
+        "points": 22,
+        "team": "TREK - SEGAFREDO"
+      }
+    ],
+    "elyne roussel": [
+      {
+        "year": 2025,
+        "rank": 110,
+        "points": 0,
+        "team": "ST MICHEL - PREFERENCE HOME - AUBER93"
+      },
+      {
+        "year": 2024,
+        "rank": 118,
+        "points": 0,
+        "team": "ST MICHEL - MAVIC - AUBER93"
+      }
+    ],
+    "emilia fahlin": [
+      {
+        "year": 2025,
+        "rank": 111,
+        "points": 0,
+        "team": "ARKEA - B&B HOTELS WOMAN"
+      },
+      {
+        "year": 2024,
+        "rank": 60,
+        "points": 31,
+        "team": "ARKEA - B&B HOTELS WOMEN"
+      }
+    ],
+    "emilie morier": [
+      {
+        "year": 2025,
+        "rank": 76,
+        "points": 10,
+        "team": "ST MICHEL - PREFERENCE HOME - AUBER93"
+      }
+    ],
+    "emily newsom": [
+      {
+        "year": 2022,
+        "rank": 102,
+        "points": 0,
+        "team": "EF EDUCATION-TIBCO-SVB"
+      }
+    ],
+    "emily watts": [
+      {
+        "year": 2025,
+        "rank": 112,
+        "points": 0,
+        "team": "ST MICHEL - PREFERENCE HOME - AUBER93"
+      }
+    ],
+    "emma norsgaard bjerg": [
+      {
+        "year": 2025,
+        "rank": 113,
+        "points": 0,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2024,
+        "rank": 40,
+        "points": 76,
+        "team": "MOVISTAR TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 17,
+        "points": 161,
+        "team": "MOVISTAR TEAM WOMEN"
+      },
+      {
+        "year": 2022,
+        "rank": 41,
+        "points": 49,
+        "team": "MOVISTAR TEAM WOMEN"
+      }
+    ],
+    "eri yonamine": [
+      {
+        "year": 2023,
+        "rank": 108,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      }
+    ],
+    "erica magnaldi": [
+      {
+        "year": 2024,
+        "rank": 83,
+        "points": 11,
+        "team": "UAE TEAM ADQ"
+      },
+      {
+        "year": 2023,
+        "rank": 72,
+        "points": 10,
+        "team": "UAE TEAM ADQ"
+      },
+      {
+        "year": 2022,
+        "rank": 89,
+        "points": 3,
+        "team": "UAE TEAM ADQ"
+      }
+    ],
+    "esmee peperkamp": [
+      {
+        "year": 2023,
+        "rank": 89,
+        "points": 1,
+        "team": "TEAM DSM-FIRMENICH"
+      }
+    ],
+    "eugenia bujak": [
+      {
+        "year": 2025,
+        "rank": 68,
+        "points": 16,
+        "team": "COFIDIS WOMEN TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 103,
+        "points": 0,
+        "team": "UAE TEAM ADQ"
+      }
+    ],
+    "eva van agt": [
+      {
+        "year": 2025,
+        "rank": 17,
+        "points": 158,
+        "team": "TEAM VISMA | LEASE A BIKE"
+      },
+      {
+        "year": 2023,
+        "rank": 109,
+        "points": 0,
+        "team": "TEAM JUMBO-VISMA"
+      },
+      {
+        "year": 2022,
+        "rank": 75,
+        "points": 8,
+        "team": "LE COL-WAHOO"
+      }
+    ],
+    "evita muzic": [
+      {
+        "year": 2025,
+        "rank": 21,
+        "points": 145,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2024,
+        "rank": 8,
+        "points": 329,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2023,
+        "rank": 83,
+        "points": 4,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2022,
+        "rank": 18,
+        "points": 166,
+        "team": "FDJ SUEZ FUTUROSCOPE"
+      }
+    ],
+    "evy kuijpers": [
+      {
+        "year": 2023,
+        "rank": 51,
+        "points": 34,
+        "team": "FENIX-DECEUNINCK"
+      }
+    ],
+    "fauve bastiaenssen": [
+      {
+        "year": 2024,
+        "rank": 119,
+        "points": 0,
+        "team": "LOTTO DSTNY LADIES"
+      }
+    ],
+    "fem van empel": [
+      {
+        "year": 2024,
+        "rank": 35,
+        "points": 91,
+        "team": "TEAM VISMA | LEASE A BIKE"
+      }
+    ],
+    "femke de vries": [
+      {
+        "year": 2025,
+        "rank": 18,
+        "points": 158,
+        "team": "TEAM VISMA | LEASE A BIKE"
+      },
+      {
+        "year": 2024,
+        "rank": 51,
+        "points": 52,
+        "team": "TEAM VISMA | LEASE A BIKE"
+      }
+    ],
+    "femke gerritse": [
+      {
+        "year": 2025,
+        "rank": 30,
+        "points": 104,
+        "team": "TEAM SD WORX - PROTIME"
+      },
+      {
+        "year": 2022,
+        "rank": 36,
+        "points": 70,
+        "team": "PARKHOTEL VALKENBURG"
+      }
+    ],
+    "femke markus": [
+      {
+        "year": 2022,
+        "rank": 43,
+        "points": 42,
+        "team": "PARKHOTEL VALKENBURG"
+      }
+    ],
+    "fien delbaere": [
+      {
+        "year": 2023,
+        "rank": 110,
+        "points": 0,
+        "team": "ISRAEL PREMIER TECH ROLAND"
+      }
+    ],
+    "fiona mangan": [
+      {
+        "year": 2025,
+        "rank": 114,
+        "points": 0,
+        "team": "WINSPACE ORANGE SEAL"
+      }
+    ],
+    "floortje mackaij": [
+      {
+        "year": 2024,
+        "rank": 120,
+        "points": 0,
+        "team": "MOVISTAR TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 62,
+        "points": 20,
+        "team": "MOVISTAR TEAM WOMEN"
+      }
+    ],
+    "flora perkins": [
+      {
+        "year": 2025,
+        "rank": 86,
+        "points": 5,
+        "team": "FENIX-DECEUNINCK"
+      }
+    ],
+    "frances janse van rensburg": [
+      {
+        "year": 2022,
+        "rank": 104,
+        "points": 0,
+        "team": "STADE ROCHELAIS CHARENTE MARITIME"
+      }
+    ],
+    "francesca barale": [
+      {
+        "year": 2025,
+        "rank": 40,
+        "points": 69,
+        "team": "TEAM PICNIC POSTNL"
+      },
+      {
+        "year": 2024,
+        "rank": 28,
+        "points": 106,
+        "team": "TEAM DSM-FIRMENICH POSTNL"
+      }
+    ],
+    "franziska brau e": [
+      {
+        "year": 2025,
+        "rank": 82,
+        "points": 8,
+        "team": "CERATIZIT PRO CYCLING TEAM"
+      }
+    ],
+    "franziska koch": [
+      {
+        "year": 2025,
+        "rank": 49,
+        "points": 56,
+        "team": "TEAM PICNIC POSTNL"
+      },
+      {
+        "year": 2024,
+        "rank": 34,
+        "points": 92,
+        "team": "TEAM DSM-FIRMENICH POSTNL"
+      },
+      {
+        "year": 2022,
+        "rank": 44,
+        "points": 42,
+        "team": "TEAM DSM"
+      }
+    ],
+    "gabrielle pilote fortin": [
+      {
+        "year": 2023,
+        "rank": 111,
+        "points": 0,
+        "team": "COFIDIS WOMEN TEAM"
+      }
+    ],
+    "gaia masetti": [
+      {
+        "year": 2024,
+        "rank": 55,
+        "points": 42,
+        "team": "AG INSURANCE - SOUDAL TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 105,
+        "points": 0,
+        "team": "AG INSURANCE-NXTG TEAM"
+      }
+    ],
+    "gaia realini": [
+      {
+        "year": 2024,
+        "rank": 14,
+        "points": 159,
+        "team": "LIDL - TREK"
+      }
+    ],
+    "georgia williams": [
+      {
+        "year": 2023,
+        "rank": 80,
+        "points": 6,
+        "team": "EF EDUCATION - TIBCO - SVB"
+      }
+    ],
+    "georgina howe": [
+      {
+        "year": 2023,
+        "rank": 84,
+        "points": 4,
+        "team": "TEAM JAYCO ALULA"
+      }
+    ],
+    "giorgia vettorello": [
+      {
+        "year": 2024,
+        "rank": 121,
+        "points": 0,
+        "team": "ROLAND"
+      }
+    ],
+    "gladys verhulst wild": [
+      {
+        "year": 2025,
+        "rank": 42,
+        "points": 66,
+        "team": "AG INSURANCE - SOUDAL TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 76,
+        "points": 8,
+        "team": "LE COL-WAHOO"
+      }
+    ],
+    "grace brown": [
+      {
+        "year": 2024,
+        "rank": 94,
+        "points": 3,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2023,
+        "rank": 38,
+        "points": 55,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2022,
+        "rank": 50,
+        "points": 36,
+        "team": "FDJ SUEZ FUTUROSCOPE"
+      }
+    ],
+    "greta richioud": [
+      {
+        "year": 2022,
+        "rank": 106,
+        "points": 0,
+        "team": "ARKEA PRO CYCLING TEAM"
+      }
+    ],
+    "hannah barnes": [
+      {
+        "year": 2022,
+        "rank": 107,
+        "points": 0,
+        "team": "UNO-X PRO CYCLING TEAM"
+      }
+    ],
+    "hannah buch": [
+      {
+        "year": 2022,
+        "rank": 108,
+        "points": 0,
+        "team": "ROLAND COGEAS EDELWEISS SQUAD"
+      }
+    ],
+    "hannah ludwig": [
+      {
+        "year": 2025,
+        "rank": 60,
+        "points": 24,
+        "team": "COFIDIS WOMEN TEAM"
+      },
+      {
+        "year": 2024,
+        "rank": 91,
+        "points": 4,
+        "team": "COFIDIS WOMEN TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 69,
+        "points": 14,
+        "team": "UNO-X PRO CYCLING TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 109,
+        "points": 0,
+        "team": "UNO-X PRO CYCLING TEAM"
+      }
+    ],
+    "henrietta christie": [
+      {
+        "year": 2025,
+        "rank": 115,
+        "points": 0,
+        "team": "EF EDUCATION - OATLY"
+      },
+      {
+        "year": 2023,
+        "rank": 112,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      },
+      {
+        "year": 2022,
+        "rank": 66,
+        "points": 13,
+        "team": "HUMAN POWERED HEALTH"
+      }
+    ],
+    "idoia eraso lasa": [
+      {
+        "year": 2025,
+        "rank": 116,
+        "points": 0,
+        "team": "LABORAL KUTXA - FUNDACION EUSKADI"
+      }
+    ],
+    "ilaria sanguineti": [
+      {
+        "year": 2023,
+        "rank": 113,
+        "points": 0,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2022,
+        "rank": 77,
+        "points": 8,
+        "team": "VALCAR - TRAVEL & SERVICE"
+      }
+    ],
+    "ilse pluimers": [
+      {
+        "year": 2025,
+        "rank": 43,
+        "points": 66,
+        "team": "AG INSURANCE - SOUDAL TEAM"
+      },
+      {
+        "year": 2024,
+        "rank": 65,
+        "points": 25,
+        "team": "AG INSURANCE - SOUDAL TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 84,
+        "points": 5,
+        "team": "AG INSURANCE-NXTG TEAM"
+      }
+    ],
+    "imogen wolff": [
+      {
+        "year": 2025,
+        "rank": 16,
+        "points": 172,
+        "team": "TEAM VISMA | LEASE A BIKE"
+      }
+    ],
+    "india grangier": [
+      {
+        "year": 2023,
+        "rank": 114,
+        "points": 0,
+        "team": "TEAM COOP-HITEC PRODUCTS"
+      },
+      {
+        "year": 2022,
+        "rank": 110,
+        "points": 0,
+        "team": "STADE ROCHELAIS CHARENTE MARITIME"
+      }
+    ],
+    "iurani blanco calbet": [
+      {
+        "year": 2024,
+        "rank": 74,
+        "points": 18,
+        "team": "LABORAL KUTXA - FUNDACION EUSKADI"
+      }
+    ],
+    "jade wiel": [
+      {
+        "year": 2023,
+        "rank": 115,
+        "points": 0,
+        "team": "FDJ-SUEZ"
+      }
+    ],
+    "jeanne korevaar": [
+      {
+        "year": 2025,
+        "rank": 77,
+        "points": 10,
+        "team": "LIV-ALULA-JAYCO"
+      },
+      {
+        "year": 2024,
+        "rank": 122,
+        "points": 0,
+        "team": "LIV-ALULA-JAYCO"
+      },
+      {
+        "year": 2023,
+        "rank": 116,
+        "points": 0,
+        "team": "LIV RACING TEQFIND"
+      },
+      {
+        "year": 2022,
+        "rank": 87,
+        "points": 4,
+        "team": "LIV RACING XSTRA"
+      }
+    ],
+    "jelena eric": [
+      {
+        "year": 2025,
+        "rank": 90,
+        "points": 4,
+        "team": "MOVISTAR TEAM"
+      }
+    ],
+    "jenny rissveds": [
+      {
+        "year": 2023,
+        "rank": 117,
+        "points": 0,
+        "team": "TEAM COOP-HITEC PRODUCTS"
+      }
+    ],
+    "jesse vandenbulcke": [
+      {
+        "year": 2022,
+        "rank": 78,
+        "points": 8,
+        "team": "LE COL-WAHOO"
+      }
+    ],
+    "jessica allen": [
+      {
+        "year": 2023,
+        "rank": 118,
+        "points": 0,
+        "team": "TEAM JAYCO ALULA"
+      }
+    ],
+    "joscelin lowden": [
+      {
+        "year": 2022,
+        "rank": 80,
+        "points": 6,
+        "team": "UNO-X PRO CYCLING TEAM"
+      }
+    ],
+    "josie nelson": [
+      {
+        "year": 2023,
+        "rank": 119,
+        "points": 0,
+        "team": "TEAM COOP-HITEC PRODUCTS"
+      }
+    ],
+    "josie talbot": [
+      {
+        "year": 2024,
+        "rank": 123,
+        "points": 0,
+        "team": "COFIDIS WOMEN TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 120,
+        "points": 0,
+        "team": "COFIDIS WOMEN TEAM"
+      }
+    ],
+    "julia borgstrom": [
+      {
+        "year": 2023,
+        "rank": 66,
+        "points": 17,
+        "team": "AG INSURANCE - SOUDAL QUICK-STEP TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 37,
+        "points": 68,
+        "team": "AG INSURANCE-NXTG TEAM"
+      }
+    ],
+    "julie bego": [
+      {
+        "year": 2025,
+        "rank": 33,
+        "points": 86,
+        "team": "COFIDIS WOMEN TEAM"
+      }
+    ],
+    "julie de wilde": [
+      {
+        "year": 2024,
+        "rank": 47,
+        "points": 61,
+        "team": "FENIX-DECEUNINCK"
+      },
+      {
+        "year": 2023,
+        "rank": 24,
+        "points": 102,
+        "team": "FENIX-DECEUNINCK"
+      },
+      {
+        "year": 2022,
+        "rank": 28,
+        "points": 92,
+        "team": "PLANTUR-PURA"
+      }
+    ],
+    "julie leth": [
+      {
+        "year": 2022,
+        "rank": 111,
+        "points": 0,
+        "team": "UNO-X PRO CYCLING TEAM"
+      }
+    ],
+    "julie van de velde": [
+      {
+        "year": 2025,
+        "rank": 44,
+        "points": 66,
+        "team": "AG INSURANCE - SOUDAL TEAM"
+      },
+      {
+        "year": 2024,
+        "rank": 56,
+        "points": 42,
+        "team": "AG INSURANCE - SOUDAL TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 36,
+        "points": 61,
+        "team": "FENIX-DECEUNINCK"
+      }
+    ],
+    "juliette labous": [
+      {
+        "year": 2025,
+        "rank": 11,
+        "points": 274,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2024,
+        "rank": 12,
+        "points": 200,
+        "team": "TEAM DSM-FIRMENICH POSTNL"
+      },
+      {
+        "year": 2023,
+        "rank": 15,
+        "points": 209,
+        "team": "TEAM DSM-FIRMENICH"
+      },
+      {
+        "year": 2022,
+        "rank": 8,
+        "points": 303,
+        "team": "TEAM DSM"
+      }
+    ],
+    "justine ghekiere": [
+      {
+        "year": 2025,
+        "rank": 38,
+        "points": 71,
+        "team": "AG INSURANCE - SOUDAL TEAM"
+      },
+      {
+        "year": 2024,
+        "rank": 10,
+        "points": 238,
+        "team": "AG INSURANCE - SOUDAL TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 121,
+        "points": 0,
+        "team": "AG INSURANCE - SOUDAL QUICK-STEP TEAM"
+      }
+    ],
+    "kaja rysz": [
+      {
+        "year": 2025,
+        "rank": 61,
+        "points": 24,
+        "team": "ROLAND LE DEVOLUY"
+      },
+      {
+        "year": 2023,
+        "rank": 122,
+        "points": 0,
+        "team": "LIFEPLUS WAHOO"
+      }
+    ],
+    "karlijn swinkels": [
+      {
+        "year": 2025,
+        "rank": 117,
+        "points": 0,
+        "team": "UAE TEAM ADQ"
+      },
+      {
+        "year": 2024,
+        "rank": 37,
+        "points": 84,
+        "team": "UAE TEAM ADQ"
+      },
+      {
+        "year": 2023,
+        "rank": 123,
+        "points": 0,
+        "team": "TEAM JUMBO-VISMA"
+      },
+      {
+        "year": 2022,
+        "rank": 14,
+        "points": 174,
+        "team": "TEAM JUMBO VISMA"
+      }
+    ],
+    "karolina kumiega": [
+      {
+        "year": 2024,
+        "rank": 124,
+        "points": 0,
+        "team": "UAE TEAM ADQ"
+      }
+    ],
+    "karolina perekitko": [
+      {
+        "year": 2025,
+        "rank": 118,
+        "points": 0,
+        "team": "WINSPACE ORANGE SEAL"
+      }
+    ],
+    "katarzyna niewiadoma phinney": [
+      {
+        "year": 2025,
+        "rank": 4,
+        "points": 548,
+        "team": "CANYON//SRAM ZONDACRYPTO"
+      },
+      {
+        "year": 2024,
+        "rank": 2,
+        "points": 712,
+        "team": "CANYON//SRAM RACING"
+      },
+      {
+        "year": 2023,
+        "rank": 3,
+        "points": 515,
+        "team": "CANYON//SRAM RACING"
+      },
+      {
+        "year": 2022,
+        "rank": 4,
+        "points": 531,
+        "team": "CANYON // SRAM RACING"
+      }
+    ],
+    "kathrin hammes": [
+      {
+        "year": 2023,
+        "rank": 31,
+        "points": 70,
+        "team": "EF EDUCATION - TIBCO - SVB"
+      },
+      {
+        "year": 2022,
+        "rank": 112,
+        "points": 0,
+        "team": "EF EDUCATION-TIBCO-SVB"
+      }
+    ],
+    "kathrin schweinberger": [
+      {
+        "year": 2024,
+        "rank": 59,
+        "points": 34,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 41,
+        "points": 47,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 113,
+        "points": 0,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      }
+    ],
+    "katrine aalerud": [
+      {
+        "year": 2025,
+        "rank": 73,
+        "points": 12,
+        "team": "UNO-X MOBILITY"
+      },
+      {
+        "year": 2024,
+        "rank": 69,
+        "points": 20,
+        "team": "UNO-X MOBILITY"
+      }
+    ],
+    "kiara lylyk": [
+      {
+        "year": 2025,
+        "rank": 80,
+        "points": 9,
+        "team": "WINSPACE ORANGE SEAL"
+      }
+    ],
+    "kim de baat": [
+      {
+        "year": 2022,
+        "rank": 68,
+        "points": 12,
+        "team": "PLANTUR-PURA"
+      }
+    ],
+    "kim le court pienaar": [
+      {
+        "year": 2025,
+        "rank": 5,
+        "points": 536,
+        "team": "AG INSURANCE - SOUDAL TEAM"
+      },
+      {
+        "year": 2024,
+        "rank": 24,
+        "points": 125,
+        "team": "AG INSURANCE - SOUDAL TEAM"
+      }
+    ],
+    "krista doebel hickok": [
+      {
+        "year": 2022,
+        "rank": 64,
+        "points": 14,
+        "team": "EF EDUCATION-TIBCO-SVB"
+      }
+    ],
+    "kristen faulkner": [
+      {
+        "year": 2025,
+        "rank": 119,
+        "points": 0,
+        "team": "EF EDUCATION - OATLY"
+      },
+      {
+        "year": 2024,
+        "rank": 20,
+        "points": 137,
+        "team": "EF - OATLY - CANNONDALE"
+      },
+      {
+        "year": 2022,
+        "rank": 69,
+        "points": 12,
+        "team": "TEAM BIKEEXCHANGE-JAYCO"
+      }
+    ],
+    "kristyna burlova": [
+      {
+        "year": 2025,
+        "rank": 78,
+        "points": 10,
+        "team": "CERATIZIT PRO CYCLING TEAM"
+      }
+    ],
+    "lara gillespie": [
+      {
+        "year": 2025,
+        "rank": 34,
+        "points": 85,
+        "team": "UAE TEAM ADQ"
+      }
+    ],
+    "lara vieceli": [
+      {
+        "year": 2023,
+        "rank": 124,
+        "points": 0,
+        "team": "ISRAEL PREMIER TECH ROLAND"
+      }
+    ],
+    "laura asencio": [
+      {
+        "year": 2022,
+        "rank": 65,
+        "points": 14,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      }
+    ],
+    "laura molenaar": [
+      {
+        "year": 2025,
+        "rank": 120,
+        "points": 0,
+        "team": "VOLKERWESSELS CYCLING TEAM"
+      }
+    ],
+    "laura su emilch": [
+      {
+        "year": 2022,
+        "rank": 114,
+        "points": 0,
+        "team": "PLANTUR-PURA"
+      }
+    ],
+    "laura tomasi": [
+      {
+        "year": 2025,
+        "rank": 121,
+        "points": 0,
+        "team": "LABORAL KUTXA - FUNDACION EUSKADI"
+      },
+      {
+        "year": 2024,
+        "rank": 70,
+        "points": 19,
+        "team": "LABORAL KUTXA - FUNDACION EUSKADI"
+      }
+    ],
+    "lauretta hanson": [
+      {
+        "year": 2025,
+        "rank": 122,
+        "points": 0,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2023,
+        "rank": 125,
+        "points": 0,
+        "team": "LIDL - TREK"
+      }
+    ],
+    "lea curinier": [
+      {
+        "year": 2024,
+        "rank": 126,
+        "points": 0,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2023,
+        "rank": 47,
+        "points": 40,
+        "team": "TEAM DSM-FIRMENICH"
+      }
+    ],
+    "leah thomas": [
+      {
+        "year": 2022,
+        "rank": 60,
+        "points": 22,
+        "team": "TREK - SEGAFREDO"
+      }
+    ],
+    "letizia borghesi": [
+      {
+        "year": 2025,
+        "rank": 123,
+        "points": 0,
+        "team": "EF EDUCATION - OATLY"
+      },
+      {
+        "year": 2023,
+        "rank": 77,
+        "points": 8,
+        "team": "EF EDUCATION - TIBCO - SVB"
+      },
+      {
+        "year": 2022,
+        "rank": 115,
+        "points": 0,
+        "team": "EF EDUCATION-TIBCO-SVB"
+      }
+    ],
+    "letizia paternoster": [
+      {
+        "year": 2025,
+        "rank": 69,
+        "points": 16,
+        "team": "LIV-ALULA-JAYCO"
+      }
+    ],
+    "liane lippert": [
+      {
+        "year": 2025,
+        "rank": 32,
+        "points": 100,
+        "team": "MOVISTAR TEAM"
+      },
+      {
+        "year": 2024,
+        "rank": 21,
+        "points": 132,
+        "team": "MOVISTAR TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 12,
+        "points": 246,
+        "team": "MOVISTAR TEAM WOMEN"
+      },
+      {
+        "year": 2022,
+        "rank": 34,
+        "points": 77,
+        "team": "TEAM DSM"
+      }
+    ],
+    "lieke nooijen": [
+      {
+        "year": 2025,
+        "rank": 19,
+        "points": 156,
+        "team": "TEAM VISMA | LEASE A BIKE"
+      }
+    ],
+    "lily williams": [
+      {
+        "year": 2025,
+        "rank": 124,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      },
+      {
+        "year": 2024,
+        "rank": 125,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      },
+      {
+        "year": 2022,
+        "rank": 116,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      }
+    ],
+    "linda riedmann": [
+      {
+        "year": 2024,
+        "rank": 44,
+        "points": 70,
+        "team": "TEAM VISMA | LEASE A BIKE"
+      }
+    ],
+    "linda zanetti": [
+      {
+        "year": 2025,
+        "rank": 57,
+        "points": 26,
+        "team": "UNO-X MOBILITY"
+      }
+    ],
+    "lisa brennauer": [
+      {
+        "year": 2022,
+        "rank": 117,
+        "points": 0,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      }
+    ],
+    "loes adegeest": [
+      {
+        "year": 2024,
+        "rank": 43,
+        "points": 71,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2023,
+        "rank": 85,
+        "points": 4,
+        "team": "FDJ-SUEZ"
+      }
+    ],
+    "lone meertens": [
+      {
+        "year": 2022,
+        "rank": 88,
+        "points": 4,
+        "team": "AG INSURANCE-NXTG TEAM"
+      }
+    ],
+    "lonneke uneken": [
+      {
+        "year": 2025,
+        "rank": 125,
+        "points": 0,
+        "team": "VOLKERWESSELS CYCLING TEAM"
+      }
+    ],
+    "lorena wiebes": [
+      {
+        "year": 2025,
+        "rank": 6,
+        "points": 494,
+        "team": "TEAM SD WORX - PROTIME"
+      },
+      {
+        "year": 2024,
+        "rank": 7,
+        "points": 335,
+        "team": "TEAM SD WORX - PROTIME"
+      },
+      {
+        "year": 2023,
+        "rank": 7,
+        "points": 308,
+        "team": "TEAM SD WORX"
+      },
+      {
+        "year": 2022,
+        "rank": 9,
+        "points": 294,
+        "team": "TEAM DSM"
+      }
+    ],
+    "lotta henttala": [
+      {
+        "year": 2024,
+        "rank": 25,
+        "points": 119,
+        "team": "EF - OATLY - CANNONDALE"
+      },
+      {
+        "year": 2023,
+        "rank": 73,
+        "points": 10,
+        "team": "AG INSURANCE - SOUDAL QUICK-STEP TEAM"
+      }
+    ],
+    "lotte claes": [
+      {
+        "year": 2025,
+        "rank": 126,
+        "points": 0,
+        "team": "ARKEA - B&B HOTELS WOMAN"
+      },
+      {
+        "year": 2024,
+        "rank": 88,
+        "points": 7,
+        "team": "ARKEA - B&B HOTELS WOMEN"
+      }
+    ],
+    "lotte kopecky": [
+      {
+        "year": 2025,
+        "rank": 26,
+        "points": 119,
+        "team": "TEAM SD WORX - PROTIME"
+      },
+      {
+        "year": 2023,
+        "rank": 1,
+        "points": 1054,
+        "team": "TEAM SD WORX"
+      },
+      {
+        "year": 2022,
+        "rank": 7,
+        "points": 378,
+        "team": "TEAM SD WORX"
+      }
+    ],
+    "lucie fityus": [
+      {
+        "year": 2025,
+        "rank": 127,
+        "points": 0,
+        "team": "ST MICHEL - PREFERENCE HOME - AUBER93"
+      }
+    ],
+    "lucie jounier": [
+      {
+        "year": 2023,
+        "rank": 126,
+        "points": 0,
+        "team": "TEAM COOP-HITEC PRODUCTS"
+      }
+    ],
+    "lucinda brand": [
+      {
+        "year": 2025,
+        "rank": 70,
+        "points": 16,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2024,
+        "rank": 15,
+        "points": 154,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2023,
+        "rank": 56,
+        "points": 30,
+        "team": "LIDL - TREK"
+      }
+    ],
+    "maaike boogaard": [
+      {
+        "year": 2023,
+        "rank": 127,
+        "points": 0,
+        "team": "AG INSURANCE - SOUDAL QUICK-STEP TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 118,
+        "points": 0,
+        "team": "UAE TEAM ADQ"
+      }
+    ],
+    "maaike colje": [
+      {
+        "year": 2024,
+        "rank": 127,
+        "points": 0,
+        "team": "ARKEA - B&B HOTELS WOMEN"
+      },
+      {
+        "year": 2023,
+        "rank": 128,
+        "points": 0,
+        "team": "ARKEA PRO CYCLING TEAM"
+      }
+    ],
+    "maeva squiban": [
+      {
+        "year": 2025,
+        "rank": 10,
+        "points": 298,
+        "team": "UAE TEAM ADQ"
+      },
+      {
+        "year": 2024,
+        "rank": 27,
+        "points": 111,
+        "team": "ARKEA - B&B HOTELS WOMEN"
+      },
+      {
+        "year": 2022,
+        "rank": 119,
+        "points": 0,
+        "team": "STADE ROCHELAIS CHARENTE MARITIME"
+      }
+    ],
+    "magdeleine vallieres": [
+      {
+        "year": 2025,
+        "rank": 54,
+        "points": 34,
+        "team": "EF EDUCATION - OATLY"
+      },
+      {
+        "year": 2024,
+        "rank": 84,
+        "points": 10,
+        "team": "EF - OATLY - CANNONDALE"
+      },
+      {
+        "year": 2023,
+        "rank": 129,
+        "points": 0,
+        "team": "EF EDUCATION - TIBCO - SVB"
+      },
+      {
+        "year": 2022,
+        "rank": 72,
+        "points": 9,
+        "team": "EF EDUCATION-TIBCO-SVB"
+      }
+    ],
+    "maggie coles lyster": [
+      {
+        "year": 2024,
+        "rank": 63,
+        "points": 26,
+        "team": "ROLAND"
+      }
+    ],
+    "maike van der duin": [
+      {
+        "year": 2022,
+        "rank": 19,
+        "points": 145,
+        "team": "LE COL-WAHOO"
+      }
+    ],
+    "mareille meijering": [
+      {
+        "year": 2025,
+        "rank": 81,
+        "points": 9,
+        "team": "MOVISTAR TEAM"
+      },
+      {
+        "year": 2024,
+        "rank": 64,
+        "points": 26,
+        "team": "MOVISTAR TEAM"
+      }
+    ],
+    "margarita misyurina": [
+      {
+        "year": 2024,
+        "rank": 128,
+        "points": 0,
+        "team": "TASHKENT CITY WOMEN PROFESSIONAL CYCLING TEAM"
+      }
+    ],
+    "margaux vigie": [
+      {
+        "year": 2023,
+        "rank": 130,
+        "points": 0,
+        "team": "LIFEPLUS WAHOO"
+      },
+      {
+        "year": 2022,
+        "rank": 120,
+        "points": 0,
+        "team": "VALCAR - TRAVEL & SERVICE"
+      }
+    ],
+    "margot pompanon": [
+      {
+        "year": 2023,
+        "rank": 131,
+        "points": 0,
+        "team": "ST MICHEL - MAVIC - AUBER93"
+      },
+      {
+        "year": 2022,
+        "rank": 121,
+        "points": 0,
+        "team": "ST-MICHEL AUBER 93"
+      }
+    ],
+    "margot vanpachtenbeke": [
+      {
+        "year": 2025,
+        "rank": 53,
+        "points": 40,
+        "team": "VOLKERWESSELS CYCLING TEAM"
+      }
+    ],
+    "maria giulia confalonieri": [
+      {
+        "year": 2025,
+        "rank": 128,
+        "points": 0,
+        "team": "UNO-X MOBILITY"
+      },
+      {
+        "year": 2024,
+        "rank": 80,
+        "points": 12,
+        "team": "UNO-X MOBILITY"
+      },
+      {
+        "year": 2023,
+        "rank": 81,
+        "points": 6,
+        "team": "UNO-X PRO CYCLING TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 12,
+        "points": 189,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      }
+    ],
+    "marianne vos": [
+      {
+        "year": 2025,
+        "rank": 3,
+        "points": 634,
+        "team": "TEAM VISMA | LEASE A BIKE"
+      },
+      {
+        "year": 2024,
+        "rank": 4,
+        "points": 403,
+        "team": "TEAM VISMA | LEASE A BIKE"
+      },
+      {
+        "year": 2023,
+        "rank": 14,
+        "points": 210,
+        "team": "TEAM JUMBO-VISMA"
+      },
+      {
+        "year": 2022,
+        "rank": 1,
+        "points": 754,
+        "team": "TEAM JUMBO VISMA"
+      }
+    ],
+    "marie le net": [
+      {
+        "year": 2025,
+        "rank": 39,
+        "points": 70,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2022,
+        "rank": 45,
+        "points": 41,
+        "team": "FDJ SUEZ FUTUROSCOPE"
+      }
+    ],
+    "marie morgane le deunff": [
+      {
+        "year": 2025,
+        "rank": 129,
+        "points": 0,
+        "team": "WINSPACE ORANGE SEAL"
+      },
+      {
+        "year": 2023,
+        "rank": 132,
+        "points": 0,
+        "team": "ARKEA PRO CYCLING TEAM"
+      }
+    ],
+    "marine allione": [
+      {
+        "year": 2025,
+        "rank": 130,
+        "points": 0,
+        "team": "WINSPACE ORANGE SEAL"
+      }
+    ],
+    "marion bunel": [
+      {
+        "year": 2025,
+        "rank": 13,
+        "points": 224,
+        "team": "TEAM VISMA | LEASE A BIKE"
+      },
+      {
+        "year": 2024,
+        "rank": 42,
+        "points": 72,
+        "team": "ST MICHEL - MAVIC - AUBER93"
+      }
+    ],
+    "marit raaijmakers": [
+      {
+        "year": 2025,
+        "rank": 131,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      },
+      {
+        "year": 2024,
+        "rank": 129,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      },
+      {
+        "year": 2022,
+        "rank": 90,
+        "points": 2,
+        "team": "HUMAN POWERED HEALTH"
+      }
+    ],
+    "marjolein van t geloof": [
+      {
+        "year": 2025,
+        "rank": 132,
+        "points": 0,
+        "team": "ARKEA - B&B HOTELS WOMAN"
+      },
+      {
+        "year": 2023,
+        "rank": 133,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      },
+      {
+        "year": 2022,
+        "rank": 79,
+        "points": 8,
+        "team": "LE COL-WAHOO"
+      }
+    ],
+    "marlen reusser": [
+      {
+        "year": 2023,
+        "rank": 5,
+        "points": 492,
+        "team": "TEAM SD WORX"
+      },
+      {
+        "year": 2022,
+        "rank": 25,
+        "points": 104,
+        "team": "TEAM SD WORX"
+      }
+    ],
+    "marta bastianelli": [
+      {
+        "year": 2022,
+        "rank": 33,
+        "points": 80,
+        "team": "UAE TEAM ADQ"
+      }
+    ],
+    "marta cavalli": [
+      {
+        "year": 2023,
+        "rank": 58,
+        "points": 26,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2022,
+        "rank": 122,
+        "points": 0,
+        "team": "FDJ SUEZ FUTUROSCOPE"
+      }
+    ],
+    "marta lach": [
+      {
+        "year": 2024,
+        "rank": 130,
+        "points": 0,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 28,
+        "points": 84,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 70,
+        "points": 12,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      }
+    ],
+    "marte berg edseth": [
+      {
+        "year": 2024,
+        "rank": 81,
+        "points": 12,
+        "team": "UNO-X MOBILITY"
+      },
+      {
+        "year": 2023,
+        "rank": 134,
+        "points": 0,
+        "team": "UNO-X PRO CYCLING TEAM"
+      }
+    ],
+    "marthe truyen": [
+      {
+        "year": 2025,
+        "rank": 133,
+        "points": 0,
+        "team": "FENIX-DECEUNINCK"
+      },
+      {
+        "year": 2024,
+        "rank": 50,
+        "points": 56,
+        "team": "FENIX-DECEUNINCK"
+      },
+      {
+        "year": 2023,
+        "rank": 52,
+        "points": 34,
+        "team": "FENIX-DECEUNINCK"
+      }
+    ],
+    "martina alzini": [
+      {
+        "year": 2024,
+        "rank": 68,
+        "points": 21,
+        "team": "COFIDIS WOMEN TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 135,
+        "points": 0,
+        "team": "COFIDIS WOMEN TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 81,
+        "points": 6,
+        "team": "COFIDIS WOMEN TEAM"
+      }
+    ],
+    "maud rijnbeek": [
+      {
+        "year": 2025,
+        "rank": 74,
+        "points": 12,
+        "team": "VOLKERWESSELS CYCLING TEAM"
+      }
+    ],
+    "maureen arens": [
+      {
+        "year": 2024,
+        "rank": 131,
+        "points": 0,
+        "team": "LOTTO DSTNY LADIES"
+      }
+    ],
+    "maurene tregouet": [
+      {
+        "year": 2025,
+        "rank": 134,
+        "points": 0,
+        "team": "ARKEA - B&B HOTELS WOMAN"
+      }
+    ],
+    "mavi garcia canellas": [
+      {
+        "year": 2025,
+        "rank": 24,
+        "points": 124,
+        "team": "LIV-ALULA-JAYCO"
+      },
+      {
+        "year": 2024,
+        "rank": 89,
+        "points": 7,
+        "team": "LIV-ALULA-JAYCO"
+      },
+      {
+        "year": 2023,
+        "rank": 60,
+        "points": 21,
+        "team": "LIV RACING TEQFIND"
+      },
+      {
+        "year": 2022,
+        "rank": 21,
+        "points": 136,
+        "team": "UAE TEAM ADQ"
+      }
+    ],
+    "megan jastrab": [
+      {
+        "year": 2025,
+        "rank": 35,
+        "points": 81,
+        "team": "TEAM PICNIC POSTNL"
+      },
+      {
+        "year": 2023,
+        "rank": 136,
+        "points": 0,
+        "team": "TEAM DSM-FIRMENICH"
+      }
+    ],
+    "mia griffin": [
+      {
+        "year": 2025,
+        "rank": 135,
+        "points": 0,
+        "team": "ROLAND LE DEVOLUY"
+      }
+    ],
+    "michaela drummond": [
+      {
+        "year": 2024,
+        "rank": 132,
+        "points": 0,
+        "team": "ARKEA - B&B HOTELS WOMEN"
+      }
+    ],
+    "mie bj rndal ottestad": [
+      {
+        "year": 2025,
+        "rank": 85,
+        "points": 6,
+        "team": "UNO-X MOBILITY"
+      },
+      {
+        "year": 2024,
+        "rank": 78,
+        "points": 15,
+        "team": "UNO-X MOBILITY"
+      },
+      {
+        "year": 2023,
+        "rank": 78,
+        "points": 8,
+        "team": "UNO-X PRO CYCLING TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 123,
+        "points": 0,
+        "team": "UNO-X PRO CYCLING TEAM"
+      }
+    ],
+    "mieke docx": [
+      {
+        "year": 2024,
+        "rank": 133,
+        "points": 0,
+        "team": "LOTTO DSTNY LADIES"
+      }
+    ],
+    "mikayla harvey": [
+      {
+        "year": 2024,
+        "rank": 134,
+        "points": 0,
+        "team": "UAE TEAM ADQ"
+      }
+    ],
+    "millie couzens": [
+      {
+        "year": 2025,
+        "rank": 66,
+        "points": 18,
+        "team": "FENIX-DECEUNINCK"
+      }
+    ],
+    "mischa bredewold": [
+      {
+        "year": 2025,
+        "rank": 31,
+        "points": 104,
+        "team": "TEAM SD WORX - PROTIME"
+      },
+      {
+        "year": 2024,
+        "rank": 38,
+        "points": 84,
+        "team": "TEAM SD WORX - PROTIME"
+      },
+      {
+        "year": 2023,
+        "rank": 10,
+        "points": 290,
+        "team": "TEAM SD WORX"
+      },
+      {
+        "year": 2022,
+        "rank": 26,
+        "points": 104,
+        "team": "PARKHOTEL VALKENBURG"
+      }
+    ],
+    "mona mitterwallner": [
+      {
+        "year": 2025,
+        "rank": 136,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      }
+    ],
+    "monica trinca colonel": [
+      {
+        "year": 2025,
+        "rank": 75,
+        "points": 11,
+        "team": "LIV-ALULA-JAYCO"
+      }
+    ],
+    "morgane coston": [
+      {
+        "year": 2025,
+        "rank": 137,
+        "points": 0,
+        "team": "ROLAND LE DEVOLUY"
+      },
+      {
+        "year": 2023,
+        "rank": 137,
+        "points": 0,
+        "team": "COFIDIS WOMEN TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 124,
+        "points": 0,
+        "team": "ARKEA PRO CYCLING TEAM"
+      }
+    ],
+    "mylene de zoete": [
+      {
+        "year": 2024,
+        "rank": 41,
+        "points": 74,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      }
+    ],
+    "nadia gontova": [
+      {
+        "year": 2025,
+        "rank": 71,
+        "points": 16,
+        "team": "WINSPACE ORANGE SEAL"
+      }
+    ],
+    "nadia quagliotto": [
+      {
+        "year": 2025,
+        "rank": 62,
+        "points": 24,
+        "team": "COFIDIS WOMEN TEAM"
+      }
+    ],
+    "nafosat kozieva": [
+      {
+        "year": 2024,
+        "rank": 135,
+        "points": 0,
+        "team": "TASHKENT CITY WOMEN PROFESSIONAL CYCLING TEAM"
+      }
+    ],
+    "natalie grinczer": [
+      {
+        "year": 2023,
+        "rank": 138,
+        "points": 0,
+        "team": "LIFEPLUS WAHOO"
+      },
+      {
+        "year": 2022,
+        "rank": 125,
+        "points": 0,
+        "team": "STADE ROCHELAIS CHARENTE MARITIME"
+      }
+    ],
+    "nathalie eklund": [
+      {
+        "year": 2023,
+        "rank": 139,
+        "points": 0,
+        "team": "ISRAEL PREMIER TECH ROLAND"
+      }
+    ],
+    "neve summer bradbury": [
+      {
+        "year": 2025,
+        "rank": 138,
+        "points": 0,
+        "team": "CANYON//SRAM ZONDACRYPTO"
+      },
+      {
+        "year": 2024,
+        "rank": 19,
+        "points": 140,
+        "team": "CANYON//SRAM RACING"
+      }
+    ],
+    "niamh fisher black": [
+      {
+        "year": 2025,
+        "rank": 12,
+        "points": 263,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2024,
+        "rank": 29,
+        "points": 100,
+        "team": "TEAM SD WORX - PROTIME"
+      }
+    ],
+    "nicole frain": [
+      {
+        "year": 2022,
+        "rank": 42,
+        "points": 46,
+        "team": "PARKHOTEL VALKENBURG"
+      }
+    ],
+    "nienke vinke": [
+      {
+        "year": 2025,
+        "rank": 27,
+        "points": 109,
+        "team": "TEAM PICNIC POSTNL"
+      }
+    ],
+    "nikola noskova": [
+      {
+        "year": 2024,
+        "rank": 136,
+        "points": 0,
+        "team": "COFIDIS WOMEN TEAM"
+      }
+    ],
+    "nina berton": [
+      {
+        "year": 2024,
+        "rank": 85,
+        "points": 10,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 39,
+        "points": 51,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      }
+    ],
+    "nina buijsman": [
+      {
+        "year": 2022,
+        "rank": 126,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      }
+    ],
+    "nina kessler": [
+      {
+        "year": 2023,
+        "rank": 140,
+        "points": 0,
+        "team": "TEAM JAYCO ALULA"
+      }
+    ],
+    "noemi ruegg": [
+      {
+        "year": 2025,
+        "rank": 65,
+        "points": 21,
+        "team": "EF EDUCATION - OATLY"
+      },
+      {
+        "year": 2024,
+        "rank": 54,
+        "points": 45,
+        "team": "EF - OATLY - CANNONDALE"
+      },
+      {
+        "year": 2022,
+        "rank": 15,
+        "points": 174,
+        "team": "TEAM JUMBO VISMA"
+      }
+    ],
+    "noemie abgrall": [
+      {
+        "year": 2022,
+        "rank": 127,
+        "points": 0,
+        "team": "STADE ROCHELAIS CHARENTE MARITIME"
+      }
+    ],
+    "olga zabelinskaya": [
+      {
+        "year": 2022,
+        "rank": 128,
+        "points": 0,
+        "team": "ROLAND COGEAS EDELWEISS SQUAD"
+      }
+    ],
+    "olivia baril": [
+      {
+        "year": 2024,
+        "rank": 92,
+        "points": 4,
+        "team": "MOVISTAR TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 55,
+        "points": 32,
+        "team": "UAE TEAM ADQ"
+      },
+      {
+        "year": 2022,
+        "rank": 129,
+        "points": 0,
+        "team": "VALCAR - TRAVEL & SERVICE"
+      }
+    ],
+    "paula patino bedoya": [
+      {
+        "year": 2023,
+        "rank": 63,
+        "points": 20,
+        "team": "MOVISTAR TEAM WOMEN"
+      },
+      {
+        "year": 2022,
+        "rank": 31,
+        "points": 88,
+        "team": "MOVISTAR TEAM WOMEN"
+      }
+    ],
+    "pauliena rooijakkers": [
+      {
+        "year": 2025,
+        "rank": 20,
+        "points": 154,
+        "team": "FENIX-DECEUNINCK"
+      },
+      {
+        "year": 2024,
+        "rank": 6,
+        "points": 346,
+        "team": "FENIX-DECEUNINCK"
+      },
+      {
+        "year": 2022,
+        "rank": 39,
+        "points": 57,
+        "team": "CANYON // SRAM RACING"
+      }
+    ],
+    "pauline allin": [
+      {
+        "year": 2022,
+        "rank": 130,
+        "points": 0,
+        "team": "ARKEA PRO CYCLING TEAM"
+      }
+    ],
+    "pauline ferrand prevot": [
+      {
+        "year": 2025,
+        "rank": 1,
+        "points": 832,
+        "team": "TEAM VISMA | LEASE A BIKE"
+      }
+    ],
+    "petra stiasny": [
+      {
+        "year": 2025,
+        "rank": 139,
+        "points": 0,
+        "team": "ROLAND LE DEVOLUY"
+      }
+    ],
+    "pfeiffer georgi": [
+      {
+        "year": 2025,
+        "rank": 52,
+        "points": 42,
+        "team": "TEAM PICNIC POSTNL"
+      },
+      {
+        "year": 2024,
+        "rank": 39,
+        "points": 83,
+        "team": "TEAM DSM-FIRMENICH POSTNL"
+      },
+      {
+        "year": 2023,
+        "rank": 141,
+        "points": 0,
+        "team": "TEAM DSM-FIRMENICH"
+      },
+      {
+        "year": 2022,
+        "rank": 35,
+        "points": 73,
+        "team": "TEAM DSM"
+      }
+    ],
+    "puck pieterse": [
+      {
+        "year": 2025,
+        "rank": 36,
+        "points": 81,
+        "team": "FENIX-DECEUNINCK"
+      },
+      {
+        "year": 2024,
+        "rank": 3,
+        "points": 439,
+        "team": "FENIX-DECEUNINCK"
+      }
+    ],
+    "quinty schoens": [
+      {
+        "year": 2022,
+        "rank": 51,
+        "points": 36,
+        "team": "PARKHOTEL VALKENBURG"
+      }
+    ],
+    "quinty ton": [
+      {
+        "year": 2024,
+        "rank": 87,
+        "points": 8,
+        "team": "LIV-ALULA-JAYCO"
+      },
+      {
+        "year": 2023,
+        "rank": 142,
+        "points": 0,
+        "team": "LIV RACING TEQFIND"
+      }
+    ],
+    "rachel neylan": [
+      {
+        "year": 2023,
+        "rank": 143,
+        "points": 0,
+        "team": "COFIDIS WOMEN TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 131,
+        "points": 0,
+        "team": "COFIDIS WOMEN TEAM"
+      }
+    ],
+    "rachele barbieri": [
+      {
+        "year": 2025,
+        "rank": 48,
+        "points": 58,
+        "team": "TEAM PICNIC POSTNL"
+      },
+      {
+        "year": 2024,
+        "rank": 23,
+        "points": 126,
+        "team": "TEAM DSM-FIRMENICH POSTNL"
+      },
+      {
+        "year": 2023,
+        "rank": 144,
+        "points": 0,
+        "team": "LIV RACING TEQFIND"
+      },
+      {
+        "year": 2022,
+        "rank": 17,
+        "points": 168,
+        "team": "LIV RACING XSTRA"
+      }
+    ],
+    "rebecca koerner": [
+      {
+        "year": 2025,
+        "rank": 140,
+        "points": 0,
+        "team": "UNO-X MOBILITY"
+      }
+    ],
+    "ricarda bauernfeind": [
+      {
+        "year": 2025,
+        "rank": 83,
+        "points": 8,
+        "team": "CANYON//SRAM ZONDACRYPTO"
+      },
+      {
+        "year": 2023,
+        "rank": 13,
+        "points": 244,
+        "team": "CANYON//SRAM RACING"
+      }
+    ],
+    "riejanne markus": [
+      {
+        "year": 2025,
+        "rank": 141,
+        "points": 0,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2024,
+        "rank": 46,
+        "points": 64,
+        "team": "TEAM VISMA | LEASE A BIKE"
+      },
+      {
+        "year": 2023,
+        "rank": 27,
+        "points": 89,
+        "team": "TEAM JUMBO-VISMA"
+      },
+      {
+        "year": 2022,
+        "rank": 13,
+        "points": 187,
+        "team": "TEAM JUMBO VISMA"
+      }
+    ],
+    "romy kasper": [
+      {
+        "year": 2025,
+        "rank": 142,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      },
+      {
+        "year": 2024,
+        "rank": 137,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      },
+      {
+        "year": 2023,
+        "rank": 88,
+        "points": 2,
+        "team": "AG INSURANCE - SOUDAL QUICK-STEP TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 16,
+        "points": 174,
+        "team": "TEAM JUMBO VISMA"
+      }
+    ],
+    "rotem gafinovitz": [
+      {
+        "year": 2022,
+        "rank": 132,
+        "points": 0,
+        "team": "ROLAND COGEAS EDELWEISS SQUAD"
+      }
+    ],
+    "ruby roseman gannon": [
+      {
+        "year": 2025,
+        "rank": 79,
+        "points": 10,
+        "team": "LIV-ALULA-JAYCO"
+      },
+      {
+        "year": 2024,
+        "rank": 71,
+        "points": 19,
+        "team": "LIV-ALULA-JAYCO"
+      },
+      {
+        "year": 2022,
+        "rank": 56,
+        "points": 28,
+        "team": "TEAM BIKEEXCHANGE-JAYCO"
+      }
+    ],
+    "ruth edwards": [
+      {
+        "year": 2025,
+        "rank": 45,
+        "points": 65,
+        "team": "HUMAN POWERED HEALTH"
+      },
+      {
+        "year": 2024,
+        "rank": 138,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      }
+    ],
+    "sabrina stultiens": [
+      {
+        "year": 2022,
+        "rank": 133,
+        "points": 0,
+        "team": "LIV RACING XSTRA"
+      }
+    ],
+    "sandra alonso": [
+      {
+        "year": 2024,
+        "rank": 86,
+        "points": 10,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 44,
+        "points": 46,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 73,
+        "points": 9,
+        "team": "CERATIZIT - WNT PRO CYCLING TEAM"
+      }
+    ],
+    "sandra levenez": [
+      {
+        "year": 2022,
+        "rank": 134,
+        "points": 0,
+        "team": "COFIDIS WOMEN TEAM"
+      }
+    ],
+    "sandrine bideau": [
+      {
+        "year": 2023,
+        "rank": 145,
+        "points": 0,
+        "team": "ST MICHEL - MAVIC - AUBER93"
+      },
+      {
+        "year": 2022,
+        "rank": 135,
+        "points": 0,
+        "team": "ST-MICHEL AUBER 93"
+      }
+    ],
+    "sanne cant": [
+      {
+        "year": 2023,
+        "rank": 53,
+        "points": 34,
+        "team": "FENIX-DECEUNINCK"
+      },
+      {
+        "year": 2022,
+        "rank": 55,
+        "points": 30,
+        "team": "PLANTUR-PURA"
+      }
+    ],
+    "sara martin martin": [
+      {
+        "year": 2025,
+        "rank": 143,
+        "points": 0,
+        "team": "MOVISTAR TEAM"
+      },
+      {
+        "year": 2024,
+        "rank": 139,
+        "points": 0,
+        "team": "MOVISTAR TEAM"
+      }
+    ],
+    "sara poidevin": [
+      {
+        "year": 2023,
+        "rank": 146,
+        "points": 0,
+        "team": "EF EDUCATION - TIBCO - SVB"
+      }
+    ],
+    "sarah gigante": [
+      {
+        "year": 2025,
+        "rank": 9,
+        "points": 326,
+        "team": "AG INSURANCE - SOUDAL TEAM"
+      },
+      {
+        "year": 2024,
+        "rank": 16,
+        "points": 148,
+        "team": "AG INSURANCE - SOUDAL TEAM"
+      }
+    ],
+    "sarah roy": [
+      {
+        "year": 2024,
+        "rank": 140,
+        "points": 0,
+        "team": "COFIDIS WOMEN TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 48,
+        "points": 40,
+        "team": "CANYON//SRAM RACING"
+      }
+    ],
+    "sarah van dam": [
+      {
+        "year": 2025,
+        "rank": 72,
+        "points": 16,
+        "team": "CERATIZIT PRO CYCLING TEAM"
+      }
+    ],
+    "segolene thomas": [
+      {
+        "year": 2025,
+        "rank": 147,
+        "points": 0,
+        "team": "ST MICHEL - PREFERENCE HOME - AUBER93"
+      }
+    ],
+    "severine eraud": [
+      {
+        "year": 2022,
+        "rank": 136,
+        "points": 0,
+        "team": "STADE ROCHELAIS CHARENTE MARITIME"
+      }
+    ],
+    "shari bossuyt": [
+      {
+        "year": 2025,
+        "rank": 22,
+        "points": 142,
+        "team": "AG INSURANCE - SOUDAL TEAM"
+      }
+    ],
+    "sheyla gutierrez ruiz": [
+      {
+        "year": 2024,
+        "rank": 141,
+        "points": 0,
+        "team": "MOVISTAR TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 64,
+        "points": 20,
+        "team": "MOVISTAR TEAM WOMEN"
+      },
+      {
+        "year": 2022,
+        "rank": 32,
+        "points": 88,
+        "team": "MOVISTAR TEAM WOMEN"
+      }
+    ],
+    "shirin van anrooij": [
+      {
+        "year": 2025,
+        "rank": 47,
+        "points": 59,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2024,
+        "rank": 26,
+        "points": 114,
+        "team": "LIDL - TREK"
+      },
+      {
+        "year": 2022,
+        "rank": 29,
+        "points": 89,
+        "team": "TREK - SEGAFREDO"
+      }
+    ],
+    "sigrid haugset": [
+      {
+        "year": 2023,
+        "rank": 147,
+        "points": 0,
+        "team": "TEAM COOP-HITEC PRODUCTS"
+      }
+    ],
+    "silke smulders": [
+      {
+        "year": 2025,
+        "rank": 46,
+        "points": 63,
+        "team": "LIV-ALULA-JAYCO"
+      },
+      {
+        "year": 2024,
+        "rank": 75,
+        "points": 18,
+        "team": "LIV-ALULA-JAYCO"
+      },
+      {
+        "year": 2023,
+        "rank": 54,
+        "points": 34,
+        "team": "LIV RACING TEQFIND"
+      },
+      {
+        "year": 2022,
+        "rank": 137,
+        "points": 0,
+        "team": "LIV RACING XSTRA"
+      }
+    ],
+    "silvia persico": [
+      {
+        "year": 2024,
+        "rank": 61,
+        "points": 31,
+        "team": "UAE TEAM ADQ"
+      },
+      {
+        "year": 2023,
+        "rank": 30,
+        "points": 72,
+        "team": "UAE TEAM ADQ"
+      },
+      {
+        "year": 2022,
+        "rank": 5,
+        "points": 531,
+        "team": "VALCAR - TRAVEL & SERVICE"
+      }
+    ],
+    "simone boilard": [
+      {
+        "year": 2024,
+        "rank": 82,
+        "points": 12,
+        "team": "UNO-X MOBILITY"
+      },
+      {
+        "year": 2023,
+        "rank": 148,
+        "points": 0,
+        "team": "ST MICHEL - MAVIC - AUBER93"
+      },
+      {
+        "year": 2022,
+        "rank": 52,
+        "points": 34,
+        "team": "ST-MICHEL AUBER 93"
+      }
+    ],
+    "sofia bertizzolo": [
+      {
+        "year": 2024,
+        "rank": 95,
+        "points": 3,
+        "team": "UAE TEAM ADQ"
+      }
+    ],
+    "sophie von berswordt": [
+      {
+        "year": 2024,
+        "rank": 52,
+        "points": 52,
+        "team": "TEAM VISMA | LEASE A BIKE"
+      }
+    ],
+    "soraya paladin": [
+      {
+        "year": 2025,
+        "rank": 144,
+        "points": 0,
+        "team": "CANYON//SRAM ZONDACRYPTO"
+      },
+      {
+        "year": 2024,
+        "rank": 32,
+        "points": 96,
+        "team": "CANYON//SRAM RACING"
+      },
+      {
+        "year": 2023,
+        "rank": 19,
+        "points": 147,
+        "team": "CANYON//SRAM RACING"
+      },
+      {
+        "year": 2022,
+        "rank": 82,
+        "points": 6,
+        "team": "CANYON // SRAM RACING"
+      }
+    ],
+    "spela kern": [
+      {
+        "year": 2024,
+        "rank": 148,
+        "points": 0,
+        "team": "COFIDIS WOMEN TEAM"
+      },
+      {
+        "year": 2023,
+        "rank": 153,
+        "points": 0,
+        "team": "COFIDIS WOMEN TEAM"
+      }
+    ],
+    "stine dale": [
+      {
+        "year": 2023,
+        "rank": 149,
+        "points": 0,
+        "team": "TEAM COOP-HITEC PRODUCTS"
+      }
+    ],
+    "susanne andersen": [
+      {
+        "year": 2025,
+        "rank": 145,
+        "points": 0,
+        "team": "UNO-X MOBILITY"
+      },
+      {
+        "year": 2023,
+        "rank": 46,
+        "points": 44,
+        "team": "UNO-X PRO CYCLING TEAM"
+      }
+    ],
+    "sylvie swinkels": [
+      {
+        "year": 2025,
+        "rank": 146,
+        "points": 0,
+        "team": "ROLAND LE DEVOLUY"
+      },
+      {
+        "year": 2024,
+        "rank": 142,
+        "points": 0,
+        "team": "ROLAND"
+      }
+    ],
+    "tamara dronova": [
+      {
+        "year": 2025,
+        "rank": 148,
+        "points": 0,
+        "team": "ROLAND LE DEVOLUY"
+      },
+      {
+        "year": 2024,
+        "rank": 143,
+        "points": 0,
+        "team": "ROLAND"
+      },
+      {
+        "year": 2023,
+        "rank": 37,
+        "points": 56,
+        "team": "ISRAEL PREMIER TECH ROLAND"
+      },
+      {
+        "year": 2022,
+        "rank": 40,
+        "points": 51,
+        "team": "ROLAND COGEAS EDELWEISS SQUAD"
+      }
+    ],
+    "teniel campbell": [
+      {
+        "year": 2023,
+        "rank": 150,
+        "points": 0,
+        "team": "TEAM JAYCO ALULA"
+      }
+    ],
+    "teuntje beekhuis": [
+      {
+        "year": 2025,
+        "rank": 149,
+        "points": 0,
+        "team": "UNO-X MOBILITY"
+      }
+    ],
+    "thalita de jong": [
+      {
+        "year": 2025,
+        "rank": 150,
+        "points": 0,
+        "team": "HUMAN POWERED HEALTH"
+      },
+      {
+        "year": 2024,
+        "rank": 17,
+        "points": 144,
+        "team": "LOTTO DSTNY LADIES"
+      },
+      {
+        "year": 2023,
+        "rank": 70,
+        "points": 12,
+        "team": "LIV RACING TEQFIND"
+      },
+      {
+        "year": 2022,
+        "rank": 138,
+        "points": 0,
+        "team": "LIV RACING XSTRA"
+      }
+    ],
+    "tiffany cromwell": [
+      {
+        "year": 2022,
+        "rank": 71,
+        "points": 12,
+        "team": "CANYON // SRAM RACING"
+      }
+    ],
+    "tiril j rgensen": [
+      {
+        "year": 2023,
+        "rank": 151,
+        "points": 0,
+        "team": "TEAM COOP-HITEC PRODUCTS"
+      }
+    ],
+    "titia ryo": [
+      {
+        "year": 2025,
+        "rank": 37,
+        "points": 77,
+        "team": "ARKEA - B&B HOTELS WOMAN"
+      }
+    ],
+    "typhaine laurance": [
+      {
+        "year": 2023,
+        "rank": 152,
+        "points": 0,
+        "team": "LIFEPLUS WAHOO"
+      }
+    ],
+    "urska pintar": [
+      {
+        "year": 2022,
+        "rank": 139,
+        "points": 0,
+        "team": "UAE TEAM ADQ"
+      }
+    ],
+    "urska zigart": [
+      {
+        "year": 2022,
+        "rank": 57,
+        "points": 27,
+        "team": "TEAM BIKEEXCHANGE-JAYCO"
+      }
+    ],
+    "usoa ostolaza": [
+      {
+        "year": 2025,
+        "rank": 151,
+        "points": 0,
+        "team": "LABORAL KUTXA - FUNDACION EUSKADI"
+      },
+      {
+        "year": 2024,
+        "rank": 76,
+        "points": 18,
+        "team": "LABORAL KUTXA - FUNDACION EUSKADI"
+      }
+    ],
+    "valentina cavallar": [
+      {
+        "year": 2025,
+        "rank": 152,
+        "points": 0,
+        "team": "ARKEA - B&B HOTELS WOMAN"
+      },
+      {
+        "year": 2024,
+        "rank": 45,
+        "points": 69,
+        "team": "ARKEA - B&B HOTELS WOMEN"
+      }
+    ],
+    "valentine fortin": [
+      {
+        "year": 2022,
+        "rank": 140,
+        "points": 0,
+        "team": "COFIDIS WOMEN TEAM"
+      }
+    ],
+    "valerie demey": [
+      {
+        "year": 2025,
+        "rank": 153,
+        "points": 0,
+        "team": "VOLKERWESSELS CYCLING TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 141,
+        "points": 0,
+        "team": "LIV RACING XSTRA"
+      }
+    ],
+    "veronica ewers": [
+      {
+        "year": 2023,
+        "rank": 74,
+        "points": 10,
+        "team": "EF EDUCATION - TIBCO - SVB"
+      },
+      {
+        "year": 2022,
+        "rank": 23,
+        "points": 129,
+        "team": "EF EDUCATION-TIBCO-SVB"
+      }
+    ],
+    "victoire berteau": [
+      {
+        "year": 2025,
+        "rank": 63,
+        "points": 24,
+        "team": "COFIDIS WOMEN TEAM"
+      },
+      {
+        "year": 2024,
+        "rank": 144,
+        "points": 0,
+        "team": "COFIDIS WOMEN TEAM"
+      },
+      {
+        "year": 2022,
+        "rank": 83,
+        "points": 6,
+        "team": "COFIDIS WOMEN TEAM"
+      }
+    ],
+    "victorie guilman": [
+      {
+        "year": 2024,
+        "rank": 145,
+        "points": 0,
+        "team": "ST MICHEL - MAVIC - AUBER93"
+      }
+    ],
+    "vittoria guazzini": [
+      {
+        "year": 2023,
+        "rank": 42,
+        "points": 47,
+        "team": "FDJ-SUEZ"
+      },
+      {
+        "year": 2022,
+        "rank": 22,
+        "points": 131,
+        "team": "FDJ SUEZ FUTUROSCOPE"
+      }
+    ],
+    "wilma aintila": [
+      {
+        "year": 2024,
+        "rank": 146,
+        "points": 0,
+        "team": "LOTTO DSTNY LADIES"
+      }
+    ],
+    "wilma olausson": [
+      {
+        "year": 2023,
+        "rank": 82,
+        "points": 6,
+        "team": "UNO-X PRO CYCLING TEAM"
+      }
+    ],
+    "yanina kuskova": [
+      {
+        "year": 2024,
+        "rank": 147,
+        "points": 0,
+        "team": "TASHKENT CITY WOMEN PROFESSIONAL CYCLING TEAM"
+      }
+    ],
+    "yara kastelijn": [
+      {
+        "year": 2025,
+        "rank": 50,
+        "points": 56,
+        "team": "FENIX-DECEUNINCK"
+      },
+      {
+        "year": 2024,
+        "rank": 33,
+        "points": 96,
+        "team": "FENIX-DECEUNINCK"
+      },
+      {
+        "year": 2023,
+        "rank": 11,
+        "points": 250,
+        "team": "FENIX-DECEUNINCK"
+      },
+      {
+        "year": 2022,
+        "rank": 61,
+        "points": 22,
+        "team": "PLANTUR-PURA"
+      }
+    ],
+    "yuliia biriukova": [
+      {
+        "year": 2022,
+        "rank": 142,
+        "points": 0,
+        "team": "ARKEA PRO CYCLING TEAM"
+      }
+    ]
+  }
+}

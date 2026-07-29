@@ -6,7 +6,9 @@ from typing import Iterable
 
 from flask_login import UserMixin
 from sqlalchemy import UniqueConstraint
+from sqlalchemy.dialects.mysql import MEDIUMBLOB
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import deferred
 
 from tour_femmes import db
 from tour_femmes.timezones import app_timezone, app_timezone_name
@@ -134,6 +136,13 @@ class Stage(db.Model):
     departure = db.Column(db.String(120), nullable=True)
     arrival = db.Column(db.String(120), nullable=True)
     profile_image_url = db.Column(db.String(500), nullable=True)
+    profile_image_data = deferred(
+        db.Column(
+            db.LargeBinary().with_variant(MEDIUMBLOB(), "mysql"),
+            nullable=True,
+        )
+    )
+    profile_image_mime = db.Column(db.String(80), nullable=True)
     is_finished = db.Column(db.Boolean, default=False, nullable=False)
     results_imported_at = db.Column(db.DateTime(timezone=True), nullable=True)
     live_imported_at = db.Column(db.DateTime(timezone=True), nullable=True)
@@ -176,6 +185,13 @@ class Team(db.Model):
     name = db.Column(db.String(160), nullable=False)
     pcs_url = db.Column(db.String(500), nullable=True)
     image_url = db.Column(db.String(500), nullable=True)
+    image_data = deferred(
+        db.Column(
+            db.LargeBinary().with_variant(MEDIUMBLOB(), "mysql"),
+            nullable=True,
+        )
+    )
+    image_mime = db.Column(db.String(80), nullable=True)
     category = db.Column(db.String(30), nullable=True)
 
     event = db.relationship("Event", back_populates="teams")
@@ -190,6 +206,13 @@ class Rider(db.Model):
     pcs_url = db.Column(db.String(500), nullable=False)
     name = db.Column(db.String(180), nullable=False, index=True)
     photo_url = db.Column(db.String(500), nullable=True)
+    photo_data = deferred(
+        db.Column(
+            db.LargeBinary().with_variant(MEDIUMBLOB(), "mysql"),
+            nullable=True,
+        )
+    )
+    photo_mime = db.Column(db.String(80), nullable=True)
     nationality = db.Column(db.String(80), nullable=True)
     date_of_birth = db.Column(db.String(80), nullable=True)
     height_m = db.Column(db.Float, nullable=True)

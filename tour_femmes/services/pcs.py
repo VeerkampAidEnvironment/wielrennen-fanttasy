@@ -22,6 +22,7 @@ from tour_femmes.models import (
     Team,
     utcnow,
 )
+from tour_femmes.pcs_image_cache import load_cached_pcs_image, store_cached_pcs_image
 from tour_femmes.pcs_urls import canonicalize_pcs_url
 from tour_femmes.scoring import points_for_result
 from tour_femmes.services.game import recalculate_stage_scores
@@ -38,6 +39,8 @@ DEFAULT_PCS_USER_AGENT = (
     "AppleWebKit/537.36 (KHTML, like Gecko) "
     "Chrome/126.0 Safari/537.36"
 )
+PCS_IMAGE_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+MAX_STAGE_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024
 PCS_LIVE_EMBED_CACHE_SECONDS = 20.0
 CLASSIFICATION_URL_SUFFIXES = {
     "gc": "gc",
@@ -115,6 +118,15 @@ class ProfileEnrichmentSummary:
 
 
 @dataclass(frozen=True)
+class ImageSyncSummary:
+    rider_images_loaded: int = 0
+    team_images_loaded: int = 0
+    failed_images: int = 0
+    remaining_images: int = 0
+    rate_limited: bool = False
+
+
+@dataclass(frozen=True)
 class ParsedStage:
     number: int
     name: str
@@ -128,6 +140,8 @@ class ParsedStage:
     departure: str | None = None
     arrival: str | None = None
     profile_image_url: str | None = None
+    profile_image_data: bytes | None = None
+    profile_image_mime: str | None = None
 
 
 @dataclass(frozen=True)
@@ -219,6 +233,38 @@ class PcsClient:
 
         raise RuntimeError("PCS-verzoek mislukte voordat er een reactie terugkwam.")
 
+    def get_image(self, url: str) -> tuple[bytes, str]:
+        url = self.canonical_url(url)
+        cached_image = load_cached_pcs_image(url)
+        if cached_image:
+            return cached_image
+
+        self.wait_for_rate_limit()
+        try:
+            response = self.session.get(
+                url,
+                timeout=self.timeout,
+                headers={
+                    "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+                    "Referer": self.base_url,
+                },
+            )
+            self.last_request_at = monotonic()
+        except requests.RequestException as exc:
+            self.last_request_at = monotonic()
+            raise requests.RequestException(f"PCS-afbeelding ophalen mislukt voor {url}: {exc}") from exc
+
+        if response.status_code == 429:
+            self.rate_limited = True
+        response.raise_for_status()
+        content_type = response.headers.get("Content-Type", "").split(";", 1)[0].lower()
+        if content_type not in PCS_IMAGE_CONTENT_TYPES:
+            raise ValueError(f"PCS gaf geen geldige afbeelding terug voor {url}.")
+        if len(response.content) > MAX_STAGE_PROFILE_IMAGE_BYTES:
+            raise ValueError(f"PCS-etappeprofiel is groter dan 5 MB: {url}.")
+        store_cached_pcs_image(url, response.content)
+        return response.content, content_type
+
     def absolute_url(self, href: str) -> str:
         return self.canonical_url(urljoin(f"{self.base_url}/", href))
 
@@ -283,6 +329,9 @@ def initialize_event_from_pcs(
         stage.departure = parsed.departure
         stage.arrival = parsed.arrival
         stage.profile_image_url = parsed.profile_image_url
+        if parsed.profile_image_data:
+            stage.profile_image_data = parsed.profile_image_data
+            stage.profile_image_mime = parsed.profile_image_mime
     if progress:
         progress(len(parsed_stages), len(parsed_stages), "Etappes", "Etappes opgeslagen in de database.")
     return len(parsed_stages)
@@ -428,7 +477,13 @@ def enrich_missing_profiles(
         if progress:
             progress(index, total, "Rennerprofielen", f"{link.rider.name} verwerkt.")
 
-    teams = list({link.team.id: link.team for link in links if link.team and not link.team.image_url}.values())
+    teams = list(
+        {
+            link.team.id: link.team
+            for link in links
+            if link.team and (not link.team.image_url or not link.team.image_mime)
+        }.values()
+    )
     team_loaded = 0
     for team in teams[:team_limit]:
         if client.rate_limited:
@@ -475,7 +530,10 @@ def update_team_details(client: PcsClient, team: Team) -> bool:
     except requests.RequestException:
         return False
 
-    team.image_url = parse_team_image_url(soup, client) or team.image_url
+    try:
+        store_team_image(client, team, soup=soup)
+    except (requests.RequestException, ValueError) as exc:
+        current_app.logger.warning("PCS team image download failed for %s: %s", team.name, exc)
     return True
 
 
@@ -484,6 +542,136 @@ def parse_team_image_url(soup: BeautifulSoup, client: PcsClient) -> str | None:
     if image and image.get("src"):
         return client.absolute_url(image["src"])
     return None
+
+
+def store_team_image(
+    client: PcsClient,
+    team: Team,
+    soup: BeautifulSoup | None = None,
+) -> bool:
+    if soup is None and not team.image_url:
+        if not team.pcs_url:
+            return False
+        soup = client.get_soup(team.pcs_url)
+    if soup is not None:
+        image_url = parse_team_image_url(soup, client)
+        if image_url and image_url != team.image_url:
+            team.image_url = image_url
+            team.image_data = None
+            team.image_mime = None
+    if not team.image_url:
+        return False
+    team.image_data, team.image_mime = client.get_image(team.image_url)
+    return True
+
+
+def parse_rider_photo_url(soup: BeautifulSoup, client: PcsClient) -> str | None:
+    photo = soup.find("img", src=re.compile(r"riders|rider|photo", re.I)) or soup.find("img")
+    if photo and photo.get("src"):
+        return client.absolute_url(photo["src"])
+    return None
+
+
+def store_rider_image(
+    client: PcsClient,
+    rider: Rider,
+    soup: BeautifulSoup | None = None,
+) -> bool:
+    if soup is None and not rider.photo_url:
+        soup = client.get_soup(rider.pcs_url)
+    if soup is not None:
+        photo_url = parse_rider_photo_url(soup, client)
+        if photo_url and photo_url != rider.photo_url:
+            rider.photo_url = photo_url
+            rider.photo_data = None
+            rider.photo_mime = None
+    if not rider.photo_url:
+        return False
+    rider.photo_data, rider.photo_mime = client.get_image(rider.photo_url)
+    return True
+
+
+def sync_event_images(
+    event: Event,
+    client: PcsClient | None = None,
+    progress: ProgressCallback | None = None,
+) -> ImageSyncSummary:
+    """Store known rider and team images without reloading profile statistics."""
+    client = client or PcsClient()
+    links = (
+        EventRider.query.filter_by(event_id=event.id, active=True)
+        .join(EventRider.rider)
+        .order_by(EventRider.id)
+        .all()
+    )
+    riders = list(
+        {
+            link.rider.id: link.rider
+            for link in links
+            if not link.rider.photo_mime
+        }.values()
+    )
+    teams = list(
+        {
+            link.team.id: link.team
+            for link in links
+            if link.team and not link.team.image_mime
+        }.values()
+    )
+    total = len(riders) + len(teams)
+    current = 0
+    rider_loaded = 0
+    team_loaded = 0
+    failed = 0
+
+    if progress:
+        progress(0, total, "Afbeeldingen", f"{total} afbeeldingen moeten lokaal worden opgeslagen.")
+
+    for rider in riders:
+        if client.rate_limited:
+            break
+        if progress:
+            progress(current, total, "Rennerfoto's", f"{rider.name} ophalen.")
+        try:
+            if store_rider_image(client, rider):
+                rider_loaded += 1
+            else:
+                failed += 1
+        except (requests.RequestException, ValueError) as exc:
+            failed += 1
+            current_app.logger.warning("PCS rider image download failed for %s: %s", rider.name, exc)
+        current += 1
+        if progress:
+            progress(current, total, "Rennerfoto's", f"{rider.name} verwerkt.")
+
+    if not client.rate_limited:
+        for team in teams:
+            if client.rate_limited:
+                break
+            if progress:
+                progress(current, total, "Ploegafbeeldingen", f"{team.name} ophalen.")
+            try:
+                if store_team_image(client, team):
+                    team_loaded += 1
+                else:
+                    failed += 1
+            except (requests.RequestException, ValueError) as exc:
+                failed += 1
+                current_app.logger.warning("PCS team image download failed for %s: %s", team.name, exc)
+            current += 1
+            if progress:
+                progress(current, total, "Ploegafbeeldingen", f"{team.name} verwerkt.")
+
+    remaining = sum(not rider.photo_mime for rider in riders) + sum(
+        not team.image_mime for team in teams
+    )
+    return ImageSyncSummary(
+        rider_images_loaded=rider_loaded,
+        team_images_loaded=team_loaded,
+        failed_images=failed,
+        remaining_images=remaining,
+        rate_limited=client.rate_limited,
+    )
 
 
 def parse_event_stages(
@@ -554,11 +742,21 @@ def parse_stage_page(client: PcsClient, stage_url: str, number: int) -> ParsedSt
         )
 
     profile_image_url = None
+    profile_image_data = None
+    profile_image_mime = None
     profile_heading = soup.find(string=re.compile(r"Race profile", re.I))
     if profile_heading:
         image = next((node for node in profile_heading.parent.next_elements if isinstance(node, Tag) and node.name == "img"), None)
         if image and image.get("src"):
             profile_image_url = client.absolute_url(image["src"])
+            try:
+                profile_image_data, profile_image_mime = client.get_image(profile_image_url)
+            except (requests.RequestException, ValueError) as exc:
+                current_app.logger.warning(
+                    "PCS stage profile download failed for stage %s: %s",
+                    number,
+                    exc,
+                )
 
     return ParsedStage(
         number=number,
@@ -573,6 +771,8 @@ def parse_stage_page(client: PcsClient, stage_url: str, number: int) -> ParsedSt
         departure=race_info.get("Departure"),
         arrival=race_info.get("Arrival"),
         profile_image_url=profile_image_url,
+        profile_image_data=profile_image_data,
+        profile_image_mime=profile_image_mime,
     )
 
 
@@ -634,9 +834,10 @@ def update_rider_details(client: PcsClient, rider: Rider) -> bool:
     if h1:
         rider.name = clean_text(h1.get_text(" ", strip=True))
 
-    photo = soup.find("img", src=re.compile(r"riders|rider|photo", re.I)) or soup.find("img")
-    if photo and photo.get("src"):
-        rider.photo_url = client.absolute_url(photo["src"])
+    try:
+        store_rider_image(client, rider, soup=soup)
+    except (requests.RequestException, ValueError) as exc:
+        current_app.logger.warning("PCS rider image download failed for %s: %s", rider.name, exc)
 
     rider.nationality = value_after_label(text_lines, "Nationality") or rider.nationality
     rider.height_m = parse_float(value_after_label(text_lines, "Height")) or rider.height_m

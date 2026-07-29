@@ -62,8 +62,14 @@ def test_pcs_database_merge_preserves_online_game_data(tmp_path):
         assert event.team_size == 1
         assert event.lineup_size == 1
         assert stage.name == "Lokale PCS-etappe"
+        assert stage.profile_image_data == b"stage-profile-image"
+        assert stage.profile_image_mime == "image/jpeg"
+        assert event_rider.team.image_data == b"team-image"
+        assert event_rider.team.image_mime == "image/png"
         assert rider.name == "Bijgewerkte Renner"
         assert rider.photo_url == "https://www.procyclingstats.com/images/rider.jpg"
+        assert rider.photo_data == b"rider-image"
+        assert rider.photo_mime == "image/jpeg"
         assert event_rider.price == 12
 
         assert User.query.count() == 1
@@ -136,6 +142,7 @@ def test_admin_shows_database_upload_and_direct_pcs_actions(monkeypatch):
     assert page.status_code == 200
     assert "Etappes laden uit PCS" in html
     assert "Startlijst snel bijwerken" in html
+    assert "Afbeeldingen lokaal opslaan" in html
     assert "Koersdata uploaden" in dashboard_html
 
     monkeypatch.setattr("tour_femmes.admin.initialize_event_from_pcs", lambda *_args, **_kwargs: 0)
@@ -215,12 +222,16 @@ def _create_source_database(source_path) -> None:
             distance_km=132.5,
             parcours_type="Heuvel",
             profile_image_url="https://www.procyclingstats.com/images/profile.jpg",
+            profile_image_data=b"stage-profile-image",
+            profile_image_mime="image/jpeg",
         )
         team = Team(
             id=70,
             event=event,
             name="Testploeg",
             image_url="https://www.procyclingstats.com/images/team.png",
+            image_data=b"team-image",
+            image_mime="image/png",
         )
         rider = Rider(
             id=80,
@@ -228,6 +239,8 @@ def _create_source_database(source_path) -> None:
             pcs_url="https://www.procyclingstats.com/rider/renner-een",
             name="Bijgewerkte Renner",
             photo_url="https://www.procyclingstats.com/images/rider.jpg",
+            photo_data=b"rider-image",
+            photo_mime="image/jpeg",
             specialties={"sprint": 75},
             best_results=[{"name": "Testzege"}],
             grand_tour_results={"tour": [{"year": 2025, "result": "12"}]},

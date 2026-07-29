@@ -109,8 +109,8 @@
           {% if not editable %}disabled{% endif %}
         >
           <span class="my-team-photo">
-            {% if rider.photo_url %}
-              <img src="{{ pcs_image_url(rider.photo_url) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            {% if rider.photo_mime or rider.photo_url %}
+              <img src="{{ rider_photo_url(rider) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
             {% else %}
               <span>{{ rider.name[:2] }}</span>
             {% endif %}
@@ -197,8 +197,8 @@
       {% for team in team_filters %}
         <button type="button" class="team-filter-chip" data-team-chip value="{{ team.name }}">
           <span class="team-chip-image">
-            {% if team.image_url %}
-              <img src="{{ pcs_image_url(team.image_url) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            {% if team.image_mime or team.image_url %}
+              <img src="{{ team_image_url(team) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
             {% else %}
               <span>{{ team.name[:2] }}</span>
             {% endif %}
@@ -213,6 +213,7 @@
   <div class="rider-grid">
     {% for event_rider in event_riders %}
       {% set rider = event_rider.rider %}
+      {% set historical_scores = historical_rider_scores(rider) %}
       {% set unavailable = not event_rider.selectable %}
       {% set budget_blocked = editable and event_rider.id not in selected_ids and event_rider.price is not none and team_status.selected_total + event_rider.price > event.budget %}
       <article
@@ -236,8 +237,8 @@
           {% if unavailable or not editable or budget_blocked %}disabled{% endif %}
         >
         <span class="rider-card-media">
-          {% if rider.photo_url %}
-            <img src="{{ pcs_image_url(rider.photo_url) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+          {% if rider.photo_mime or rider.photo_url %}
+            <img src="{{ rider_photo_url(rider) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
           {% else %}
             <span class="rider-initials">{{ rider.name[:2] }}</span>
           {% endif %}
@@ -251,8 +252,8 @@
           <span class="rider-main">
             <strong>{{ rider.name }}</strong>
             <small class="rider-team-line">
-              {% if event_rider.team and event_rider.team.image_url %}
-                <img src="{{ pcs_image_url(event_rider.team.image_url) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              {% if event_rider.team and (event_rider.team.image_mime or event_rider.team.image_url) %}
+                <img src="{{ team_image_url(event_rider.team) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
               {% endif %}
               <span>{{ event_rider.team.name if event_rider.team else 'Geen ploeg' }}</span>
             </small>
@@ -287,6 +288,20 @@
               </span>
             </span>
           {% endif %}
+          {% if historical_scores %}
+            <span class="card-section historical-score-section rider-card-detail">
+              <span class="section-label">Tour-scores 2022-2025</span>
+              <span class="historical-score-list">
+                {% for score in historical_scores %}
+                  <span class="historical-score-row" title="{{ score.team }}">
+                    <strong>{{ score.year }}</strong>
+                    <span>#{{ score.rank }}</span>
+                    <span>{{ score.points }} ptn</span>
+                  </span>
+                {% endfor %}
+              </span>
+            </span>
+          {% endif %}
           {% if rider.specialties %}
             <span class="card-section profile-section">
               <span class="section-label">PCS-profiel</span>
@@ -302,7 +317,7 @@
               </span>
             </span>
           {% endif %}
-          {% if rider.best_results or rider.grand_tour_results %}
+          {% if rider.best_results or rider.grand_tour_results or historical_scores %}
             <button type="button" class="details-toggle" data-card-toggle aria-expanded="false">Details</button>
           {% endif %}
           <span class="selection-action" data-selection-action>
