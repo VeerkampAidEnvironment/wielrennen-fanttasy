@@ -130,6 +130,12 @@
     const budgetPercent = Math.max(Math.min(budgetPercentRaw, 100), 0);
     const complete = count === maxCount && total <= budget;
     const overBudget = total > budget;
+    updateNavigationSelectionState(
+      "[data-team-selection-tab]",
+      count,
+      maxCount,
+      complete,
+    );
 
     document.querySelectorAll("[data-team-status-card]").forEach((card) => {
       card.classList.toggle("complete", complete);
@@ -161,6 +167,30 @@
   function setStatusWidth(selector, value) {
     document.querySelectorAll(selector).forEach((node) => {
       node.style.width = `${value}%`;
+    });
+  }
+
+  function updateNavigationSelectionState(selector, count, required, complete) {
+    const state = complete ? "complete" : count > 0 ? "partial" : "empty";
+    const label = complete ? "Compleet" : count > 0 ? `${count}/${required}` : "Leeg";
+
+    document.querySelectorAll(selector).forEach((tab) => {
+      tab.classList.remove(
+        "selection-state-complete",
+        "selection-state-partial",
+        "selection-state-empty",
+      );
+      tab.classList.add(`selection-state-${state}`);
+      tab.dataset.selectionState = state;
+      if (tab.hasAttribute("data-stage-selection-state")) {
+        tab.dataset.stageSelectionState = state;
+      }
+      const status = tab.querySelector(".event-tab-status");
+      if (status) {
+        status.textContent = label;
+      }
+      const selectionLabel = tab.dataset.selectionLabel || "Selectie";
+      tab.setAttribute("aria-label", `${selectionLabel}, selectie ${label}`);
     });
   }
 
@@ -537,6 +567,16 @@
         firstCaptain.checked = true;
         captain = firstCaptain;
       }
+    }
+
+    const stageId = form.dataset.stageId || "";
+    if (stageId) {
+      updateNavigationSelectionState(
+        `[data-stage-selection-tab="${stageId}"]`,
+        checked.length,
+        maxCount,
+        checked.length === maxCount && Boolean(captain),
+      );
     }
 
     form.querySelectorAll("[data-count]").forEach((count) => {

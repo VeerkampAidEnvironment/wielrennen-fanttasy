@@ -4,6 +4,8 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 
+from sqlalchemy.orm import selectinload
+
 from tour_femmes import db
 from tour_femmes.models import (
     Award,
@@ -38,6 +40,14 @@ class SelectionValidation:
     message: str
     selected_riders: list[EventRider]
     total_price: int
+
+
+@dataclass(frozen=True)
+class SelectionProgress:
+    state: str
+    count: int
+    required: int
+    label: str
 
 
 @dataclass(frozen=True)
@@ -164,6 +174,65 @@ def lineup_status(user: User, stage: Stage) -> str:
     if len(lineup.riders) != stage.event.lineup_size:
         return "Niet compleet"
     return "Compleet"
+
+
+def event_selection_progress(
+    user: User,
+    event: Event,
+) -> dict[str | int, SelectionProgress]:
+    selection = (
+        TeamSelection.query.options(selectinload(TeamSelection.riders))
+        .filter_by(user_id=user.id, event_id=event.id)
+        .first()
+    )
+    selected_count = len(selection.riders) if selection else 0
+    team_complete = bool(
+        selection
+        and selected_count == event.team_size
+        and selection.total_price <= event.budget
+    )
+    progress: dict[str | int, SelectionProgress] = {
+        "team": _selection_progress(selected_count, event.team_size, team_complete)
+    }
+
+    stage_ids = [stage.id for stage in event.stages]
+    lineups = (
+        StageLineup.query.options(selectinload(StageLineup.riders))
+        .filter(
+            StageLineup.user_id == user.id,
+            StageLineup.stage_id.in_(stage_ids),
+        )
+        .all()
+        if stage_ids
+        else []
+    )
+    lineup_by_stage_id = {lineup.stage_id: lineup for lineup in lineups}
+    for stage in event.stages:
+        lineup = lineup_by_stage_id.get(stage.id)
+        rider_ids = lineup.rider_ids() if lineup else set()
+        lineup_complete = bool(
+            lineup
+            and len(rider_ids) == event.lineup_size
+            and lineup.captain_event_rider_id in rider_ids
+        )
+        progress[stage.id] = _selection_progress(
+            len(rider_ids),
+            event.lineup_size,
+            lineup_complete,
+        )
+    return progress
+
+
+def _selection_progress(
+    count: int,
+    required: int,
+    complete: bool,
+) -> SelectionProgress:
+    if complete:
+        return SelectionProgress("complete", count, required, "Compleet")
+    if count:
+        return SelectionProgress("partial", count, required, f"{count}/{required}")
+    return SelectionProgress("empty", 0, required, "Leeg")
 
 
 def save_stage_lineup(

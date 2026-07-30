@@ -311,6 +311,80 @@ select:focus {
   background: var(--blue);
 }
 
+.event-stage-nav a.selection-state {
+  --selection-state-color: var(--muted);
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  min-height: 54px;
+  padding: 7px 13px;
+  color: var(--text);
+}
+
+.event-stage-nav a.selection-state > span {
+  line-height: 1.05;
+}
+
+.event-tab-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--selection-state-color);
+  font-size: 0.64rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.event-tab-status::before {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--selection-state-color);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.82);
+  content: "";
+}
+
+.event-stage-nav a.selection-state-complete {
+  --selection-state-color: var(--green);
+  border-color: #bddac9;
+  background: #f0f8f3;
+}
+
+.event-stage-nav a.selection-state-partial {
+  --selection-state-color: #a45c0a;
+  border-color: #ecd2a2;
+  background: #fff8eb;
+}
+
+.event-stage-nav a.selection-state-empty {
+  --selection-state-color: var(--danger);
+  border-color: #edc5bf;
+  background: #fff5f3;
+}
+
+.event-stage-nav a.selection-state:hover {
+  color: var(--text);
+  border-color: var(--selection-state-color);
+}
+
+.event-stage-nav a.selection-state.active {
+  color: #fff;
+  border-color: var(--blue);
+  background: var(--blue);
+  box-shadow: inset 0 -3px 0 var(--selection-state-color);
+}
+
+.event-stage-nav a.selection-state.active .event-tab-status {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.event-stage-nav a.selection-state.active .event-tab-status::before {
+  background: var(--selection-state-color);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
 .event-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));

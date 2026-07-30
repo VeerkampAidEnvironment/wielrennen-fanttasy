@@ -119,7 +119,12 @@
     {% if locked %}
       <div class="notice">De selectie is gesloten voor deze etappe.</div>
     {% endif %}
-    <form method="post" data-lineup-form data-team-size="{{ event.lineup_size }}">
+    <form
+      method="post"
+      data-lineup-form
+      data-team-size="{{ event.lineup_size }}"
+      data-stage-id="{{ stage.id }}"
+    >
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="lineup-builder">
         <section class="lineup-builder-section selected-lineup-section">

@@ -32,6 +32,7 @@ from tour_femmes.services.game import (
     build_rider_stage_history,
     build_stage_leaderboard,
     can_edit_team,
+    event_selection_progress,
     get_or_create_entry,
     get_team_selection,
     lineup_status,
@@ -41,6 +42,11 @@ from tour_femmes.services.game import (
 )
 events_bp = Blueprint("events", __name__)
 SUBLEAGUE_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+
+@events_bp.app_context_processor
+def inject_event_navigation_helpers():
+    return {"event_selection_progress": event_selection_progress}
 
 
 @events_bp.route("/events")

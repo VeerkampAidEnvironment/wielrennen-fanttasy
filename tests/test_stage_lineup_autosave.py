@@ -143,6 +143,12 @@ def test_stage_lineup_fetch_autosaves_concept_and_complete_lineup():
     client = app.test_client()
     login(client, user_id)
 
+    initial_html = client.get(
+        f"/events/{event_id}/stages/{stage_id}"
+    ).get_data(as_text=True)
+    assert 'data-selection-state="complete"' in initial_html
+    assert 'data-stage-selection-state="empty"' in initial_html
+
     concept_response = client.post(
         f"/events/{event_id}/stages/{stage_id}",
         data={
@@ -158,6 +164,11 @@ def test_stage_lineup_fetch_autosaves_concept_and_complete_lineup():
     with app.app_context():
         lineup = StageLineup.query.filter_by(user_id=user_id, stage_id=stage_id).one()
         assert lineup.rider_ids() == set(event_rider_ids[:3])
+    concept_html = client.get(
+        f"/events/{event_id}/stages/{stage_id}"
+    ).get_data(as_text=True)
+    assert 'data-stage-selection-state="partial"' in concept_html
+    assert '<small class="event-tab-status">3/6</small>' in concept_html
 
     complete_response = client.post(
         f"/events/{event_id}/stages/{stage_id}",
@@ -175,6 +186,11 @@ def test_stage_lineup_fetch_autosaves_concept_and_complete_lineup():
         lineup = StageLineup.query.filter_by(user_id=user_id, stage_id=stage_id).one()
         assert lineup.rider_ids() == set(event_rider_ids[:6])
         assert lineup.captain_event_rider_id == event_rider_ids[1]
+    complete_html = client.get(
+        f"/events/{event_id}/stages/{stage_id}"
+    ).get_data(as_text=True)
+    assert 'data-stage-selection-state="complete"' in complete_html
+    assert complete_html.count('<small class="event-tab-status">Compleet</small>') == 2
 
 
 def test_stage_scoring_stores_user_and_rider_score_breakdown():
