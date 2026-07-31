@@ -96,6 +96,15 @@ class RiderStageHistory:
     results: list[RiderStageHistoryItem]
 
 
+@dataclass(frozen=True)
+class OfficialRiderStageScore:
+    event_rider_id: int
+    stage_points: int
+    classification_points: int
+    teammate_points: int
+    total_points: int
+
+
 def get_or_create_entry(user: User, event: Event) -> EventEntry:
     entry = EventEntry.query.filter_by(user_id=user.id, event_id=event.id).first()
     if entry:
@@ -456,6 +465,40 @@ def calculate_classification_bonuses(
                 values[event_rider_id][1] += STAGE_WINNER_TEAMMATE_POINTS
 
     return {event_rider_id: tuple(parts) for event_rider_id, parts in values.items()}
+
+
+def build_official_stage_scores(stage: Stage) -> dict[int, OfficialRiderStageScore]:
+    """Return neutral rider totals without user-specific captain bonuses."""
+    event_rider_ids = {
+        event_rider.id
+        for event_rider in EventRider.query.filter_by(event_id=stage.event_id).all()
+    }
+    bonuses = calculate_classification_bonuses(
+        stage,
+        daily_eligible_ids=event_rider_ids,
+        final_eligible_ids=event_rider_ids,
+    )
+    results_by_rider = {result.event_rider_id: result for result in stage.results}
+    scored_rider_ids = set(results_by_rider) | set(bonuses)
+
+    scores: dict[int, OfficialRiderStageScore] = {}
+    for event_rider_id in scored_rider_ids:
+        result = results_by_rider.get(event_rider_id)
+        stage_points = points_for_result(result.rank, result.status) if result else 0
+        daily, teammate, final, final_teammate = bonuses.get(
+            event_rider_id,
+            (0, 0, 0, 0),
+        )
+        classification_total = daily + final
+        teammate_total = teammate + final_teammate
+        scores[event_rider_id] = OfficialRiderStageScore(
+            event_rider_id=event_rider_id,
+            stage_points=stage_points,
+            classification_points=classification_total,
+            teammate_points=teammate_total,
+            total_points=stage_points + classification_total + teammate_total,
+        )
+    return scores
 
 
 def recalculate_event_awards(event: Event) -> None:

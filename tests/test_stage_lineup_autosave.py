@@ -20,12 +20,13 @@ from tour_femmes.models import (
     UserStageRiderScore,
     UserStageScore,
 )
-from tour_femmes.services.game import recalculate_stage_scores
+from tour_femmes.services.game import build_official_stage_scores, recalculate_stage_scores
 from tour_femmes.scoring import (
     DAILY_LEADER_TEAMMATE_POINTS,
     FINAL_WINNER_TEAMMATE_POINTS,
     STAGE_WINNER_TEAMMATE_POINTS,
     classification_points,
+    points_for_result,
 )
 
 
@@ -306,6 +307,8 @@ def test_scoring_rules_are_on_separate_tab_and_images_use_database_routes():
 
     assert stage_response.status_code == 200
     assert "Etappeprofiel" in stage_html
+    assert stage_html.index("Etappeprofiel") < stage_html.index("Etappeselectie")
+    assert "upcoming-stage-lineup" in stage_html
     assert "Puntentelling</h2>" not in stage_html
     assert f"/media/stage-profile/{stage_id}" in stage_html
     assert "/media/rider-photo/" in stage_html
@@ -352,7 +355,7 @@ def test_team_selection_tab_disappears_after_stage_one_starts():
     assert "data-deadline-countdown" in stage_html
 
 
-def test_admin_stage_page_shows_result_import_button():
+def test_result_import_button_stays_in_admin_environment():
     app, user_id, event_id, stage_id, _event_rider_ids = make_app_with_lineup_context()
     with app.app_context():
         stage = db.session.get(Stage, stage_id)
@@ -365,6 +368,93 @@ def test_admin_stage_page_shows_result_import_button():
         session["admin_ok"] = True
 
     stage_html = client.get(f"/events/{event_id}/stages/{stage_id}").get_data(as_text=True)
+    admin_html = client.get(f"/admin/events/{event_id}").get_data(as_text=True)
 
-    assert "Uitslag laden" in stage_html
-    assert f"/admin/stages/{stage_id}/import-results" in stage_html
+    assert "Uitslag laden" not in stage_html
+    assert f"/admin/stages/{stage_id}/import-results" not in stage_html
+    assert "Uitslag laden" in admin_html
+    assert f"/admin/stages/{stage_id}/import-results" in admin_html
+
+
+def test_finished_stage_moves_profile_below_results():
+    app, user_id, event_id, stage_id, event_rider_ids = make_app_with_lineup_context()
+    with app.app_context():
+        stage = db.session.get(Stage, stage_id)
+        stage.starts_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+        lineup = StageLineup(
+            user_id=user_id,
+            stage_id=stage_id,
+            captain_event_rider_id=event_rider_ids[0],
+        )
+        db.session.add(lineup)
+        db.session.flush()
+        for event_rider_id in event_rider_ids[:6]:
+            lineup.riders.append(
+                StageLineupRider(event_rider_id=event_rider_id)
+            )
+        db.session.add(
+            StageResult(
+                stage_id=stage_id,
+                event_rider_id=event_rider_ids[0],
+                rank=1,
+                status="FIN",
+                base_points=100,
+            )
+        )
+        db.session.flush()
+        recalculate_stage_scores(stage)
+        db.session.commit()
+
+    client = app.test_client()
+    login(client, user_id)
+    stage_html = client.get(f"/events/{event_id}/stages/{stage_id}").get_data(as_text=True)
+
+    assert "finished-stage-profile" in stage_html
+    assert stage_html.index("Officiële uitslag") < stage_html.index("Etappeprofiel")
+    assert "upcoming-stage-lineup" not in stage_html
+    assert "Etappeselectie" not in stage_html
+    assert "Wisselspelers" in stage_html
+    assert "5 renners" in stage_html
+    assert "Niet opgesteld en niet meegerekend in jouw etappescore." in stage_html
+
+
+def test_official_result_combines_stage_classification_and_team_points():
+    app, _user_id, _event_id, stage_id, event_rider_ids = make_app_with_lineup_context()
+    with app.app_context():
+        stage = db.session.get(Stage, stage_id)
+        db.session.add_all(
+            [
+                StageResult(
+                    stage_id=stage_id,
+                    event_rider_id=event_rider_ids[0],
+                    rank=1,
+                    status="FIN",
+                ),
+                StageResult(
+                    stage_id=stage_id,
+                    event_rider_id=event_rider_ids[1],
+                    rank=2,
+                    status="FIN",
+                ),
+                ClassificationResult(
+                    stage_id=stage_id,
+                    event_rider_id=event_rider_ids[0],
+                    classification="gc",
+                    rank=1,
+                    is_final=False,
+                ),
+            ]
+        )
+        db.session.flush()
+
+        official_scores = build_official_stage_scores(stage)
+
+        assert official_scores[event_rider_ids[0]].stage_points == 100
+        assert official_scores[event_rider_ids[0]].classification_points == 16
+        assert official_scores[event_rider_ids[0]].teammate_points == 0
+        assert official_scores[event_rider_ids[0]].total_points == 116
+        second_place_points = points_for_result(2, "FIN")
+        assert official_scores[event_rider_ids[1]].stage_points == second_place_points
+        assert official_scores[event_rider_ids[1]].classification_points == 0
+        assert official_scores[event_rider_ids[1]].teammate_points == 24
+        assert official_scores[event_rider_ids[1]].total_points == second_place_points + 24

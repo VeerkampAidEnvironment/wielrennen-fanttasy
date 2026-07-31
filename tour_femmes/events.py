@@ -29,6 +29,7 @@ from tour_femmes.scoring import (
 )
 from tour_femmes.services.game import (
     build_leaderboard,
+    build_official_stage_scores,
     build_rider_stage_history,
     build_stage_leaderboard,
     can_edit_team,
@@ -256,8 +257,21 @@ def stage(event_id: int, stage_id: int):
     captain_id = lineup.captain_event_rider_id if lineup else None
     user_result = next((score for score in stage_obj.user_scores if score.user_id == current_user.id), None)
     team_riders = [link.event_rider for link in selection.riders]
+    team_rider_ids = {event_rider.id for event_rider in team_riders}
     rider_history = build_rider_stage_history(event, stage_obj, team_riders)
     show_results = stage_obj.has_ranked_result()
+    stage_results = sorted(
+        stage_obj.results,
+        key=lambda result: (
+            result.rank is None,
+            result.rank if result.rank is not None else 0,
+            result.event_rider.rider.name.casefold(),
+        ),
+    )
+    stage_results_by_rider_id = {
+        result.event_rider_id: result for result in stage_results
+    }
+    official_rider_scores = build_official_stage_scores(stage_obj) if show_results else {}
 
     return render_template(
         "events/stage.html",
@@ -269,6 +283,10 @@ def stage(event_id: int, stage_id: int):
         locked=locked,
         lineup=lineup,
         show_results=show_results,
+        stage_results=stage_results,
+        stage_results_by_rider_id=stage_results_by_rider_id,
+        team_rider_ids=team_rider_ids,
+        official_rider_scores=official_rider_scores,
         user_result=user_result,
         rider_history=rider_history,
     )
