@@ -504,6 +504,27 @@
     }
   }
 
+  function toggleLineupRiderProfile(card, form) {
+    const expanded = !card.classList.contains("profile-expanded");
+    if (expanded) {
+      form.querySelectorAll("[data-lineup-card].profile-expanded").forEach((otherCard) => {
+        if (otherCard !== card) {
+          setLineupRiderProfile(otherCard, false);
+        }
+      });
+    }
+    setLineupRiderProfile(card, expanded);
+  }
+
+  function setLineupRiderProfile(card, expanded) {
+    const button = card.querySelector("[data-toggle-lineup-profile]");
+    card.classList.toggle("profile-expanded", expanded);
+    if (button) {
+      button.setAttribute("aria-expanded", expanded ? "true" : "false");
+      button.textContent = expanded ? "Sluiten" : "Profiel";
+    }
+  }
+
   async function saveTeamSelection(form) {
     const csrf = form.querySelector('input[name="csrf_token"]')?.value || "";
     const body = new URLSearchParams();
@@ -977,6 +998,20 @@
       }
     });
     form.addEventListener("click", (event) => {
+      const profileButton = event.target.closest("[data-toggle-lineup-profile]");
+      if (profileButton) {
+        event.preventDefault();
+        const card = profileButton.closest("[data-lineup-card]");
+        if (card) {
+          preserveScroll(() => toggleLineupRiderProfile(card, form));
+        }
+        return;
+      }
+
+      if (event.target.closest("[data-lineup-profile]")) {
+        return;
+      }
+
       const captainButton = event.target.closest("[data-toggle-captain]");
       if (captainButton) {
         event.preventDefault();

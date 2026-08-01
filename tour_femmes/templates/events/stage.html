@@ -7,6 +7,7 @@
 {% macro rider_card(event_rider) %}
   {% set rider = event_rider.rider %}
   {% set history = rider_history.get(event_rider.id) %}
+  {% set historical_scores = historical_rider_scores(rider) %}
   {% set selected = event_rider.id in selected_ids %}
   {% set is_captain = captain_id == event_rider.id %}
   <article
@@ -66,14 +67,73 @@
       {% endif %}
       </span>
     </span>
-    {% if not locked %}
-      <span class="lineup-card-actions">
-        <button type="button" class="mini-action" data-toggle-lineup>{{ 'Verwijderen' if selected else 'Toevoegen' }}</button>
-        <button type="button" class="mini-action captain-action" data-toggle-captain>{{ 'Kopvrouw gekozen' if is_captain else 'Kopvrouw' }}</button>
+    <span class="lineup-rider-profile" data-lineup-profile>
+      <span class="lineup-profile-meta">
+        {% if rider.nationality %}<span>{{ rider.nationality }}</span>{% endif %}
+        {% if rider.age is not none %}<span>{{ rider.age }} jaar</span>{% endif %}
+        {% if rider.height_m %}<span>{{ rider.height_m }} m</span>{% endif %}
       </span>
+      {% if rider.specialties %}
+        <span class="lineup-profile-section">
+          <strong>PCS-profiel</strong>
+          <span class="profile-bars">
+            {% for speciality in speciality_filters %}
+              {% set value = rider.specialties.get(speciality.stat_label, 0) %}
+              {% set width = (value / 80)|round(0, 'floor') %}
+              <span class="profile-stat profile-stat-{{ speciality.key }}">
+                <span class="profile-stat-top"><span>{{ speciality.label }}</span></span>
+                <span class="profile-track"><span style="width: {{ 100 if width > 100 else width }}%"></span></span>
+              </span>
+            {% endfor %}
+          </span>
+        </span>
+      {% endif %}
+      {% if rider.best_results %}
+        <span class="lineup-profile-section">
+          <strong>Beste resultaten</strong>
+          <span class="result-list">
+            {% for result in rider.best_results[:4] %}<span>{{ result }}</span>{% endfor %}
+          </span>
+        </span>
+      {% endif %}
+      {% if rider.grand_tour_results %}
+        <span class="lineup-profile-section">
+          <strong>Grote rondes</strong>
+          <span class="gt-list">
+            {% for race, results in rider.grand_tour_results.items() %}
+              <span class="gt-race">
+                <strong>{{ race }}</strong>
+                {% for result in results %}<span>{{ result }}</span>{% endfor %}
+              </span>
+            {% endfor %}
+          </span>
+        </span>
+      {% endif %}
+      {% if historical_scores %}
+        <span class="lineup-profile-section">
+          <strong>Tour-scores 2022-2025</strong>
+          <span class="historical-score-list">
+            {% for score in historical_scores %}
+              <span class="historical-score-row" title="{{ score.team }}">
+                <strong>{{ score.year }}</strong><span>#{{ score.rank }}</span><span>{{ score.points }} ptn</span>
+              </span>
+            {% endfor %}
+          </span>
+        </span>
+      {% endif %}
+      {% if not rider.specialties and not rider.best_results and not rider.grand_tour_results and not historical_scores %}
+        <span class="lineup-profile-empty">Voor deze renner zijn nog geen profielgegevens geladen.</span>
+      {% endif %}
+    </span>
+    <span class="lineup-card-actions">
+      <button type="button" class="mini-action profile-action" data-toggle-lineup-profile aria-expanded="false">Profiel</button>
+    {% if not locked %}
+      <button type="button" class="mini-action" data-toggle-lineup>{{ 'Verwijderen' if selected else 'Toevoegen' }}</button>
+      <button type="button" class="mini-action captain-action" data-toggle-captain>{{ 'Kopvrouw gekozen' if is_captain else 'Kopvrouw' }}</button>
     {% else %}
       <span class="lineup-card-status">{{ 'Kopvrouw' if is_captain else 'Geselecteerd' if selected else 'Bank' }}</span>
     {% endif %}
+    </span>
   </article>
 {% endmacro %}
 

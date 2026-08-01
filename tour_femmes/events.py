@@ -44,6 +44,14 @@ from tour_femmes.services.game import (
 )
 events_bp = Blueprint("events", __name__)
 SUBLEAGUE_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+RIDER_SPECIALITY_FILTERS = [
+    {"key": "onedayraces", "label": "Eendagskoersen", "stat_label": "Onedayraces"},
+    {"key": "gc", "label": "Klassement", "stat_label": "GC"},
+    {"key": "tt", "label": "Tijdrit", "stat_label": "TT"},
+    {"key": "sprint", "label": "Sprint", "stat_label": "Sprint"},
+    {"key": "climber", "label": "Klimmen", "stat_label": "Climber"},
+    {"key": "hills", "label": "Heuvels", "stat_label": "Hills"},
+]
 
 
 @events_bp.app_context_processor
@@ -160,14 +168,7 @@ def team(event_id: int):
     teams_by_name = {link.team.name: link.team for link in event_riders if link.team}
     team_filters = [teams_by_name[name] for name in sorted(teams_by_name, key=str.lower)]
     prices = [link.price for link in event_riders if link.price is not None]
-    speciality_filters = [
-        {"key": "onedayraces", "label": "Eendagskoersen", "stat_label": "Onedayraces"},
-        {"key": "gc", "label": "Klassement", "stat_label": "GC"},
-        {"key": "tt", "label": "Tijdrit", "stat_label": "TT"},
-        {"key": "sprint", "label": "Sprint", "stat_label": "Sprint"},
-        {"key": "climber", "label": "Klimmen", "stat_label": "Climber"},
-        {"key": "hills", "label": "Heuvels", "stat_label": "Hills"},
-    ]
+    speciality_filters = RIDER_SPECIALITY_FILTERS
     selected_ids = selection.rider_ids() if selection else set()
     selected_total = selection.total_price if selection else 0
     remaining_budget = event.budget - selected_total
@@ -290,6 +291,7 @@ def stage(event_id: int, stage_id: int):
         official_rider_scores=official_rider_scores,
         user_result=user_result,
         rider_history=rider_history,
+        speciality_filters=RIDER_SPECIALITY_FILTERS,
     )
 
 

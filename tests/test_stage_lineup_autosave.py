@@ -316,6 +316,9 @@ def test_scoring_rules_are_on_separate_tab_and_images_use_database_routes():
     assert "Puntentelling</h2>" not in stage_html
     assert f"/media/stage-profile/{stage_id}" in stage_html
     assert "/media/rider-photo/" in stage_html
+    assert stage_html.count("data-toggle-lineup-profile") == 11
+    assert stage_html.count("data-lineup-profile") == 11
+    assert "Tour-scores 2022-2025" in stage_html
     assert "Teamselectie" in stage_html
     assert "data-team-selection-tab" in stage_html
     assert "data-deadline-at=" in stage_html

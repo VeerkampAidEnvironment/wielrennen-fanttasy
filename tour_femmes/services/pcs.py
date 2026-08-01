@@ -856,11 +856,19 @@ def import_stage_results(stage: Stage) -> int:
     client = PcsClient()
     soup = client.get_soup(stage.pcs_url)
     parsed_results = parse_stage_results(soup, stage)
+    if not parsed_results:
+        return 0
+    existing_results = {
+        result.event_rider_id: result
+        for result in StageResult.query.filter_by(stage_id=stage.id).all()
+    }
+    parsed_ids = {parsed.event_rider_id for parsed in parsed_results}
+    for event_rider_id, result in existing_results.items():
+        if event_rider_id not in parsed_ids:
+            db.session.delete(result)
+
     for parsed in parsed_results:
-        result = StageResult.query.filter_by(
-            stage_id=stage.id,
-            event_rider_id=parsed.event_rider_id,
-        ).first()
+        result = existing_results.get(parsed.event_rider_id)
         if not result:
             result = StageResult(stage=stage, event_rider_id=parsed.event_rider_id)
             db.session.add(result)
@@ -870,6 +878,7 @@ def import_stage_results(stage: Stage) -> int:
         result.raw_result = parsed.raw_result
         result.base_points = points_for_result(parsed.rank, parsed.status)
         result.imported_at = utcnow()
+    db.session.flush()
     import_stage_classifications(stage, client)
     recalculate_stage_scores(stage)
     return len(parsed_results)
@@ -948,38 +957,58 @@ def parse_stage_results(soup: BeautifulSoup, stage: Stage) -> list[ParsedResult]
         link.rider.pcs_slug: link.id
         for link in EventRider.query.join(Rider).filter(EventRider.event_id == stage.event_id).all()
     }
-    parsed: list[ParsedResult] = []
-    seen: set[int] = set()
+    candidates: list[list[ParsedResult]] = []
+    tables = soup.find_all("table") or [soup]
+    for table in tables:
+        parsed: list[ParsedResult] = []
+        seen: set[int] = set()
+        for row in table.find_all("tr"):
+            cells = [
+                clean_text(cell.get_text(" ", strip=True))
+                for cell in row.find_all(["td", "th"])
+            ]
+            if not cells:
+                continue
 
-    for row in soup.find_all("tr"):
-        cells = [clean_text(cell.get_text(" ", strip=True)) for cell in row.find_all(["td", "th"])]
-        if not cells:
-            continue
+            rank = parse_rank(cells[0])
+            status = parse_status(cells)
+            rider_anchor = row.find("a", href=re.compile(r"(^|/)rider/"))
+            if not rider_anchor:
+                continue
 
-        rank = parse_rank(cells[0])
-        status = parse_status(cells)
-        rider_anchor = row.find("a", href=re.compile(r"(^|/)rider/"))
-        if not rider_anchor:
-            continue
-
-        slug = urlparse(rider_anchor["href"]).path.strip("/").split("rider/")[-1].strip("/")
-        event_rider_id = links_by_slug.get(slug)
-        if not event_rider_id or event_rider_id in seen:
-            continue
-
-        time_gap = next((cell for cell in cells if re.fullmatch(r"(\+)?\d+:\d{2}(:\d{2})?|\+?\d+s", cell)), None)
-        parsed.append(
-            ParsedResult(
-                event_rider_id=event_rider_id,
-                rank=rank,
-                status=status,
-                time_gap=time_gap,
-                raw_result={"cells": " | ".join(cells)},
+            time_gap = next(
+                (
+                    cell
+                    for cell in cells
+                    if re.fullmatch(r"(\+)?\d+:\d{2}(:\d{2})?|\+?\d+s", cell)
+                ),
+                None,
             )
-        )
-        seen.add(event_rider_id)
+            repeated_rank = len(cells) > 1 and parse_rank(cells[1]) == rank
+            if rank and not time_gap and not repeated_rank:
+                # PCS shows points and mountain classifications below the result.
+                # Their first cell is also a rank, but the second cell is a bib number.
+                continue
 
-    return parsed
+            slug = urlparse(rider_anchor["href"]).path.strip("/").split("rider/")[-1].strip("/")
+            event_rider_id = links_by_slug.get(slug)
+            if not event_rider_id or event_rider_id in seen:
+                continue
+
+            parsed.append(
+                ParsedResult(
+                    event_rider_id=event_rider_id,
+                    rank=rank,
+                    status=status,
+                    time_gap=time_gap,
+                    raw_result={"cells": " | ".join(cells)},
+                )
+            )
+            seen.add(event_rider_id)
+        if parsed:
+            candidates.append(parsed)
+
+    return max(candidates, key=len, default=[])
 
 
 def fetch_live_updates(stage: Stage) -> list[LiveUpdateItem]:

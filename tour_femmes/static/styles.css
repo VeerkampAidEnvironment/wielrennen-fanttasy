@@ -1137,6 +1137,7 @@ select:focus {
   grid-template-areas:
     "photo main"
     "history history"
+    "profile profile"
     "actions actions";
   gap: 10px;
   align-items: center;
@@ -1265,8 +1266,84 @@ select:focus {
 .lineup-card-actions {
   grid-area: actions;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+}
+
+.lineup-builder-card.locked .lineup-card-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.lineup-card-actions .lineup-card-status {
+  grid-area: auto;
+}
+
+.profile-action {
+  border-color: #cdd9e5;
+  background: #f4f7fa;
+  color: var(--blue);
+}
+
+.lineup-builder-card.profile-expanded .profile-action {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: #fff;
+}
+
+.lineup-rider-profile {
+  grid-area: profile;
+  display: none;
+  gap: 11px;
+  min-width: 0;
+  padding: 10px;
+  border-top: 1px solid var(--line);
+  background: #f8faf8;
+  cursor: default;
+}
+
+.lineup-builder-card.profile-expanded .lineup-rider-profile {
+  display: grid;
+}
+
+.lineup-profile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.lineup-profile-meta > span {
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: #e9eeea;
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.lineup-profile-section {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.lineup-profile-section > strong {
+  color: var(--muted);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+}
+
+.lineup-profile-section .result-list,
+.lineup-profile-section .gt-list {
+  font-size: 0.68rem;
+}
+
+.lineup-profile-section .historical-score-row {
+  font-size: 0.67rem;
+}
+
+.lineup-profile-empty {
+  color: var(--muted);
+  font-size: 0.72rem;
 }
 
 .mini-action,
