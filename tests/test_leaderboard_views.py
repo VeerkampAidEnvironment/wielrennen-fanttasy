@@ -13,11 +13,14 @@ from tour_femmes.models import (
     StageLineupRider,
     StageResult,
     Team,
+    TeamSelection,
+    TeamSelectionRider,
     User,
 )
 from tour_femmes.services.game import (
     build_leaderboard,
     build_stage_leaderboard,
+    build_team_selection_overview,
     recalculate_stage_scores,
 )
 
@@ -194,3 +197,43 @@ def test_event_overview_highlights_status_and_next_deadline():
     assert "data-deadline-at" in html
     assert "Ingeschreven" in html
     assert "Nog niet compleet" in html
+
+
+def test_team_overview_shows_full_selections_and_rider_popularity():
+    app, user_id, event_id = make_leaderboard_app()
+    with app.app_context():
+        event = db.session.get(Event, event_id)
+        event_rider = EventRider.query.join(Rider).filter(Rider.name == "Alpha Rider").one()
+        users = User.query.order_by(User.username).all()
+        for user in users:
+            selection = TeamSelection(user=user, event=event, total_price=1)
+            selection.riders.append(TeamSelectionRider(event_rider=event_rider))
+            db.session.add(selection)
+        db.session.commit()
+
+        overview = build_team_selection_overview(event)
+
+        assert overview.participant_count == 2
+        assert overview.selection_count == 2
+        assert overview.completed_count == 2
+        assert overview.unique_rider_count == 1
+        assert overview.average_total_price == 1
+        assert overview.popularity[0].event_rider.rider.name == "Alpha Rider"
+        assert overview.popularity[0].selected_count == 2
+        assert overview.popularity[0].percentage == 100
+
+    client = app.test_client()
+    login(client, user_id)
+    response = client.get(f"/events/{event_id}/teams")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'href="/events/1/teams"' in html
+    assert "Teams van deelnemers" in html
+    assert "Meest gekozen renners" in html
+    assert "Volledige teamselecties" in html
+    assert "Alpha Rider" in html
+    assert "alpha" in html
+    assert "beta" in html
+    assert "2 / 2" in html
+    assert "100%" in html

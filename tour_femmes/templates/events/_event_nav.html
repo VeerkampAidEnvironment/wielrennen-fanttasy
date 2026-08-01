@@ -1,6 +1,7 @@
 {% set selection_progress = event_selection_progress(current_user, event) %}
 <div class="event-nav event-top-nav" aria-label="Koerspagina's">
   <a class="{{ 'active' if active == 'leaderboard' else '' }}" href="{{ url_for('events.leaderboard', event_id=event.id) }}">Klassement</a>
+  <a class="{{ 'active' if active == 'teams' else '' }}" href="{{ url_for('events.teams', event_id=event.id) }}">Teams</a>
   <a class="{{ 'active' if active == 'subleagues' else '' }}" href="{{ url_for('events.subleagues', event_id=event.id) }}">Subcompetities</a>
   <a class="{{ 'active' if active == 'scoring' else '' }}" href="{{ url_for('events.scoring', event_id=event.id) }}">Puntentelling</a>
 </div>

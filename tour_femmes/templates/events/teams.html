@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Teams - {{ event.name }}{% endblock %}
+{% block body %}
+{% set active = 'teams' %}
+{% include "events/_event_nav.html" with context %}
+
+<section class="section-head participant-teams-head">
+  <div>
+    <p class="eyebrow">{{ event.name }}</p>
+    <h1>Teams van deelnemers</h1>
+  </div>
+  <div class="participant-total">
+    <strong>{{ overview.participant_count }}</strong>
+    <span>deelnemers</span>
+  </div>
+</section>
+
+<section class="team-insight-strip" aria-label="Teamselectiestatistieken">
+  <div>
+    <span>Teams ingevuld</span>
+    <strong>{{ overview.selection_count }} / {{ overview.participant_count }}</strong>
+  </div>
+  <div>
+    <span>Complete teams</span>
+    <strong>{{ overview.completed_count }}</strong>
+  </div>
+  <div>
+    <span>Gekozen renners</span>
+    <strong>{{ overview.unique_rider_count }}</strong>
+  </div>
+  <div>
+    <span>Gemiddeld budget</span>
+    <strong>{{ overview.average_total_price|round(1) }} <small>/ {{ event.budget }}</small></strong>
+  </div>
+</section>
+
+<section class="rider-popularity-section">
+  <header class="team-overview-section-head">
+    <div>
+      <p class="eyebrow">Selectiestatistiek</p>
+      <h2>Meest gekozen renners</h2>
+    </div>
+    <span>Top {{ [overview.popularity|length, 10]|min }}</span>
+  </header>
+
+  {% if overview.popularity %}
+    <div class="rider-popularity-list">
+      {% for item in overview.popularity[:10] %}
+        {% set event_rider = item.event_rider %}
+        {% set rider = event_rider.rider %}
+        <article class="rider-popularity-row">
+          <span class="popularity-rank">{{ loop.index }}</span>
+          <span class="popularity-photo">
+            {% if rider.photo_mime or rider.photo_url %}
+              <img src="{{ rider_photo_url(rider) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            {% else %}
+              <span>{{ rider.name[:2] }}</span>
+            {% endif %}
+          </span>
+          <span class="popularity-rider">
+            <strong>{{ rider.name }}</strong>
+            <small>{{ event_rider.team.name if event_rider.team else 'Geen ploeg' }}</small>
+          </span>
+          <span class="popularity-meter" aria-label="Door {{ item.percentage }} procent gekozen">
+            <span style="width: {{ item.percentage }}%"></span>
+          </span>
+          <span class="popularity-count">
+            <strong>{{ item.selected_count }} / {{ overview.participant_count }}</strong>
+            <small>{{ item.percentage }}%</small>
+          </span>
+          <span class="popularity-price">{{ event_rider.price or 0 }}</span>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state compact-empty-state">Nog geen renners geselecteerd.</div>
+  {% endif %}
+</section>
+
+<section class="participant-team-section">
+  <header class="team-overview-section-head">
+    <div>
+      <p class="eyebrow">Alle deelnemers</p>
+      <h2>Volledige teamselecties</h2>
+    </div>
+    <span>{{ overview.participant_teams|length }} teams</span>
+  </header>
+
+  {% if overview.participant_teams %}
+    <div class="participant-team-grid">
+      {% for team in overview.participant_teams %}
+        <article class="participant-team-card {{ 'current-user-team' if team.user.id == current_user.id else '' }}">
+          <header class="participant-team-card-head">
+            <div>
+              <span class="participant-name-line">
+                <strong>{{ team.user.username }}</strong>
+                {% if team.user.id == current_user.id %}<small>Jij</small>{% endif %}
+              </span>
+              <span>{{ team.riders|length }} / {{ event.team_size }} renners</span>
+            </div>
+            <span class="team-completion-state {{ 'complete' if team.complete else 'incomplete' }}">
+              {{ 'Compleet' if team.complete else 'Niet compleet' }}
+            </span>
+          </header>
+
+          <div class="participant-team-budget">
+            <span>Budget</span>
+            <strong>{{ team.total_price }} <small>/ {{ event.budget }}</small></strong>
+          </div>
+
+          {% if team.riders %}
+            <div class="participant-rider-list">
+              {% for event_rider in team.riders %}
+                {% set rider = event_rider.rider %}
+                <div class="participant-rider-row">
+                  <span class="participant-rider-photo">
+                    {% if rider.photo_mime or rider.photo_url %}
+                      <img src="{{ rider_photo_url(rider) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+                    {% else %}
+                      <span>{{ rider.name[:2] }}</span>
+                    {% endif %}
+                  </span>
+                  <span class="participant-rider-main">
+                    <strong>{{ rider.name }}</strong>
+                    <small>{{ event_rider.team.name if event_rider.team else 'Geen ploeg' }}</small>
+                  </span>
+                  <strong class="participant-rider-price">{{ event_rider.price or 0 }}</strong>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="participant-team-empty">Nog geen renners geselecteerd.</p>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">Nog geen deelnemers voor deze koers.</div>
+  {% endif %}
+</section>
+{% endblock %}

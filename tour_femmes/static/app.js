@@ -659,7 +659,7 @@
       }
       if (captainButton) {
         captainButton.disabled = !selected || Boolean(radio && radio.disabled);
-        captainButton.textContent = radio && radio.checked && selected ? "Kopman gekozen" : "Kopman";
+        captainButton.textContent = radio && radio.checked && selected ? "Kopvrouw gekozen" : "Kopvrouw";
       }
     });
 
@@ -669,10 +669,10 @@
     if (captainMeter) {
       if (captain && checkedIds.has(captain.value)) {
         const captainCard = captain.closest("[data-lineup-card]");
-        const captainName = captainCard?.querySelector(".lineup-card-main strong")?.textContent || "Kopman gekozen";
+        const captainName = captainCard?.querySelector(".lineup-card-main strong")?.textContent || "Kopvrouw gekozen";
         captainMeter.textContent = captainName;
       } else {
-        captainMeter.textContent = "Geen kopman";
+        captainMeter.textContent = "Geen kopvrouw";
       }
     }
   }

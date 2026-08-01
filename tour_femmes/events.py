@@ -32,6 +32,7 @@ from tour_femmes.services.game import (
     build_official_stage_scores,
     build_rider_stage_history,
     build_stage_leaderboard,
+    build_team_selection_overview,
     can_edit_team,
     event_selection_progress,
     get_or_create_entry,
@@ -341,6 +342,17 @@ def leaderboard(event_id: int):
         selected_stage=selected_stage,
         stage_rows=stage_rows,
         lineups_visible=selected_stage.is_locked() if selected_stage else False,
+    )
+
+
+@events_bp.route("/events/<int:event_id>/teams")
+@login_required
+def teams(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    return render_template(
+        "events/teams.html",
+        event=event,
+        overview=build_team_selection_overview(event),
     )
 
 

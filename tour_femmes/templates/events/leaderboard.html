@@ -195,7 +195,7 @@
           <div class="stage-user-score">
             <span>Score</span>
             <strong>{{ row.score if row.has_score else '—' }}</strong>
-            {% if row.captain_bonus %}<small>+{{ row.captain_bonus }} kopmanbonus</small>{% endif %}
+            {% if row.captain_bonus %}<small>+{{ row.captain_bonus }} kopvrouwbonus</small>{% endif %}
           </div>
         </header>
 
@@ -217,7 +217,7 @@
                     <small>{{ lineup_rider.event_rider.team.name if lineup_rider.event_rider.team else 'Geen ploeg' }}</small>
                   </span>
                   <span class="stage-lineup-result">
-                    {% if lineup_rider.is_captain %}<small class="captain-pill">Kopman</small>{% endif %}
+                    {% if lineup_rider.is_captain %}<small class="captain-pill">Kopvrouw</small>{% endif %}
                     <strong>{{ lineup_rider.points }} ptn</strong>
                     <small>{{ lineup_rider.rank_label }}</small>
                   </span>

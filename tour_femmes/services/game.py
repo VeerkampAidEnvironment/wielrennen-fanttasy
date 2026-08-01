@@ -51,6 +51,32 @@ class SelectionProgress:
 
 
 @dataclass(frozen=True)
+class RiderSelectionPopularity:
+    event_rider: EventRider
+    selected_count: int
+    percentage: int
+
+
+@dataclass(frozen=True)
+class ParticipantTeamOverview:
+    user: User
+    riders: tuple[EventRider, ...]
+    total_price: int
+    complete: bool
+
+
+@dataclass(frozen=True)
+class TeamSelectionOverview:
+    participant_count: int
+    selection_count: int
+    completed_count: int
+    unique_rider_count: int
+    average_total_price: float
+    popularity: tuple[RiderSelectionPopularity, ...]
+    participant_teams: tuple[ParticipantTeamOverview, ...]
+
+
+@dataclass(frozen=True)
 class LeaderboardRow:
     user: User
     total_score: int
@@ -252,6 +278,98 @@ def event_selection_progress(
     return progress
 
 
+def build_team_selection_overview(event: Event) -> TeamSelectionOverview:
+    entries = (
+        EventEntry.query.options(selectinload(EventEntry.user))
+        .filter_by(event_id=event.id, status="active")
+        .all()
+    )
+    entries.sort(key=lambda entry: entry.user.username.casefold())
+
+    selections = (
+        TeamSelection.query.options(
+            selectinload(TeamSelection.riders)
+            .joinedload(TeamSelectionRider.event_rider)
+            .joinedload(EventRider.rider),
+            selectinload(TeamSelection.riders)
+            .joinedload(TeamSelectionRider.event_rider)
+            .joinedload(EventRider.team),
+        )
+        .filter_by(event_id=event.id)
+        .all()
+    )
+    selection_by_user_id = {selection.user_id: selection for selection in selections}
+    selected_counts: dict[int, int] = defaultdict(int)
+    selected_riders: dict[int, EventRider] = {}
+    participant_teams: list[ParticipantTeamOverview] = []
+    totals_with_riders: list[int] = []
+
+    for entry in entries:
+        selection = selection_by_user_id.get(entry.user_id)
+        riders = tuple(
+            sorted(
+                (link.event_rider for link in selection.riders) if selection else (),
+                key=lambda event_rider: (
+                    -(event_rider.price or 0),
+                    event_rider.rider.name.casefold(),
+                ),
+            )
+        )
+        total_price = selection.total_price if selection else 0
+        complete = bool(
+            selection
+            and len(riders) == event.team_size
+            and total_price <= event.budget
+        )
+        if riders:
+            totals_with_riders.append(total_price)
+        for event_rider in riders:
+            selected_counts[event_rider.id] += 1
+            selected_riders[event_rider.id] = event_rider
+        participant_teams.append(
+            ParticipantTeamOverview(
+                user=entry.user,
+                riders=riders,
+                total_price=total_price,
+                complete=complete,
+            )
+        )
+
+    participant_count = len(entries)
+    popularity = tuple(
+        RiderSelectionPopularity(
+            event_rider=selected_riders[event_rider_id],
+            selected_count=selected_count,
+            percentage=(
+                round((selected_count / participant_count) * 100)
+                if participant_count
+                else 0
+            ),
+        )
+        for event_rider_id, selected_count in sorted(
+            selected_counts.items(),
+            key=lambda item: (
+                -item[1],
+                -(selected_riders[item[0]].price or 0),
+                selected_riders[item[0]].rider.name.casefold(),
+            ),
+        )
+    )
+    return TeamSelectionOverview(
+        participant_count=participant_count,
+        selection_count=sum(bool(team.riders) for team in participant_teams),
+        completed_count=sum(team.complete for team in participant_teams),
+        unique_rider_count=len(selected_counts),
+        average_total_price=(
+            round(sum(totals_with_riders) / len(totals_with_riders), 1)
+            if totals_with_riders
+            else 0
+        ),
+        popularity=popularity,
+        participant_teams=tuple(participant_teams),
+    )
+
+
 def _selection_progress(
     count: int,
     required: int,
@@ -297,7 +415,7 @@ def save_stage_lineup(
 
     if captain_id not in unique_ids:
         if require_exact:
-            return False, "De kopman moet in je etappeselectie zitten."
+            return False, "De kopvrouw moet in je etappeselectie zitten."
         captain_id = unique_ids[0]
 
     if not lineup:
