@@ -119,6 +119,14 @@
                     Uitslag laden
                   </button>
                 </form>
+                {% if stage.is_locked() %}
+                  <a class="secondary-button compact-button" href="{{ url_for('admin.stage_lineups', stage_id=stage.id) }}">
+                    Selecties aanvullen
+                    {% if stage_lineup_progress[stage.id].incomplete %}
+                      <span class="admin-action-count">{{ stage_lineup_progress[stage.id].incomplete }}</span>
+                    {% endif %}
+                  </a>
+                {% endif %}
               </div>
             </td>
           </tr>

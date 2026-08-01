@@ -219,3 +219,69 @@ def test_admin_users_page_deletes_user_and_keeps_event():
         assert StageLineup.query.count() == 0
         assert UserStageScore.query.count() == 0
         assert Award.query.count() == 0
+
+
+def test_admin_can_complete_an_incomplete_stage_lineup_after_deadline():
+    app, _user_id, other_id, event_id = make_management_app()
+    with app.app_context():
+        event = db.session.get(Event, event_id)
+        other = db.session.get(User, other_id)
+        event_rider = EventRider.query.filter_by(event_id=event_id).one()
+        selection = TeamSelection(user=other, event=event, total_price=event_rider.price)
+        selection.riders.append(TeamSelectionRider(event_rider=event_rider))
+        db.session.add(selection)
+        db.session.commit()
+        stage_id = event.stages[0].id
+        event_rider_id = event_rider.id
+
+    client = app.test_client()
+    login_admin(client)
+
+    event_page = client.get(f"/admin/events/{event_id}").get_data(as_text=True)
+    assert "Selecties aanvullen" in event_page
+    assert f"/admin/stages/{stage_id}/lineups" in event_page
+
+    lineup_page = client.get(f"/admin/stages/{stage_id}/lineups")
+    lineup_html = lineup_page.get_data(as_text=True)
+    assert lineup_page.status_code == 200
+    assert "Onvolledige selecties" in lineup_html
+    assert "other" in lineup_html
+
+    response = client.post(
+        f"/admin/stages/{stage_id}/lineups/{other_id}",
+        data={
+            "csrf_token": "token",
+            "rider_ids": str(event_rider_id),
+            "captain": str(event_rider_id),
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert "Etappeselectie van other is aangevuld" in response.get_data(as_text=True)
+    with app.app_context():
+        lineup = StageLineup.query.filter_by(user_id=other_id, stage_id=stage_id).one()
+        assert lineup.rider_ids() == {event_rider_id}
+        assert lineup.captain_event_rider_id == event_rider_id
+
+
+def test_admin_cannot_complete_stage_lineup_before_deadline():
+    app, _user_id, other_id, event_id = make_management_app()
+    with app.app_context():
+        event = db.session.get(Event, event_id)
+        event.stages[0].starts_at = datetime.now(timezone.utc) + timedelta(hours=4)
+        stage_id = event.stages[0].id
+        db.session.commit()
+
+    client = app.test_client()
+    login_admin(client)
+    response = client.post(
+        f"/admin/stages/{stage_id}/lineups/{other_id}",
+        data={"csrf_token": "token"},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert "deadline is nog niet verstreken" in response.get_data(as_text=True)
+    with app.app_context():
+        assert StageLineup.query.filter_by(user_id=other_id, stage_id=stage_id).first() is None

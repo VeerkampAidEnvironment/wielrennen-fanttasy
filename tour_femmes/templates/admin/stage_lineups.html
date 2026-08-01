@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Etappeselecties - {{ stage.name }}{% endblock %}
+{% block body %}
+<section class="section-head admin-lineup-page-head">
+  <div>
+    <p class="eyebrow">Admin &middot; {{ event.name }}</p>
+    <h1>Etappeselecties aanvullen</h1>
+    <p class="muted">{{ stage.name }} &middot; deadline {{ stage.starts_at.strftime('%d-%m-%Y %H:%M') if stage.starts_at else 'onbekend' }}</p>
+  </div>
+  <a class="secondary-button" href="{{ url_for('admin.event_detail', event_id=event.id) }}">Terug naar koersbeheer</a>
+</section>
+
+<section class="admin-lineup-summary" aria-label="Voortgang etappeselecties">
+  <div><strong>{{ complete_count }}</strong><span>Compleet</span></div>
+  <div class="{{ 'needs-attention' if incomplete_rows else '' }}"><strong>{{ incomplete_rows|length }}</strong><span>Nog aanvullen</span></div>
+</section>
+
+<div class="notice">
+  Wijzigingen hier omzeilen uitsluitend de verstreken deadline. De gekozen renners moeten nog steeds uit het volledige team van de deelnemer komen. Bestaande scores worden na opslaan herberekend.
+</div>
+
+<section class="admin-lineup-section">
+  <header class="team-overview-section-head">
+    <div>
+      <p class="eyebrow">Actie nodig</p>
+      <h2>Onvolledige selecties</h2>
+    </div>
+    <span>{{ incomplete_rows|length }} deelnemers</span>
+  </header>
+
+  {% for row in incomplete_rows %}
+    <article class="admin-lineup-card">
+      <header>
+        <div>
+          <strong>{{ row.user.username }}</strong>
+          <span>{{ row.selected_ids|length }} / {{ event.lineup_size }} opgesteld</span>
+        </div>
+        <span class="team-completion-state incomplete">Onvolledig</span>
+      </header>
+
+      {% if row.selection and row.selection.riders|length == event.team_size %}
+        <form method="post" action="{{ url_for('admin.complete_stage_lineup', stage_id=stage.id, user_id=row.user.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="admin-lineup-rider-grid">
+            {% for link in row.selection.riders %}
+              {% set event_rider = link.event_rider %}
+              {% set rider = event_rider.rider %}
+              {% set selected = event_rider.id in row.selected_ids %}
+              <div class="admin-lineup-rider {{ 'selected' if selected else '' }}">
+                <label class="admin-lineup-choice">
+                  <input type="checkbox" name="rider_ids" value="{{ event_rider.id }}" {% if selected %}checked{% endif %}>
+                  <span class="participant-rider-photo">
+                    {% if rider.photo_mime or rider.photo_url %}
+                      <img src="{{ rider_photo_url(rider) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+                    {% else %}
+                      <span>{{ rider.name[:2] }}</span>
+                    {% endif %}
+                  </span>
+                  <span class="admin-lineup-rider-name">
+                    <strong>{{ rider.name }}</strong>
+                    <small>{{ event_rider.team.name if event_rider.team else 'Geen ploeg' }}</small>
+                  </span>
+                </label>
+                <label class="admin-captain-choice">
+                  <input type="radio" name="captain" value="{{ event_rider.id }}" required {% if row.lineup and row.lineup.captain_event_rider_id == event_rider.id %}checked{% endif %}>
+                  Kopvrouw
+                </label>
+              </div>
+            {% endfor %}
+          </div>
+          <div class="admin-lineup-save">
+            <small>Kies precies {{ event.lineup_size }} renners en één kopvrouw.</small>
+            <button type="submit" class="primary-button compact-button">Selectie opslaan</button>
+          </div>
+        </form>
+      {% else %}
+        <p class="admin-lineup-unavailable">Het volledige team van deze deelnemer is niet compleet; daardoor kan de etappeselectie nog niet worden aangevuld.</p>
+      {% endif %}
+    </article>
+  {% else %}
+    <div class="empty-state compact-empty-state">Alle etappeselecties zijn compleet.</div>
+  {% endfor %}
+</section>
+{% endblock %}

@@ -4465,6 +4465,190 @@ select:focus {
   min-height: 90px;
 }
 
+.admin-action-count {
+  display: inline-grid;
+  min-width: 20px;
+  height: 20px;
+  margin-left: 5px;
+  place-items: center;
+  border-radius: 50%;
+  background: #f8e3df;
+  color: var(--danger);
+  font-size: 0.65rem;
+  line-height: 1;
+}
+
+.admin-lineup-page-head {
+  margin-bottom: 14px;
+}
+
+.admin-lineup-page-head .muted {
+  margin: 4px 0 0;
+}
+
+.admin-lineup-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 180px));
+  margin-bottom: 16px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-lineup-summary > div {
+  display: grid;
+  gap: 2px;
+  padding: 10px 14px;
+}
+
+.admin-lineup-summary > div + div {
+  border-left: 1px solid var(--line);
+}
+
+.admin-lineup-summary strong {
+  color: var(--green);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.admin-lineup-summary .needs-attention strong {
+  color: var(--danger);
+}
+
+.admin-lineup-summary span {
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.admin-lineup-section {
+  margin-top: 24px;
+}
+
+.admin-lineup-card {
+  margin-bottom: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-soft);
+}
+
+.admin-lineup-card > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  background: #f7f9f6;
+}
+
+.admin-lineup-card > header > div {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.admin-lineup-card > header span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.admin-lineup-rider-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-lineup-rider {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px 9px;
+  border-right: 1px solid #e6ebe5;
+  border-bottom: 1px solid #e6ebe5;
+}
+
+.admin-lineup-rider:nth-child(3n) {
+  border-right: 0;
+}
+
+.admin-lineup-rider.selected,
+.admin-lineup-rider:has(.admin-lineup-choice input:checked) {
+  background: #f1f8f4;
+}
+
+.admin-lineup-rider:has(.admin-captain-choice input:checked) {
+  box-shadow: inset 3px 0 0 var(--green);
+}
+
+.admin-lineup-choice {
+  display: grid;
+  grid-template-columns: auto 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.admin-lineup-choice .participant-rider-photo {
+  width: 28px;
+  height: 28px;
+}
+
+.admin-lineup-rider-name {
+  display: grid;
+  min-width: 0;
+}
+
+.admin-lineup-rider-name strong,
+.admin-lineup-rider-name small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-lineup-rider-name strong {
+  font-size: 0.76rem;
+}
+
+.admin-lineup-rider-name small {
+  color: var(--muted);
+  font-size: 0.62rem;
+}
+
+.admin-captain-choice {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.admin-lineup-save {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 9px 12px;
+}
+
+.admin-lineup-save small,
+.admin-lineup-unavailable {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.admin-lineup-unavailable {
+  margin: 0;
+  padding: 14px 12px;
+}
+
 @media (max-width: 1000px) {
   .stage-lineup-overview {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4488,6 +4672,19 @@ select:focus {
 
   .participant-rider-row:nth-child(odd) {
     border-right: 1px solid #e6ebe5;
+  }
+
+  .admin-lineup-rider-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-lineup-rider,
+  .admin-lineup-rider:nth-child(3n) {
+    border-right: 1px solid #e6ebe5;
+  }
+
+  .admin-lineup-rider:nth-child(even) {
+    border-right: 0;
   }
 }
 
@@ -4729,6 +4926,26 @@ select:focus {
   .participant-rider-row,
   .participant-rider-row:nth-child(odd) {
     border-right: 0;
+  }
+
+  .admin-lineup-rider-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-lineup-rider,
+  .admin-lineup-rider:nth-child(3n),
+  .admin-lineup-rider:nth-child(even) {
+    border-right: 0;
+  }
+
+  .admin-lineup-save,
+  .admin-lineup-card > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-lineup-save .primary-button {
+    width: 100%;
   }
 
   .upcoming-stage-lineup .lineup-card-actions {

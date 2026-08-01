@@ -13,8 +13,17 @@ from flask import Blueprint, current_app, flash, jsonify, redirect, render_templ
 from flask_login import current_user, logout_user
 
 from tour_femmes import db
-from tour_femmes.models import Event, EventRider, Stage, User
+from tour_femmes.models import (
+    Event,
+    EventEntry,
+    EventRider,
+    Stage,
+    StageLineup,
+    TeamSelection,
+    User,
+)
 from tour_femmes.services.deletion import delete_event_game, delete_user_account
+from tour_femmes.services.game import recalculate_stage_scores, save_stage_lineup
 from tour_femmes.services.pcs import (
     PcsClient,
     enrich_missing_profiles,
@@ -240,13 +249,121 @@ def event_detail(event_id: int):
     )
     active_count = EventRider.query.filter_by(event_id=event.id, active=True).count()
     frozen_count = EventRider.query.filter_by(event_id=event.id, frozen=True).count()
+    participant_ids = {
+        entry.user_id
+        for entry in EventEntry.query.filter_by(event_id=event.id, status="active").all()
+    }
+    stage_lineup_progress = {}
+    for stage in event.stages:
+        complete_count = sum(
+            1
+            for lineup in stage.lineups
+            if lineup.user_id in participant_ids
+            and len(lineup.riders) == event.lineup_size
+            and lineup.captain_event_rider_id in lineup.rider_ids()
+        )
+        stage_lineup_progress[stage.id] = {
+            "complete": complete_count,
+            "incomplete": max(0, len(participant_ids) - complete_count),
+        }
     return render_template(
         "admin/event.html",
         event=event,
         missing_prices=missing_prices,
         active_count=active_count,
         frozen_count=frozen_count,
+        stage_lineup_progress=stage_lineup_progress,
     )
+
+
+@admin_bp.route("/stages/<int:stage_id>/lineups")
+@admin_required
+def stage_lineups(stage_id: int):
+    stage = Stage.query.get_or_404(stage_id)
+    if not stage.is_locked():
+        flash("Etappeselecties kunnen pas na de deadline door een beheerder worden aangevuld.", "warning")
+        return redirect(url_for("admin.event_detail", event_id=stage.event_id))
+
+    entries = (
+        EventEntry.query.filter_by(event_id=stage.event_id, status="active")
+        .join(EventEntry.user)
+        .order_by(User.username)
+        .all()
+    )
+    selections = {
+        selection.user_id: selection
+        for selection in TeamSelection.query.filter_by(event_id=stage.event_id).all()
+    }
+    lineups = {
+        lineup.user_id: lineup
+        for lineup in StageLineup.query.filter_by(stage_id=stage.id).all()
+    }
+    rows = []
+    for entry in entries:
+        selection = selections.get(entry.user_id)
+        lineup = lineups.get(entry.user_id)
+        selected_ids = lineup.rider_ids() if lineup else set()
+        complete = bool(
+            lineup
+            and len(selected_ids) == stage.event.lineup_size
+            and lineup.captain_event_rider_id in selected_ids
+        )
+        rows.append(
+            {
+                "user": entry.user,
+                "selection": selection,
+                "lineup": lineup,
+                "selected_ids": selected_ids,
+                "complete": complete,
+            }
+        )
+
+    return render_template(
+        "admin/stage_lineups.html",
+        event=stage.event,
+        stage=stage,
+        rows=rows,
+        incomplete_rows=[row for row in rows if not row["complete"]],
+        complete_count=sum(1 for row in rows if row["complete"]),
+    )
+
+
+@admin_bp.route("/stages/<int:stage_id>/lineups/<int:user_id>", methods=["POST"])
+@admin_required
+def complete_stage_lineup(stage_id: int, user_id: int):
+    stage = Stage.query.get_or_404(stage_id)
+    user = User.query.get_or_404(user_id)
+    entry = EventEntry.query.filter_by(
+        event_id=stage.event_id,
+        user_id=user.id,
+        status="active",
+    ).first()
+    if not stage.is_locked():
+        flash("Deze etappedeadline is nog niet verstreken.", "warning")
+        return redirect(url_for("admin.event_detail", event_id=stage.event_id))
+    if not entry:
+        flash("Deze gebruiker neemt niet actief deel aan deze koers.", "danger")
+        return redirect(url_for("admin.stage_lineups", stage_id=stage.id))
+
+    captain_raw = request.form.get("captain", "")
+    captain_id = int(captain_raw) if captain_raw.isdigit() else 0
+    ok, message = save_stage_lineup(
+        user,
+        stage,
+        request.form.getlist("rider_ids"),
+        captain_id,
+        require_exact=True,
+    )
+    if not ok:
+        db.session.rollback()
+        flash(f"Selectie van {user.username} niet opgeslagen: {message}", "danger")
+        return redirect(url_for("admin.stage_lineups", stage_id=stage.id))
+
+    if stage.results or stage.classification_results:
+        recalculate_stage_scores(stage)
+    db.session.commit()
+    flash(f"Etappeselectie van {user.username} is aangevuld en opgeslagen.", "success")
+    return redirect(url_for("admin.stage_lineups", stage_id=stage.id))
 
 
 @admin_bp.route("/events/<int:event_id>/initialize", methods=["POST"])
