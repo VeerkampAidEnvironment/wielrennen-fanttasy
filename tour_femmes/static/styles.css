@@ -364,6 +364,18 @@ select:focus {
   background: #fff5f3;
 }
 
+.event-stage-nav a.selection-state-ongoing {
+  --selection-state-color: var(--blue);
+  border-color: #bfd8e5;
+  background: #f0f7fa;
+}
+
+.event-stage-nav a.selection-state-finished {
+  --selection-state-color: #527563;
+  border-color: #c9d8cf;
+  background: #f3f7f4;
+}
+
 .event-stage-nav a.selection-state:hover {
   color: var(--text);
   border-color: var(--selection-state-color);

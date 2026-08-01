@@ -179,6 +179,8 @@
         "selection-state-complete",
         "selection-state-partial",
         "selection-state-empty",
+        "selection-state-ongoing",
+        "selection-state-finished",
       );
       tab.classList.add(`selection-state-${state}`);
       tab.dataset.selectionState = state;
@@ -191,6 +193,35 @@
       }
       const selectionLabel = tab.dataset.selectionLabel || "Selectie";
       tab.setAttribute("aria-label", `${selectionLabel}, selectie ${label}`);
+    });
+  }
+
+  function updateStageNavigationLifecycle() {
+    const now = Date.now();
+    document.querySelectorAll("[data-stage-selection-tab][data-stage-start-at]").forEach((tab) => {
+      if (tab.dataset.stageLifecycleState === "finished") {
+        return;
+      }
+      const startsAt = Number(tab.dataset.stageStartAt);
+      if (!Number.isFinite(startsAt) || startsAt > now) {
+        return;
+      }
+
+      tab.classList.remove(
+        "selection-state-complete",
+        "selection-state-partial",
+        "selection-state-empty",
+      );
+      tab.classList.add("selection-state-ongoing");
+      tab.dataset.selectionState = "ongoing";
+      tab.dataset.stageSelectionState = "ongoing";
+      tab.dataset.stageLifecycleState = "ongoing";
+      const status = tab.querySelector(".event-tab-status");
+      if (status) {
+        status.textContent = "Bezig";
+      }
+      const selectionLabel = tab.dataset.selectionLabel || "Etappe";
+      tab.setAttribute("aria-label", `${selectionLabel}, status Bezig`);
     });
   }
 
@@ -1034,6 +1065,11 @@
 
     updateDeadlines();
     window.setInterval(updateDeadlines, 1000);
+  }
+
+  if (document.querySelector("[data-stage-selection-tab][data-stage-start-at]")) {
+    updateStageNavigationLifecycle();
+    window.setInterval(updateStageNavigationLifecycle, 1000);
   }
 
 })();

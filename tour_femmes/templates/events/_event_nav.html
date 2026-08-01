@@ -28,8 +28,10 @@
       data-selection-state="{{ stage_progress.state }}"
       data-stage-selection-state="{{ stage_progress.state }}"
       data-stage-selection-tab="{{ nav_stage.id }}"
+      data-stage-lifecycle-state="{{ stage_progress.state if stage_progress.state in ['ongoing', 'finished'] else 'upcoming' }}"
+      {% if nav_stage.starts_at %}data-stage-start-at="{{ nav_stage.deadline_timestamp_ms() }}"{% endif %}
       data-selection-label="Etappe {{ nav_stage.number }}"
-      aria-label="Etappe {{ nav_stage.number }}, selectie {{ stage_progress.label }}"
+      aria-label="Etappe {{ nav_stage.number }}, {{ 'status' if stage_progress.state in ['ongoing', 'finished'] else 'selectie' }} {{ stage_progress.label }}"
     >
       <span>Etappe {{ nav_stage.number }}</span>
       <small class="event-tab-status">{{ stage_progress.label }}</small>

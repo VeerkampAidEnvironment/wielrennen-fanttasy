@@ -20,7 +20,11 @@ from tour_femmes.models import (
     UserStageRiderScore,
     UserStageScore,
 )
-from tour_femmes.services.game import build_official_stage_scores, recalculate_stage_scores
+from tour_femmes.services.game import (
+    build_official_stage_scores,
+    build_rider_stage_history,
+    recalculate_stage_scores,
+)
 from tour_femmes.scoring import (
     DAILY_LEADER_TEAMMATE_POINTS,
     FINAL_WINNER_TEAMMATE_POINTS,
@@ -355,6 +359,52 @@ def test_team_selection_tab_disappears_after_stage_one_starts():
     assert "data-deadline-countdown" in stage_html
 
 
+def test_stage_tabs_show_ongoing_and_finished_instead_of_selection_complete():
+    app, user_id, event_id, stage_id, event_rider_ids = make_app_with_lineup_context()
+    with app.app_context():
+        stage = db.session.get(Stage, stage_id)
+        stage.starts_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+        lineup = StageLineup(
+            user_id=user_id,
+            stage_id=stage_id,
+            captain_event_rider_id=event_rider_ids[0],
+        )
+        db.session.add(lineup)
+        for event_rider_id in event_rider_ids[:6]:
+            lineup.riders.append(StageLineupRider(event_rider_id=event_rider_id))
+        db.session.commit()
+
+    client = app.test_client()
+    login(client, user_id)
+
+    ongoing_html = client.get(
+        f"/events/{event_id}/stages/{stage_id}"
+    ).get_data(as_text=True)
+    assert 'data-stage-selection-state="ongoing"' in ongoing_html
+    assert 'data-stage-lifecycle-state="ongoing"' in ongoing_html
+    assert '<small class="event-tab-status">Bezig</small>' in ongoing_html
+    assert '<small class="event-tab-status">Compleet</small>' not in ongoing_html
+
+    with app.app_context():
+        db.session.add(
+            StageResult(
+                stage_id=stage_id,
+                event_rider_id=event_rider_ids[0],
+                rank=1,
+                status="FIN",
+            )
+        )
+        db.session.commit()
+
+    finished_html = client.get(
+        f"/events/{event_id}/stages/{stage_id}"
+    ).get_data(as_text=True)
+    assert 'data-stage-selection-state="finished"' in finished_html
+    assert 'data-stage-lifecycle-state="finished"' in finished_html
+    assert '<small class="event-tab-status">Afgelopen</small>' in finished_html
+    assert '<small class="event-tab-status">Compleet</small>' not in finished_html
+
+
 def test_result_import_button_stays_in_admin_environment():
     app, user_id, event_id, stage_id, _event_rider_ids = make_app_with_lineup_context()
     with app.app_context():
@@ -419,7 +469,7 @@ def test_finished_stage_moves_profile_below_results():
 
 
 def test_official_result_combines_stage_classification_and_team_points():
-    app, _user_id, _event_id, stage_id, event_rider_ids = make_app_with_lineup_context()
+    app, _user_id, event_id, stage_id, event_rider_ids = make_app_with_lineup_context()
     with app.app_context():
         stage = db.session.get(Stage, stage_id)
         db.session.add_all(
@@ -448,6 +498,12 @@ def test_official_result_combines_stage_classification_and_team_points():
         db.session.flush()
 
         official_scores = build_official_stage_scores(stage)
+        event = db.session.get(Event, event_id)
+        event_riders = [
+            db.session.get(EventRider, event_rider_id)
+            for event_rider_id in event_rider_ids[:2]
+        ]
+        rider_history = build_rider_stage_history(event, stage, event_riders)
 
         assert official_scores[event_rider_ids[0]].stage_points == 100
         assert official_scores[event_rider_ids[0]].classification_points == 16
@@ -458,3 +514,7 @@ def test_official_result_combines_stage_classification_and_team_points():
         assert official_scores[event_rider_ids[1]].classification_points == 0
         assert official_scores[event_rider_ids[1]].teammate_points == 24
         assert official_scores[event_rider_ids[1]].total_points == second_place_points + 24
+        assert rider_history[event_rider_ids[0]].total_points == 116
+        assert rider_history[event_rider_ids[0]].results[0].points == 116
+        assert rider_history[event_rider_ids[1]].total_points == second_place_points + 24
+        assert rider_history[event_rider_ids[1]].results[0].points == second_place_points + 24

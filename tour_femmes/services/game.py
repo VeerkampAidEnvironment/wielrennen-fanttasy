@@ -177,6 +177,10 @@ def save_team_selection(user: User, event: Event, selected_riders: list[EventRid
 
 
 def lineup_status(user: User, stage: Stage) -> str:
+    if stage.is_finished or stage.has_ranked_result():
+        return "Afgelopen"
+    if stage.is_locked():
+        return "Bezig"
     lineup = StageLineup.query.filter_by(user_id=user.id, stage_id=stage.id).first()
     if not lineup:
         return "Ontbreekt"
@@ -219,6 +223,22 @@ def event_selection_progress(
     for stage in event.stages:
         lineup = lineup_by_stage_id.get(stage.id)
         rider_ids = lineup.rider_ids() if lineup else set()
+        if stage.is_finished or stage.has_ranked_result():
+            progress[stage.id] = SelectionProgress(
+                "finished",
+                len(rider_ids),
+                event.lineup_size,
+                "Afgelopen",
+            )
+            continue
+        if stage.is_locked():
+            progress[stage.id] = SelectionProgress(
+                "ongoing",
+                len(rider_ids),
+                event.lineup_size,
+                "Bezig",
+            )
+            continue
         lineup_complete = bool(
             lineup
             and len(rider_ids) == event.lineup_size
@@ -725,16 +745,22 @@ def build_rider_stage_history(
     if not event_rider_ids:
         return {}
 
-    eligible_stage_numbers = [
-        stage.number
+    eligible_stages = [
+        stage
         for stage in event.stages
         if stage.number < current_stage.number or (stage.id == current_stage.id and stage.has_ranked_result())
     ]
-    if not eligible_stage_numbers:
+    if not eligible_stages:
         return {
             event_rider_id: RiderStageHistory(event_rider_id=event_rider_id, total_points=0, results=[])
             for event_rider_id in event_rider_ids
         }
+
+    eligible_stage_numbers = [stage.number for stage in eligible_stages]
+    scores_by_stage_id = {
+        stage.id: build_official_stage_scores(stage)
+        for stage in eligible_stages
+    }
 
     results = (
         StageResult.query.join(Stage)
@@ -750,12 +776,13 @@ def build_rider_stage_history(
     by_rider: dict[int, list[RiderStageHistoryItem]] = defaultdict(list)
     for result in results:
         rank_label = f"#{result.rank}" if result.rank else result.status
+        official_score = scores_by_stage_id[result.stage_id].get(result.event_rider_id)
         by_rider[result.event_rider_id].append(
             RiderStageHistoryItem(
                 stage_number=result.stage.number,
                 stage_name=result.stage.name,
                 rank_label=rank_label,
-                points=result.base_points,
+                points=official_score.total_points if official_score else result.base_points,
             )
         )
 
