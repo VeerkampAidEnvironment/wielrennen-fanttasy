@@ -237,3 +237,44 @@ def test_team_overview_shows_full_selections_and_rider_popularity():
     assert "beta" in html
     assert "2 / 2" in html
     assert "100%" in html
+
+
+def test_team_overview_expands_rider_popularity_beyond_top_ten():
+    app, user_id, event_id = make_leaderboard_app()
+    with app.app_context():
+        event = db.session.get(Event, event_id)
+        user = db.session.get(User, user_id)
+        team = Team.query.filter_by(event_id=event_id).one()
+        event_riders = [
+            EventRider.query.filter_by(event_id=event_id)
+            .order_by(EventRider.id)
+            .first()
+        ]
+        for index in range(10):
+            rider = Rider(
+                name=f"Extra Rider {index}",
+                pcs_slug=f"extra-rider-{index}",
+                pcs_url=f"https://www.procyclingstats.com/rider/extra-rider-{index}",
+            )
+            event_rider = EventRider(event=event, rider=rider, team=team, price=1)
+            db.session.add_all([rider, event_rider])
+            event_riders.append(event_rider)
+        db.session.flush()
+
+        selection = TeamSelection(user=user, event=event, total_price=11)
+        selection.riders.extend(
+            [
+                TeamSelectionRider(event_rider=event_rider)
+                for event_rider in event_riders
+            ]
+        )
+        db.session.add(selection)
+        db.session.commit()
+
+    client = app.test_client()
+    login(client, user_id)
+    html = client.get(f"/events/{event_id}/teams").get_data(as_text=True)
+
+    assert "Toon alle gekozen renners" in html
+    assert "11 renners" in html
+    assert "Extra Rider 9" in html

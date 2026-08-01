@@ -4147,26 +4147,6 @@ select:focus {
   text-transform: uppercase;
 }
 
-.team-insight-strip {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: 30px;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.72);
-}
-
-.team-insight-strip > div {
-  display: grid;
-  gap: 4px;
-  padding: 15px 18px;
-}
-
-.team-insight-strip > div + div {
-  border-left: 1px solid var(--line);
-}
-
-.team-insight-strip span,
 .participant-team-budget > span {
   color: var(--muted);
   font-size: 0.66rem;
@@ -4174,12 +4154,6 @@ select:focus {
   text-transform: uppercase;
 }
 
-.team-insight-strip strong {
-  font-size: 1.25rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.team-insight-strip strong small,
 .participant-team-budget strong small {
   color: var(--muted);
   font-size: 0.68rem;
@@ -4187,7 +4161,7 @@ select:focus {
 
 .rider-popularity-section,
 .participant-team-section {
-  margin-top: 30px;
+  margin-top: 22px;
 }
 
 .team-overview-section-head {
@@ -4210,33 +4184,63 @@ select:focus {
 }
 
 .rider-popularity-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.78);
+  background: #e4e9e3;
 }
 
 .rider-popularity-row {
   display: grid;
-  grid-template-columns: 30px 40px minmax(170px, 1fr) minmax(150px, 0.8fr) 72px 42px;
+  grid-template-columns: 22px 30px minmax(100px, 1fr) 58px 34px;
+  grid-template-areas:
+    "rank photo rider count price"
+    "rank photo meter meter price";
   align-items: center;
-  gap: 11px;
-  min-height: 58px;
-  padding: 8px 14px;
-  border-bottom: 1px solid #e4e9e3;
+  gap: 3px 7px;
+  min-height: 46px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.96);
 }
 
-.rider-popularity-row:last-child {
+.rider-popularity-more {
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.rider-popularity-more > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 12px;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.rider-popularity-more > summary span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.rider-popularity-more > .rider-popularity-list {
   border-bottom: 0;
 }
 
 .popularity-rank {
+  grid-area: rank;
   color: var(--muted);
   font-size: 0.76rem;
   font-weight: 900;
   text-align: center;
 }
 
-.rider-popularity-row:first-child .popularity-rank {
+.rider-popularity-section > .rider-popularity-list > .rider-popularity-row:first-child .popularity-rank {
   color: #735800;
 }
 
@@ -4254,8 +4258,9 @@ select:focus {
 }
 
 .popularity-photo {
-  width: 40px;
-  height: 40px;
+  grid-area: photo;
+  width: 32px;
+  height: 32px;
 }
 
 .popularity-photo img,
@@ -4271,6 +4276,10 @@ select:focus {
   display: grid;
   gap: 2px;
   min-width: 0;
+}
+
+.popularity-rider {
+  grid-area: rider;
 }
 
 .popularity-rider strong,
@@ -4291,7 +4300,8 @@ select:focus {
 }
 
 .popularity-meter {
-  height: 7px;
+  grid-area: meter;
+  height: 5px;
   overflow: hidden;
   border-radius: 4px;
   background: #e3e9e4;
@@ -4305,6 +4315,7 @@ select:focus {
 }
 
 .popularity-count {
+  grid-area: count;
   display: grid;
   justify-items: end;
   font-variant-numeric: tabular-nums;
@@ -4328,9 +4339,13 @@ select:focus {
   text-align: right;
 }
 
+.popularity-price {
+  grid-area: price;
+}
+
 .participant-team-grid {
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
 .participant-team-card {
@@ -4350,8 +4365,8 @@ select:focus {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  padding: 14px 16px 11px;
+  gap: 14px;
+  padding: 10px 13px 8px;
   border-bottom: 1px solid var(--line);
 }
 
@@ -4373,7 +4388,7 @@ select:focus {
 }
 
 .participant-name-line strong {
-  font-size: 1rem;
+  font-size: 0.92rem;
 }
 
 .participant-name-line small {
@@ -4405,7 +4420,7 @@ select:focus {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 16px;
+  padding: 6px 13px;
   background: #f4f7f3;
 }
 
@@ -4416,26 +4431,26 @@ select:focus {
 
 .participant-rider-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .participant-rider-row {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 30px;
+  grid-template-columns: 28px minmax(0, 1fr) 28px;
   align-items: center;
-  gap: 9px;
-  min-height: 54px;
-  padding: 8px 16px;
+  gap: 7px;
+  min-height: 40px;
+  padding: 5px 12px;
   border-bottom: 1px solid #e6ebe5;
 }
 
-.participant-rider-row:nth-child(odd) {
+.participant-rider-row:not(:nth-child(3n)) {
   border-right: 1px solid #e6ebe5;
 }
 
 .participant-rider-photo {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
 }
 
 .participant-team-empty {
@@ -4457,6 +4472,22 @@ select:focus {
 
   .has-stage-results .stage-results-column {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rider-popularity-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .participant-rider-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .participant-rider-row {
+    border-right: 0;
+  }
+
+  .participant-rider-row:nth-child(odd) {
+    border-right: 1px solid #e6ebe5;
   }
 }
 
@@ -4651,29 +4682,14 @@ select:focus {
     justify-items: start;
   }
 
-  .team-insight-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .team-insight-strip > div + div {
-    border-left: 0;
-  }
-
-  .team-insight-strip > div:nth-child(even) {
-    border-left: 1px solid var(--line);
-  }
-
-  .team-insight-strip > div:nth-child(n + 3) {
-    border-top: 1px solid var(--line);
-  }
-
   .rider-popularity-row {
-    grid-template-columns: 24px 36px minmax(0, 1fr) 62px;
+    grid-template-columns: 22px 30px minmax(0, 1fr) 56px;
     grid-template-areas:
       "rank photo rider count"
       "rank photo meter price";
-    gap: 5px 9px;
-    padding: 9px 10px;
+    gap: 3px 8px;
+    min-height: 42px;
+    padding: 6px 9px;
   }
 
   .popularity-rank {
@@ -4682,8 +4698,8 @@ select:focus {
 
   .popularity-photo {
     grid-area: photo;
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
   }
 
   .popularity-rider {
@@ -4710,6 +4726,7 @@ select:focus {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .participant-rider-row,
   .participant-rider-row:nth-child(odd) {
     border-right: 0;
   }
