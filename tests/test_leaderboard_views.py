@@ -184,6 +184,32 @@ def test_leaderboard_total_and_stage_tabs_render_expected_details():
     assert "Alpha Rider" not in future_html
 
 
+def test_finished_stage_leaderboard_shows_each_users_bench():
+    app, user_id, event_id = make_leaderboard_app()
+    with app.app_context():
+        event = db.session.get(Event, event_id)
+        event.team_size = 2
+        event_riders = EventRider.query.order_by(EventRider.id).all()
+        for user in User.query.order_by(User.id).all():
+            selection = TeamSelection(user=user, event=event, total_price=2)
+            for event_rider in event_riders:
+                selection.riders.append(TeamSelectionRider(event_rider=event_rider))
+            db.session.add(selection)
+        db.session.commit()
+
+        rows = build_stage_leaderboard(event, event.stages[0])
+        assert len(rows[0].bench_riders) == 1
+        assert rows[0].bench_riders[0].event_rider.rider.name == "Beta Rider"
+        assert rows[1].bench_riders[0].event_rider.rider.name == "Alpha Rider"
+
+    client = app.test_client()
+    login(client, user_id)
+    html = client.get(f"/events/{event_id}/leaderboard?stage=1").get_data(as_text=True)
+
+    assert html.count('class="leaderboard-bench"') == 2
+    assert html.count('class="leaderboard-bench-card"') == 2
+
+
 def test_event_overview_highlights_status_and_next_deadline():
     app, user_id, _event_id = make_leaderboard_app()
     client = app.test_client()

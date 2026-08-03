@@ -25,6 +25,7 @@ from tour_femmes.models import (
 from tour_femmes.services.deletion import delete_event_game, delete_user_account
 from tour_femmes.services.game import recalculate_stage_scores, save_stage_lineup
 from tour_femmes.services.pcs import (
+    IncompleteStageResultsError,
     PcsClient,
     enrich_missing_profiles,
     import_stage_results,
@@ -536,6 +537,9 @@ def import_results(stage_id: int):
         count = import_stage_results(stage)
         db.session.commit()
         flash(f"{count} uitslagregels geladen en scores herberekend.", "success")
+    except IncompleteStageResultsError as exc:
+        db.session.rollback()
+        flash(str(exc), "warning")
     except requests.RequestException as exc:
         db.session.rollback()
         flash(f"PCS-uitslagimport mislukt: {exc}", "danger")

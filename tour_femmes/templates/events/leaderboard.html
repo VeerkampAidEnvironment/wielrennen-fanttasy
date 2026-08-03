@@ -4,6 +4,24 @@
 {% set active = 'leaderboard' %}
 {% include "events/_event_nav.html" with context %}
 
+{% macro compact_bench_rider(bench_rider) %}
+  {% set rider = bench_rider.event_rider.rider %}
+  <article class="leaderboard-bench-card" title="{{ rider.name }} · {{ bench_rider.rank_label }} · {{ bench_rider.points }} punten">
+    <span class="leaderboard-bench-photo">
+      {% if rider.photo_mime or rider.photo_url %}
+        <img src="{{ rider_photo_url(rider) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+      {% else %}
+        <span>{{ rider.name[:2] }}</span>
+      {% endif %}
+    </span>
+    <span class="leaderboard-bench-main">
+      <strong>{{ rider.name }}</strong>
+      <small>{{ bench_rider.rank_label }}</small>
+    </span>
+    <span class="leaderboard-bench-points"><strong>{{ bench_rider.points }}</strong> ptn</span>
+  </article>
+{% endmacro %}
+
 <section class="classification-scope" aria-labelledby="classification-scope-label">
   <span id="classification-scope-label">Klassement</span>
   <nav class="classification-scope-options" aria-label="Kies een klassement">
@@ -224,6 +242,19 @@
                 </div>
               {% endfor %}
             </div>
+            {% if selected_stage.has_ranked_result() and row.bench_riders %}
+              <section class="leaderboard-bench" aria-label="Wisselspelers van {{ row.user.username }}">
+                <header>
+                  <strong>Wisselspelers</strong>
+                  <span>Niet opgesteld</span>
+                </header>
+                <div class="leaderboard-bench-grid">
+                  {% for bench_rider in row.bench_riders %}
+                    {{ compact_bench_rider(bench_rider) }}
+                  {% endfor %}
+                </div>
+              </section>
+            {% endif %}
           {% else %}
             <div class="empty-lineup">Geen opstelling ingediend voor deze etappe.</div>
           {% endif %}

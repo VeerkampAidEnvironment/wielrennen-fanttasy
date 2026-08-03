@@ -40,6 +40,7 @@ from tour_femmes.services.game import (
     lineup_status,
     save_stage_lineup,
     save_team_selection,
+    unavailable_rider_statuses,
     validate_team_selection,
 )
 events_bp = Blueprint("events", __name__)
@@ -256,7 +257,12 @@ def stage(event_id: int, stage_id: int):
 
     lineup = StageLineup.query.filter_by(user_id=current_user.id, stage_id=stage_obj.id).first()
     selected_ids = lineup.rider_ids() if lineup else set()
+    unavailable_statuses = unavailable_rider_statuses(stage_obj)
+    if not locked:
+        selected_ids -= set(unavailable_statuses)
     captain_id = lineup.captain_event_rider_id if lineup else None
+    if captain_id not in selected_ids:
+        captain_id = next(iter(selected_ids), None)
     user_result = next((score for score in stage_obj.user_scores if score.user_id == current_user.id), None)
     team_riders = [link.event_rider for link in selection.riders]
     team_rider_ids = {event_rider.id for event_rider in team_riders}
@@ -291,6 +297,7 @@ def stage(event_id: int, stage_id: int):
         official_rider_scores=official_rider_scores,
         user_result=user_result,
         rider_history=rider_history,
+        unavailable_statuses=unavailable_statuses,
         speciality_filters=RIDER_SPECIALITY_FILTERS,
     )
 

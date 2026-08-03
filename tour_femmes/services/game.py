@@ -13,6 +13,7 @@ from tour_femmes.models import (
     Event,
     EventEntry,
     EventRider,
+    NON_FINISH_STATUSES,
     Stage,
     StageLineup,
     StageLineupRider,
@@ -103,6 +104,7 @@ class StageLeaderboardRow:
     has_score: bool
     captain_bonus: int
     lineup_riders: tuple[StageLineupRiderView, ...]
+    bench_riders: tuple[StageLineupRiderView, ...]
     is_stage_winner: bool
     is_yellow_after_stage: bool
 
@@ -406,6 +408,9 @@ def save_stage_lineup(
         return False, f"Kies maximaal {event.lineup_size} renners voor deze etappe."
     if not set(unique_ids).issubset(selection_ids):
         return False, "Etapperenners moeten uit je koersselectie komen."
+    unavailable_ids = set(unavailable_rider_statuses(stage))
+    if set(unique_ids) & unavailable_ids:
+        return False, "Een uitgevallen renner kan niet meer worden opgesteld."
 
     lineup = StageLineup.query.filter_by(user_id=user.id, stage_id=stage.id).first()
     if not unique_ids:
@@ -431,6 +436,24 @@ def save_stage_lineup(
     if len(unique_ids) == event.lineup_size:
         return True, "Etappeselectie opgeslagen."
     return True, f"Concept opgeslagen: {len(unique_ids)} / {event.lineup_size} renners."
+
+
+def unavailable_rider_statuses(stage: Stage) -> dict[int, str]:
+    rows = (
+        db.session.query(StageResult.event_rider_id, StageResult.status)
+        .join(Stage, Stage.id == StageResult.stage_id)
+        .filter(
+            Stage.event_id == stage.event_id,
+            Stage.number < stage.number,
+            StageResult.status.in_(NON_FINISH_STATUSES),
+        )
+        .order_by(Stage.number.desc())
+        .all()
+    )
+    statuses: dict[int, str] = {}
+    for event_rider_id, status in rows:
+        statuses.setdefault(event_rider_id, status)
+    return statuses
 
 
 def recalculate_stage_scores(stage: Stage) -> None:
@@ -754,9 +777,15 @@ def build_stage_leaderboard(
         entry_query = entry_query.filter(EventEntry.user_id.in_(user_ids))
     entries = entry_query.all()
     lineups = StageLineup.query.filter_by(stage_id=stage.id).all()
+    selections = TeamSelection.query.filter_by(event_id=event.id).all()
     scores = UserStageScore.query.filter_by(stage_id=stage.id).all()
     lineup_by_user = {lineup.user_id: lineup for lineup in lineups}
+    selection_by_user = {selection.user_id: selection for selection in selections}
     score_by_user = {score.user_id: score for score in scores}
+    stage_result_by_rider_id = {
+        result.event_rider_id: result for result in stage.results
+    }
+    official_scores = build_official_stage_scores(stage)
 
     if user_ids is None:
         awards = Award.query.filter_by(event_id=event.id, stage_id=stage.id).all()
@@ -803,6 +832,36 @@ def build_stage_leaderboard(
                 rider.event_rider.rider.name.lower(),
             )
         )
+        lineup_ids = lineup.rider_ids() if lineup else set()
+        selection = selection_by_user.get(entry.user_id)
+        bench_riders = []
+        if selection:
+            for link in selection.riders:
+                if link.event_rider_id in lineup_ids:
+                    continue
+                result = stage_result_by_rider_id.get(link.event_rider_id)
+                official_score = official_scores.get(link.event_rider_id)
+                bench_riders.append(
+                    StageLineupRiderView(
+                        event_rider=link.event_rider,
+                        is_captain=False,
+                        points=official_score.total_points if official_score else 0,
+                        rank_label=(
+                            f"#{result.rank}"
+                            if result and result.rank
+                            else result.status
+                            if result
+                            else "Geen uitslag"
+                        ),
+                    )
+                )
+        bench_riders.sort(
+            key=lambda rider: (
+                -rider.points,
+                rider.event_rider.rider.name.lower(),
+            )
+        )
+        bench_riders = bench_riders[:max(event.team_size - event.lineup_size, 0)]
         rows.append(
             StageLeaderboardRow(
                 user=entry.user,
@@ -810,6 +869,7 @@ def build_stage_leaderboard(
                 has_score=score is not None,
                 captain_bonus=score.captain_bonus if score else 0,
                 lineup_riders=tuple(lineup_riders),
+                bench_riders=tuple(bench_riders),
                 is_stage_winner=entry.user_id in stage_winner_ids,
                 is_yellow_after_stage=entry.user_id in yellow_user_ids,
             )

@@ -10,6 +10,8 @@ from tour_femmes.services.pcs import (
     parse_grand_tour_results,
     parse_label_values,
     parse_classification_results,
+    parse_classification_tab_results,
+    parse_gc_results_from_stage_page,
     parse_rider_in_race_results,
     parse_specialties,
     parse_stage_page,
@@ -77,6 +79,61 @@ def test_parse_classification_results_matches_ranked_riders_to_event_links():
         soup,
         {"demi-vollering": 11, "marianne-vos": 22},
     ) == [(11, 1), (22, 2)]
+
+
+def test_stage_result_gc_column_is_parsed_without_becoming_other_classifications():
+    soup = BeautifulSoup(
+        """
+        <table>
+          <tr><th>Rnk</th><th>GC</th><th>Timelag</th><th>Rider</th></tr>
+          <tr><td>34</td><td>2</td><td>+0:16</td><td><a href="rider/demi-vollering">Demi Vollering</a></td></tr>
+          <tr><td>1</td><td>1</td><td>+0:00</td><td><a href="rider/lorena-wiebes">Lorena Wiebes</a></td></tr>
+        </table>
+        """,
+        "html.parser",
+    )
+    links = {"demi-vollering": 11, "lorena-wiebes": 22}
+
+    assert parse_gc_results_from_stage_page(soup, links) == [(11, 2), (22, 1)]
+    assert parse_classification_results(soup, links) == []
+
+
+def test_classification_tabs_are_kept_separate():
+    soup = BeautifulSoup(
+        """
+        <a class="selectResultTab" data-id="gc-tab" href="race/example/2026/stage-2-gc">GC</a>
+        <a class="selectResultTab" data-id="points-tab" href="race/example/2026/stage-2-points">POINTS</a>
+        <a class="selectResultTab" data-id="qom-tab" href="race/example/2026/stage-2-kom">QOM</a>
+        <a class="selectResultTab" data-id="youth-tab" href="race/example/2026/stage-2-youth">YOUTH</a>
+        <div class="resTab" data-id="gc-tab"><table>
+          <tr><th>Rnk</th><th>Prev</th><th>Rider</th><th>Time</th></tr>
+          <tr><td>2</td><td>2</td><td><a href="rider/kim-le-court">Kim</a></td><td>0:14</td></tr>
+        </table></div>
+        <div class="resTab" data-id="points-tab"><table>
+          <tr><th>Rnk</th><th>Prev</th><th>Rider</th><th>Pnt</th><th>Today</th></tr>
+          <tr><td>3</td><td>2</td><td><a href="rider/kim-le-court">Kim</a></td><td>50</td><td>4</td></tr>
+        </table></div>
+        <div class="resTab" data-id="qom-tab"><table>
+          <tr><th>Rnk</th><th>Prev</th><th>Rider</th><th>Pnt</th><th>Today</th></tr>
+          <tr><td>1</td><td>1</td><td><a href="rider/other-rider">Other</a></td><td>8</td><td>8</td></tr>
+        </table></div>
+        <div class="resTab" data-id="youth-tab"><table>
+          <tr><th>Rnk</th><th>Prev</th><th>Rider</th><th>Time</th></tr>
+          <tr><td>1</td><td>1</td><td><a href="rider/young-rider">Young</a></td><td>7:11</td></tr>
+        </table></div>
+        """,
+        "html.parser",
+    )
+
+    assert parse_classification_tab_results(
+        soup,
+        {"kim-le-court": 11, "other-rider": 22, "young-rider": 33},
+    ) == {
+        "gc": [(11, 2)],
+        "points": [(11, 3)],
+        "mountains": [(22, 1)],
+        "youth": [(33, 1)],
+    }
 
 
 def test_parse_stage_name_prefers_route_over_results_title():

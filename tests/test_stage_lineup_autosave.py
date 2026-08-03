@@ -198,6 +198,50 @@ def test_stage_lineup_fetch_autosaves_concept_and_complete_lineup():
     assert complete_html.count('<small class="event-tab-status">Compleet</small>') == 2
 
 
+def test_non_finisher_cannot_be_selected_for_a_later_stage():
+    app, user_id, event_id, stage_id, event_rider_ids = make_app_with_lineup_context()
+    with app.app_context():
+        stage = db.session.get(Stage, stage_id)
+        stage.number = 2
+        previous_stage = Stage(
+            event_id=event_id,
+            number=1,
+            name="Etappe 1",
+            starts_at=datetime.now(timezone.utc) - timedelta(days=1),
+            pcs_url="https://www.procyclingstats.com/race/testkoers/2026/stage-1",
+        )
+        db.session.add(previous_stage)
+        db.session.flush()
+        db.session.add(
+            StageResult(
+                stage_id=previous_stage.id,
+                event_rider_id=event_rider_ids[0],
+                rank=None,
+                status="DNF",
+            )
+        )
+        db.session.commit()
+
+    client = app.test_client()
+    login(client, user_id)
+    html = client.get(f"/events/{event_id}/stages/{stage_id}").get_data(as_text=True)
+    assert "rider-unavailable" in html
+    assert "DNF &middot; uit koers" in html
+
+    response = client.post(
+        f"/events/{event_id}/stages/{stage_id}",
+        data={
+            "csrf_token": "token",
+            "riders": [str(event_rider_id) for event_rider_id in event_rider_ids[:6]],
+            "captain": str(event_rider_ids[1]),
+        },
+        headers={"Accept": "application/json", "X-Requested-With": "fetch"},
+    )
+
+    assert response.status_code == 400
+    assert "uitgevallen renner" in response.get_json()["message"]
+
+
 def test_stage_scoring_stores_user_and_rider_score_breakdown():
     app, user_id, _event_id, stage_id, event_rider_ids = make_app_with_lineup_context()
 

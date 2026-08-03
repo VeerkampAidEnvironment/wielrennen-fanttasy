@@ -10,11 +10,12 @@
   {% set historical_scores = historical_rider_scores(rider) %}
   {% set selected = event_rider.id in selected_ids %}
   {% set is_captain = captain_id == event_rider.id %}
+  {% set unavailable_status = unavailable_statuses.get(event_rider.id) %}
   <article
-    class="lineup-builder-card {{ 'selected' if selected else '' }} {{ 'captain' if is_captain else '' }} {{ 'locked' if locked else '' }}"
+    class="lineup-builder-card {{ 'selected' if selected else '' }} {{ 'captain' if is_captain else '' }} {{ 'locked' if locked else '' }} {{ 'rider-unavailable' if unavailable_status and not locked else '' }}"
     data-lineup-card
     data-event-rider-id="{{ event_rider.id }}"
-    {% if not locked %}role="button" tabindex="0" aria-label="{{ rider.name }} in etappeselectie wisselen"{% endif %}
+    {% if not locked and not unavailable_status %}role="button" tabindex="0" aria-label="{{ rider.name }} in etappeselectie wisselen"{% endif %}
   >
     <input
       class="lineup-hidden-input"
@@ -22,9 +23,9 @@
       name="riders"
       value="{{ event_rider.id }}"
       data-lineup-checkbox
-      data-fixed-disabled="{{ '1' if locked else '0' }}"
+      data-fixed-disabled="{{ '1' if locked or unavailable_status else '0' }}"
       {% if selected %}checked{% endif %}
-      {% if locked %}disabled{% endif %}
+      {% if locked or unavailable_status %}disabled{% endif %}
     >
     <input
       class="lineup-hidden-input"
@@ -32,9 +33,9 @@
       name="captain"
       value="{{ event_rider.id }}"
       data-captain-radio
-      data-fixed-disabled="{{ '1' if locked else '0' }}"
+      data-fixed-disabled="{{ '1' if locked or unavailable_status else '0' }}"
       {% if is_captain %}checked{% endif %}
-      {% if locked or not selected %}disabled{% endif %}
+      {% if locked or unavailable_status or not selected %}disabled{% endif %}
     >
     <span class="lineup-card-photo">
       {% if rider.photo_mime or rider.photo_url %}
@@ -127,7 +128,9 @@
     </span>
     <span class="lineup-card-actions">
       <button type="button" class="mini-action profile-action" data-toggle-lineup-profile aria-expanded="false">Profiel</button>
-    {% if not locked %}
+    {% if unavailable_status and not locked %}
+      <span class="lineup-unavailable-status">{{ unavailable_status }} &middot; uit koers</span>
+    {% elif not locked %}
       <button type="button" class="mini-action" data-toggle-lineup>{{ 'Verwijderen' if selected else 'Toevoegen' }}</button>
       <button type="button" class="mini-action captain-action" data-toggle-captain>{{ 'Kopvrouw gekozen' if is_captain else 'Kopvrouw' }}</button>
     {% else %}

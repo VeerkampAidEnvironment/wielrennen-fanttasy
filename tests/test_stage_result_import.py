@@ -1,8 +1,13 @@
 from bs4 import BeautifulSoup
+import pytest
 
 from tour_femmes import create_app, db
 from tour_femmes.models import Event, EventRider, Rider, Stage, StageResult, Team
-from tour_femmes.services.pcs import import_stage_results, parse_stage_results
+from tour_femmes.services.pcs import (
+    IncompleteStageResultsError,
+    import_stage_results,
+    parse_stage_results,
+)
 
 
 class TestConfig:
@@ -49,9 +54,9 @@ def make_result_app():
 def result_page_html():
     return """
     <table class="results">
-      <tr><th>Rank</th><th>Rank</th><th>Time</th><th>Rider</th></tr>
+      <tr><th>Rnk.</th><th>GC</th><th>Timelag</th><th>Rider</th></tr>
       <tr><td>1</td><td>1</td><td>+0:00</td><td><a href="/rider/rider-1">Rider 1</a></td></tr>
-      <tr><td>2</td><td>2</td><td>+0:04</td><td><a href="/rider/rider-2">Rider 2</a></td></tr>
+      <tr><td>2</td><td>5</td><td>+0:04</td><td><a href="/rider/rider-2">Rider 2</a></td></tr>
     </table>
     <table class="points-classification">
       <tr><th>Rank</th><th>Bib</th><th>Rider</th><th>Points</th></tr>
@@ -84,7 +89,10 @@ def test_stage_result_reimport_removes_obsolete_rows(monkeypatch):
             return soup
 
     monkeypatch.setattr("tour_femmes.services.pcs.PcsClient", FakeClient)
-    monkeypatch.setattr("tour_femmes.services.pcs.import_stage_classifications", lambda *_args: 0)
+    monkeypatch.setattr(
+        "tour_femmes.services.pcs.fetch_stage_classifications",
+        lambda *_args, **_kwargs: {},
+    )
     monkeypatch.setattr("tour_femmes.services.pcs.recalculate_stage_scores", lambda _stage: None)
 
     with app.app_context():
@@ -105,3 +113,28 @@ def test_stage_result_reimport_removes_obsolete_rows(monkeypatch):
         (event_rider_ids[0], 1),
         (event_rider_ids[1], 2),
     ]
+
+
+def test_stage_result_import_rejects_a_partial_pcs_result(monkeypatch):
+    app, stage_id, _event_rider_ids = make_result_app()
+    soup = BeautifulSoup(
+        """
+        <table>
+          <tr><th>Rnk.</th><th>GC</th><th>Timelag</th><th>Rider</th></tr>
+          <tr><td>1</td><td>1</td><td>+0:00</td><td><a href="/rider/rider-1">Rider 1</a></td></tr>
+        </table>
+        """,
+        "html.parser",
+    )
+
+    class FakeClient:
+        def get_soup(self, _url):
+            return soup
+
+    monkeypatch.setattr("tour_femmes.services.pcs.PcsClient", FakeClient)
+
+    with app.app_context():
+        stage = db.session.get(Stage, stage_id)
+        with pytest.raises(IncompleteStageResultsError, match="nog onvolledig"):
+            import_stage_results(stage)
+        assert StageResult.query.filter_by(stage_id=stage_id).count() == 0

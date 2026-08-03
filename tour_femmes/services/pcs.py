@@ -153,6 +153,10 @@ class ParsedResult:
     raw_result: dict[str, str]
 
 
+class IncompleteStageResultsError(ValueError):
+    pass
+
+
 @dataclass(frozen=True)
 class LiveUpdateItem:
     posted_at: datetime
@@ -857,7 +861,19 @@ def import_stage_results(stage: Stage) -> int:
     soup = client.get_soup(stage.pcs_url)
     parsed_results = parse_stage_results(soup, stage)
     if not parsed_results:
-        return 0
+        raise IncompleteStageResultsError("PCS toont nog geen etappe-uitslag.")
+    expected_count = EventRider.query.filter_by(
+        event_id=stage.event_id,
+        active=True,
+        frozen=False,
+    ).count()
+    minimum_count = min(10, max(1, (expected_count + 1) // 2))
+    if len(parsed_results) < minimum_count:
+        raise IncompleteStageResultsError(
+            f"PCS toont pas {len(parsed_results)} van circa {expected_count} renners. "
+            "De uitslag is nog onvolledig; bestaande data is niet gewijzigd."
+        )
+    parsed_classifications = fetch_stage_classifications(stage, client, stage_soup=soup)
     existing_results = {
         result.event_rider_id: result
         for result in StageResult.query.filter_by(stage_id=stage.id).all()
@@ -879,19 +895,35 @@ def import_stage_results(stage: Stage) -> int:
         result.base_points = points_for_result(parsed.rank, parsed.status)
         result.imported_at = utcnow()
     db.session.flush()
-    import_stage_classifications(stage, client)
+    store_stage_classifications(stage, parsed_classifications)
     recalculate_stage_scores(stage)
     return len(parsed_results)
 
 
 def import_stage_classifications(stage: Stage, client: PcsClient) -> int:
+    return store_stage_classifications(
+        stage,
+        fetch_stage_classifications(stage, client),
+    )
+
+
+def fetch_stage_classifications(
+    stage: Stage,
+    client: PcsClient,
+    stage_soup: BeautifulSoup | None = None,
+) -> dict[str, list[tuple[int, int]]]:
     links_by_slug = {
         link.rider.pcs_slug: link.id
         for link in EventRider.query.join(Rider).filter(EventRider.event_id == stage.event_id).all()
     }
-    is_final = bool(stage.event.stages and stage.id == stage.event.stages[-1].id)
-    imported = 0
+    parsed_classifications = {
+        "gc": parse_gc_results_from_stage_page(stage_soup, links_by_slug)
+        if stage_soup
+        else [],
+    }
     for classification, suffix in CLASSIFICATION_URL_SUFFIXES.items():
+        if classification == "gc":
+            continue
         url = f"{stage.pcs_url}-{suffix}"
         try:
             soup = client.get_soup(url)
@@ -902,7 +934,27 @@ def import_stage_classifications(stage: Stage, client: PcsClient) -> int:
             if exc.response is not None and exc.response.status_code in {404, 410, 500}:
                 continue
             raise
-        parsed = parse_classification_results(soup, links_by_slug)
+        tab_results = parse_classification_tab_results(soup, links_by_slug)
+        for parsed_classification, parsed in tab_results.items():
+            if parsed_classification != "gc" or not parsed_classifications["gc"]:
+                parsed_classifications[parsed_classification] = parsed
+        if classification not in parsed_classifications:
+            parsed_classifications[classification] = parse_classification_results(
+                soup,
+                links_by_slug,
+            )
+        if all(key in parsed_classifications for key in CLASSIFICATION_URL_SUFFIXES):
+            break
+    return parsed_classifications
+
+
+def store_stage_classifications(
+    stage: Stage,
+    parsed_classifications: dict[str, list[tuple[int, int]]],
+) -> int:
+    is_final = bool(stage.event.stages and stage.id == stage.event.stages[-1].id)
+    imported = 0
+    for classification, parsed in parsed_classifications.items():
         ClassificationResult.query.filter_by(
             stage_id=stage.id,
             classification=classification,
@@ -928,19 +980,102 @@ def parse_classification_results(
 ) -> list[tuple[int, int]]:
     candidates: list[list[tuple[int, int]]] = []
     tables = soup.find_all("table") or [soup]
+    if any(is_stage_result_table(table) for table in tables):
+        return []
     for table in tables:
+        parsed = parse_ranked_riders_table(table, links_by_slug)
+        if parsed:
+            candidates.append(parsed)
+    return max(candidates, key=len, default=[])
+
+
+def parse_classification_tab_results(
+    soup: BeautifulSoup,
+    links_by_slug: dict[str, int],
+) -> dict[str, list[tuple[int, int]]]:
+    classification_by_tab_id: dict[str, str] = {}
+    suffix_to_classification = {
+        suffix: classification
+        for classification, suffix in CLASSIFICATION_URL_SUFFIXES.items()
+    }
+    for anchor in soup.select("a.selectResultTab[data-id]"):
+        href = urlparse(anchor.get("href", "")).path.rstrip("/")
+        suffix = href.rsplit("-", 1)[-1].casefold()
+        classification = suffix_to_classification.get(suffix)
+        if classification:
+            classification_by_tab_id[str(anchor.get("data-id"))] = classification
+
+    parsed_classifications: dict[str, list[tuple[int, int]]] = {}
+    for tab in soup.select("div.resTab[data-id]"):
+        classification = classification_by_tab_id.get(str(tab.get("data-id")))
+        if not classification:
+            continue
+        tables = tab.find_all("table")
+        standings_tables = [
+            table
+            for table in tables
+            if "prev" in table_headers(table)
+        ]
+        candidates = [
+            parse_ranked_riders_table(table, links_by_slug)
+            for table in (standings_tables or tables)
+        ]
+        parsed = max(candidates, key=len, default=[])
+        if parsed:
+            parsed_classifications[classification] = parsed
+    return parsed_classifications
+
+
+def parse_ranked_riders_table(
+    table: Tag,
+    links_by_slug: dict[str, int],
+) -> list[tuple[int, int]]:
+    parsed: list[tuple[int, int]] = []
+    seen: set[int] = set()
+    for row in table.find_all("tr"):
+        rider_anchor = row.find("a", href=re.compile(r"(^|/)rider/"))
+        if not rider_anchor:
+            continue
+        cells = row.find_all(["td", "th"])
+        ranks = [
+            parse_rank(clean_text(cell.get_text(" ", strip=True)))
+            for cell in cells[:2]
+        ]
+        rank = next((value for value in ranks if value), None)
+        slug = urlparse(rider_anchor.get("href", "")).path.strip("/").split("rider/")[-1].strip("/")
+        event_rider_id = links_by_slug.get(slug)
+        if not rank or not event_rider_id or event_rider_id in seen:
+            continue
+        parsed.append((event_rider_id, rank))
+        seen.add(event_rider_id)
+    return parsed
+
+
+def table_headers(table: Tag) -> set[str]:
+    return {
+        clean_text(cell.get_text(" ", strip=True)).casefold()
+        for cell in table.find_all("th")
+    }
+
+
+def parse_gc_results_from_stage_page(
+    soup: BeautifulSoup | None,
+    links_by_slug: dict[str, int],
+) -> list[tuple[int, int]]:
+    if not soup:
+        return []
+    candidates: list[list[tuple[int, int]]] = []
+    for table in soup.find_all("table"):
+        if not is_stage_result_table(table):
+            continue
         parsed: list[tuple[int, int]] = []
         seen: set[int] = set()
         for row in table.find_all("tr"):
             rider_anchor = row.find("a", href=re.compile(r"(^|/)rider/"))
-            if not rider_anchor:
-                continue
             cells = row.find_all(["td", "th"])
-            ranks = [
-                parse_rank(clean_text(cell.get_text(" ", strip=True)))
-                for cell in cells[:2]
-            ]
-            rank = next((value for value in ranks if value), None)
+            if not rider_anchor or len(cells) < 2:
+                continue
+            rank = parse_rank(clean_text(cells[1].get_text(" ", strip=True)))
             slug = urlparse(rider_anchor.get("href", "")).path.strip("/").split("rider/")[-1].strip("/")
             event_rider_id = links_by_slug.get(slug)
             if not rank or not event_rider_id or event_rider_id in seen:
@@ -952,14 +1087,24 @@ def parse_classification_results(
     return max(candidates, key=len, default=[])
 
 
+def is_stage_result_table(table: Tag) -> bool:
+    headers = table_headers(table)
+    has_rank = any(header in {"rnk", "rnk.", "rank"} for header in headers)
+    has_rider = any("rider" in header for header in headers)
+    has_time = any("time" in header for header in headers)
+    return has_rank and has_rider and has_time
+
+
 def parse_stage_results(soup: BeautifulSoup, stage: Stage) -> list[ParsedResult]:
     links_by_slug = {
         link.rider.pcs_slug: link.id
         for link in EventRider.query.join(Rider).filter(EventRider.event_id == stage.event_id).all()
     }
-    candidates: list[list[ParsedResult]] = []
     tables = soup.find_all("table") or [soup]
-    for table in tables:
+    result_tables = [table for table in tables if is_stage_result_table(table)]
+
+    candidates: list[list[ParsedResult]] = []
+    for table in result_tables or tables:
         parsed: list[ParsedResult] = []
         seen: set[int] = set()
         for row in table.find_all("tr"):
@@ -985,7 +1130,7 @@ def parse_stage_results(soup: BeautifulSoup, stage: Stage) -> list[ParsedResult]
                 None,
             )
             repeated_rank = len(cells) > 1 and parse_rank(cells[1]) == rank
-            if rank and not time_gap and not repeated_rank:
+            if not result_tables and rank and not time_gap and not repeated_rank:
                 # PCS shows points and mountain classifications below the result.
                 # Their first cell is also a rank, but the second cell is a bib number.
                 continue
