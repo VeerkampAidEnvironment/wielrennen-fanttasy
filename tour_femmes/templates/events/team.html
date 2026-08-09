@@ -28,7 +28,7 @@
       {{ 'Onbekend' if not team_deadline or not team_deadline.starts_at else 'Gesloten' if not editable else 'Berekenen…' }}
     </strong>
     <span><strong data-count>{{ selected_ids|length }}</strong> / {{ event.team_size }} renners</span>
-    <span><strong data-budget-total>{{ selection.total_price if selection else 0 }}</strong> / {{ event.budget }} budget</span>
+    <span><strong data-budget-total>{{ price_label(selection.total_price) if selection else 0 }}</strong> / {{ event.budget }} budget</span>
     {% if editable %}<span class="autosave-status" data-autosave-status role="status" aria-live="polite"></span>{% endif %}
   </div>
 </section>
@@ -56,9 +56,9 @@
     </article>
     <article>
       <span>Budget gebruikt</span>
-      <strong><span data-status-total>{{ team_status.selected_total }}</span> / {{ event.budget }}</strong>
+      <strong><span data-status-total>{{ price_label(team_status.selected_total) }}</span> / {{ event.budget }}</strong>
       <small data-status-budget-note>
-        {% if team_status.over_budget %}{{ -team_status.remaining_budget }} boven budget{% else %}{{ team_status.remaining_budget }} over{% endif %}
+        {% if team_status.over_budget %}{{ price_label(-team_status.remaining_budget) }} boven budget{% else %}{{ price_label(team_status.remaining_budget) }} over{% endif %}
       </small>
     </article>
     <article class="team-status-progress-tile">
@@ -84,8 +84,8 @@
   data-team-form
   data-team-size="{{ event.team_size }}"
   data-budget="{{ event.budget }}"
-  data-price-min="{{ price_min }}"
-  data-price-max="{{ price_max }}"
+  data-price-min="{{ price_value(price_min) }}"
+  data-price-max="{{ price_value(price_max) }}"
 >
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <section class="my-team-panel" data-selected-team-panel>
@@ -119,7 +119,7 @@
             <strong>{{ rider.name }}</strong>
             <small>{{ event_rider.team.name if event_rider.team else 'Geen ploeg' }}</small>
           </span>
-          <span class="my-team-price">{{ event_rider.price }}</span>
+          <span class="my-team-price">{{ price_label(event_rider.price) }}</span>
         </button>
       {% endfor %}
     </div>
@@ -154,26 +154,26 @@
     <div class="price-filter" data-price-filter>
       <div class="price-filter-top">
         <span>Prijs</span>
-        <output data-price-range-label>{{ price_min }} - {{ price_max }}</output>
+        <output data-price-range-label>{{ price_label(price_min) }} - {{ price_label(price_max) }}</output>
       </div>
       <div class="price-range">
         <span class="price-range-track"></span>
         <span class="price-range-fill" data-price-range-fill></span>
         <input
           type="range"
-          min="{{ price_min }}"
-          max="{{ price_max }}"
-          value="{{ price_min }}"
-          step="1"
+          min="{{ price_value(price_min) }}"
+          max="{{ price_value(price_max) }}"
+          value="{{ price_value(price_min) }}"
+          step="0.01"
           aria-label="Minimumprijs"
           data-price-min-range
         >
         <input
           type="range"
-          min="{{ price_min }}"
-          max="{{ price_max }}"
-          value="{{ price_max }}"
-          step="1"
+          min="{{ price_value(price_min) }}"
+          max="{{ price_value(price_max) }}"
+          value="{{ price_value(price_max) }}"
+          step="0.01"
           aria-label="Maximumprijs"
           data-price-max-range
         >
@@ -181,11 +181,11 @@
       <div class="price-filter-fields">
         <label>
           Min
-          <input type="number" min="{{ price_min }}" max="{{ price_max }}" value="{{ price_min }}" data-price-min-input>
+          <input type="number" min="{{ price_value(price_min) }}" max="{{ price_value(price_max) }}" step="0.01" value="{{ price_value(price_min) }}" data-price-min-input>
         </label>
         <label>
           Max
-          <input type="number" min="{{ price_min }}" max="{{ price_max }}" value="{{ price_max }}" data-price-max-input>
+          <input type="number" min="{{ price_value(price_min) }}" max="{{ price_value(price_max) }}" step="0.01" value="{{ price_value(price_max) }}" data-price-max-input>
         </label>
       </div>
     </div>
@@ -221,7 +221,7 @@
         data-rider-card
         data-rider-name="{{ rider.name|lower }}"
         data-team="{{ event_rider.team.name if event_rider.team else '' }}"
-        data-price="{{ event_rider.price if event_rider.price is not none else -1 }}"
+        data-price="{{ price_value(event_rider.price) if event_rider.price is not none else -1 }}"
         data-unavailable-reason="{% if not editable %}Gesloten{% elif event_rider.price is none %}Geen prijs{% elif event_rider.frozen %}Bevroren{% elif not event_rider.active %}Niet op startlijst{% else %}Niet beschikbaar{% endif %}"
         {% for speciality in speciality_filters %}
           data-speciality-{{ speciality.key }}="{{ rider.specialties.get(speciality.stat_label, 0) if rider.specialties else 0 }}"
@@ -231,7 +231,7 @@
           type="checkbox"
           name="riders"
           value="{{ event_rider.id }}"
-          data-price="{{ event_rider.price or 0 }}"
+          data-price="{{ price_value(event_rider.price or 0) }}"
           data-fixed-disabled="{{ '1' if unavailable or not editable else '0' }}"
           {% if event_rider.id in selected_ids %}checked{% endif %}
           {% if unavailable or not editable or budget_blocked %}disabled{% endif %}
@@ -246,7 +246,7 @@
         </span>
         <span class="price price-badge">
           <small>Prijs</small>
-          <strong>{{ event_rider.price }}</strong>
+          <strong>{{ price_label(event_rider.price) }}</strong>
         </span>
         <span class="rider-card-body">
           <span class="rider-main">

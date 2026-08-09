@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from decimal import Decimal
 from datetime import datetime, timezone
 from typing import Iterable
 
@@ -247,7 +248,7 @@ class EventRider(db.Model):
     event_id = db.Column(db.Integer, db.ForeignKey("event.id"), nullable=False, index=True)
     rider_id = db.Column(db.Integer, db.ForeignKey("rider.id"), nullable=False, index=True)
     team_id = db.Column(db.Integer, db.ForeignKey("team.id"), nullable=True, index=True)
-    price = db.Column(db.Integer, nullable=True)
+    price = db.Column(db.Numeric(8, 2), nullable=True)
     active = db.Column(db.Boolean, default=True, nullable=False)
     frozen = db.Column(db.Boolean, default=False, nullable=False)
     startlist_status = db.Column(db.String(30), default="listed", nullable=False)
@@ -327,7 +328,7 @@ class TeamSelection(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
     event_id = db.Column(db.Integer, db.ForeignKey("event.id"), nullable=False, index=True)
     submitted_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
-    total_price = db.Column(db.Integer, default=0, nullable=False)
+    total_price = db.Column(db.Numeric(10, 2), default=0, nullable=False)
 
     user = db.relationship("User", back_populates="team_selections")
     event = db.relationship("Event")
@@ -498,8 +499,8 @@ def _app_timezone_name() -> str:
     return app_timezone_name()
 
 
-def total_price(event_riders: Iterable[EventRider]) -> int:
-    return sum(rider.price or 0 for rider in event_riders)
+def total_price(event_riders: Iterable[EventRider]) -> Decimal:
+    return sum((rider.price or Decimal("0") for rider in event_riders), Decimal("0"))
 
 
 def age_from_birth_date(value: str | None) -> int | None:

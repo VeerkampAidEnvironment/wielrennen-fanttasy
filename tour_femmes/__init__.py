@@ -34,6 +34,7 @@ def create_app(config_object: str | None = None) -> Flask:
         _ensure_subleague_schema(app)
 
     from tour_femmes.models import User
+    from tour_femmes.pricing import price_label, price_value
     from tour_femmes.services.historical_scores import historical_scores_for_rider
 
     @login_manager.user_loader
@@ -48,6 +49,8 @@ def create_app(config_object: str | None = None) -> Flask:
             "rider_photo_url": _rider_photo_url,
             "team_image_url": _team_image_url,
             "historical_rider_scores": historical_scores_for_rider,
+            "price_label": price_label,
+            "price_value": price_value,
         }
 
     @app.before_request
@@ -140,6 +143,29 @@ def _ensure_schema(app: Flask) -> None:
                 db.session.execute(
                     text("ALTER TABLE stage ADD COLUMN profile_image_mime VARCHAR(80)")
                 )
+            db.session.commit()
+        if db.engine.dialect.name == "mysql":
+            if inspector.has_table("event_rider"):
+                price_column = next(
+                    column for column in inspector.get_columns("event_rider") if column["name"] == "price"
+                )
+                if getattr(price_column["type"], "scale", None) != 2:
+                    db.session.execute(
+                        text("ALTER TABLE event_rider MODIFY COLUMN price DECIMAL(8, 2) NULL")
+                    )
+            if inspector.has_table("team_selection"):
+                total_price_column = next(
+                    column
+                    for column in inspector.get_columns("team_selection")
+                    if column["name"] == "total_price"
+                )
+                if getattr(total_price_column["type"], "scale", None) != 2:
+                    db.session.execute(
+                        text(
+                            "ALTER TABLE team_selection MODIFY COLUMN total_price "
+                            "DECIMAL(10, 2) NOT NULL DEFAULT 0"
+                        )
+                    )
             db.session.commit()
         if inspector.has_table("user_stage_rider_score"):
             score_columns = {

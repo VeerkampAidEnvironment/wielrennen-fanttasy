@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from decimal import Decimal
 from datetime import datetime
 
 from sqlalchemy.orm import selectinload
@@ -25,6 +26,7 @@ from tour_femmes.models import (
     UserStageScore,
     utcnow,
 )
+from tour_femmes.pricing import ZERO_PRICE, price_label
 from tour_femmes.scoring import (
     DAILY_LEADER_TEAMMATE_POINTS,
     FINAL_WINNER_TEAMMATE_POINTS,
@@ -40,7 +42,7 @@ class SelectionValidation:
     ok: bool
     message: str
     selected_riders: list[EventRider]
-    total_price: int
+    total_price: Decimal
 
 
 @dataclass(frozen=True)
@@ -62,7 +64,7 @@ class RiderSelectionPopularity:
 class ParticipantTeamOverview:
     user: User
     riders: tuple[EventRider, ...]
-    total_price: int
+    total_price: Decimal
     complete: bool
 
 
@@ -72,7 +74,7 @@ class TeamSelectionOverview:
     selection_count: int
     completed_count: int
     unique_rider_count: int
-    average_total_price: float
+    average_total_price: Decimal | int
     popularity: tuple[RiderSelectionPopularity, ...]
     participant_teams: tuple[ParticipantTeamOverview, ...]
 
@@ -83,6 +85,7 @@ class LeaderboardRow:
     total_score: int
     latest_stage_score: int
     stage_scores: dict[int, int]
+    final_classification_score: int
     stage_wins: int
     stage_win_numbers: frozenset[int]
     yellow_stage_numbers: frozenset[int]
@@ -150,7 +153,7 @@ def validate_team_selection(event: Event, rider_ids: list[int], require_exact: b
     try:
         unique_ids = sorted({int(rider_id) for rider_id in rider_ids})
     except ValueError:
-        return SelectionValidation(False, "Een of meer gekozen renners zijn ongeldig.", [], 0)
+        return SelectionValidation(False, "Een of meer gekozen renners zijn ongeldig.", [], ZERO_PRICE)
 
     selected = (
         EventRider.query.filter(
@@ -166,29 +169,44 @@ def validate_team_selection(event: Event, rider_ids: list[int], require_exact: b
             False,
             f"Kies precies {event.team_size} renners.",
             selected,
-            sum(rider.price or 0 for rider in selected),
+            sum((rider.price or ZERO_PRICE for rider in selected), ZERO_PRICE),
         )
     if not require_exact and len(unique_ids) > event.team_size:
         return SelectionValidation(
             False,
             f"Kies maximaal {event.team_size} renners.",
             selected,
-            sum(rider.price or 0 for rider in selected),
+            sum((rider.price or ZERO_PRICE for rider in selected), ZERO_PRICE),
         )
 
     if len(selected) != len(unique_ids) or any(not rider.selectable for rider in selected):
-        return SelectionValidation(False, "Een of meer gekozen renners zijn niet beschikbaar.", selected, 0)
+        return SelectionValidation(
+            False,
+            "Een of meer gekozen renners zijn niet beschikbaar.",
+            selected,
+            ZERO_PRICE,
+        )
 
-    total = sum(rider.price or 0 for rider in selected)
+    total = sum((rider.price or ZERO_PRICE for rider in selected), ZERO_PRICE)
     if total > event.budget:
-        return SelectionValidation(False, f"Budget overschreden: {total} / {event.budget}.", selected, total)
+        return SelectionValidation(
+            False,
+            f"Budget overschreden: {price_label(total)} / {event.budget}.",
+            selected,
+            total,
+        )
 
     if len(unique_ids) == event.team_size:
         return SelectionValidation(True, "Teamselectie opgeslagen.", selected, total)
     return SelectionValidation(True, f"Concept opgeslagen: {len(unique_ids)} / {event.team_size} renners.", selected, total)
 
 
-def save_team_selection(user: User, event: Event, selected_riders: list[EventRider], total_price: int) -> TeamSelection:
+def save_team_selection(
+    user: User,
+    event: Event,
+    selected_riders: list[EventRider],
+    total_price: Decimal,
+) -> TeamSelection:
     get_or_create_entry(user, event)
     selection = get_team_selection(user, event)
     if not selection:
@@ -304,7 +322,7 @@ def build_team_selection_overview(event: Event) -> TeamSelectionOverview:
     selected_counts: dict[int, int] = defaultdict(int)
     selected_riders: dict[int, EventRider] = {}
     participant_teams: list[ParticipantTeamOverview] = []
-    totals_with_riders: list[int] = []
+    totals_with_riders: list[Decimal] = []
 
     for entry in entries:
         selection = selection_by_user_id.get(entry.user_id)
@@ -317,7 +335,7 @@ def build_team_selection_overview(event: Event) -> TeamSelectionOverview:
                 ),
             )
         )
-        total_price = selection.total_price if selection else 0
+        total_price = selection.total_price if selection else ZERO_PRICE
         complete = bool(
             selection
             and len(riders) == event.team_size
@@ -628,7 +646,10 @@ def calculate_classification_bonuses(
     return {event_rider_id: tuple(parts) for event_rider_id, parts in values.items()}
 
 
-def build_official_stage_scores(stage: Stage) -> dict[int, OfficialRiderStageScore]:
+def build_official_stage_scores(
+    stage: Stage,
+    include_final_classification: bool = True,
+) -> dict[int, OfficialRiderStageScore]:
     """Return neutral rider totals without user-specific captain bonuses."""
     event_rider_ids = {
         event_rider.id
@@ -650,8 +671,8 @@ def build_official_stage_scores(stage: Stage) -> dict[int, OfficialRiderStageSco
             event_rider_id,
             (0, 0, 0, 0),
         )
-        classification_total = daily + final
-        teammate_total = teammate + final_teammate
+        classification_total = daily + (final if include_final_classification else 0)
+        teammate_total = teammate + (final_teammate if include_final_classification else 0)
         scores[event_rider_id] = OfficialRiderStageScore(
             event_rider_id=event_rider_id,
             stage_points=stage_points,
@@ -703,6 +724,7 @@ def build_leaderboard(
     stages = list(event.stages)
     latest_stage = latest_finished_stage(event)
     scores_by_user: dict[int, dict[int, int]] = defaultdict(dict)
+    final_scores_by_user: dict[int, int] = defaultdict(int)
     totals = defaultdict(int)
 
     scores = (
@@ -711,7 +733,12 @@ def build_leaderboard(
         .all()
     )
     for score in scores:
-        scores_by_user[score.user_id][score.stage.number] = score.score
+        final_score = sum(
+            rider_score.final_classification_points + rider_score.final_teammate_points
+            for rider_score in score.rider_scores
+        )
+        scores_by_user[score.user_id][score.stage.number] = score.score - final_score
+        final_scores_by_user[score.user_id] += final_score
         totals[score.user_id] += score.score
 
     stage_win_numbers: dict[int, set[int]] = defaultdict(set)
@@ -757,6 +784,7 @@ def build_leaderboard(
                 total_score=totals[entry.user_id],
                 latest_stage_score=latest_score,
                 stage_scores={stage.number: scores_by_user[entry.user_id].get(stage.number, 0) for stage in stages},
+                final_classification_score=final_scores_by_user[entry.user_id],
                 stage_wins=len(user_stage_wins),
                 stage_win_numbers=frozenset(user_stage_wins),
                 yellow_stage_numbers=frozenset(yellow_stage_numbers[entry.user_id]),
@@ -785,7 +813,7 @@ def build_stage_leaderboard(
     stage_result_by_rider_id = {
         result.event_rider_id: result for result in stage.results
     }
-    official_scores = build_official_stage_scores(stage)
+    official_scores = build_official_stage_scores(stage, include_final_classification=False)
 
     if user_ids is None:
         awards = Award.query.filter_by(event_id=event.id, stage_id=stage.id).all()
@@ -816,7 +844,11 @@ def build_stage_leaderboard(
                 points = 0
                 if rider_score:
                     rank_label = f"#{rider_score.rank}" if rider_score.rank else (rider_score.status or "—")
-                    points = rider_score.total_points
+                    points = (
+                        rider_score.total_points
+                        - rider_score.final_classification_points
+                        - rider_score.final_teammate_points
+                    )
                 lineup_riders.append(
                     StageLineupRiderView(
                         event_rider=link.event_rider,
@@ -865,7 +897,16 @@ def build_stage_leaderboard(
         rows.append(
             StageLeaderboardRow(
                 user=entry.user,
-                score=score.score if score else 0,
+                score=(
+                    score.score
+                    - sum(
+                        rider_score.final_classification_points
+                        + rider_score.final_teammate_points
+                        for rider_score in score.rider_scores
+                    )
+                    if score
+                    else 0
+                ),
                 has_score=score is not None,
                 captain_bonus=score.captain_bonus if score else 0,
                 lineup_riders=tuple(lineup_riders),
@@ -876,6 +917,89 @@ def build_stage_leaderboard(
         )
 
     rows.sort(key=lambda row: (-row.score, row.user.username.lower()))
+    return rows
+
+
+def final_classification_stage(event: Event) -> Stage | None:
+    """Return the stage carrying final-classification results, if imported."""
+    return next(
+        (
+            stage
+            for stage in reversed(event.stages)
+            if any(result.is_final for result in stage.classification_results)
+        ),
+        None,
+    )
+
+
+def build_final_classification_leaderboard(
+    event: Event,
+    user_ids: set[int] | None = None,
+) -> list[StageLeaderboardRow]:
+    """Build a virtual stage containing only final-classification bonuses."""
+    final_stage = final_classification_stage(event)
+    if final_stage is None:
+        return []
+
+    entry_query = EventEntry.query.filter_by(event_id=event.id, status="active")
+    if user_ids is not None:
+        entry_query = entry_query.filter(EventEntry.user_id.in_(user_ids))
+    entries = entry_query.all()
+    selections = TeamSelection.query.filter_by(event_id=event.id).all()
+    scores = UserStageScore.query.filter_by(stage_id=final_stage.id).all()
+    selection_by_user = {selection.user_id: selection for selection in selections}
+    score_by_user = {score.user_id: score for score in scores}
+    total_rows_by_user = {row.user.id: row for row in build_leaderboard(event, user_ids)}
+
+    rows: list[StageLeaderboardRow] = []
+    for entry in entries:
+        selection = selection_by_user.get(entry.user_id)
+        score = score_by_user.get(entry.user_id)
+        rider_score_by_id = {
+            rider_score.event_rider_id: rider_score
+            for rider_score in score.rider_scores
+        } if score else {}
+        rider_views: list[StageLineupRiderView] = []
+        for link in selection.riders if selection else ():
+            rider_score = rider_score_by_id.get(link.event_rider_id)
+            classification_total = rider_score.final_classification_points if rider_score else 0
+            teammate_total = rider_score.final_teammate_points if rider_score else 0
+            points = classification_total + teammate_total
+            parts = []
+            if classification_total:
+                parts.append(f"{classification_total} klassement")
+            if teammate_total:
+                parts.append(f"{teammate_total} ploegbonus")
+            rider_views.append(
+                StageLineupRiderView(
+                    event_rider=link.event_rider,
+                    is_captain=False,
+                    points=points,
+                    rank_label=" · ".join(parts) if parts else "Geen eindbonus",
+                )
+            )
+        rider_views.sort(
+            key=lambda rider: (-rider.points, rider.event_rider.rider.name.lower())
+        )
+        final_score = sum(rider.points for rider in rider_views)
+        total_row = total_rows_by_user.get(entry.user_id)
+        rows.append(
+            StageLeaderboardRow(
+                user=entry.user,
+                score=final_score,
+                has_score=score is not None,
+                captain_bonus=0,
+                lineup_riders=tuple(rider_views),
+                bench_riders=(),
+                is_stage_winner=False,
+                is_yellow_after_stage=bool(total_row and total_row.is_yellow),
+            )
+        )
+
+    rows.sort(key=lambda row: (-row.score, row.user.username.lower()))
+    if rows and rows[0].score > 0:
+        winning_score = rows[0].score
+        rows = [replace(row, is_stage_winner=row.score == winning_score) for row in rows]
     return rows
 
 
@@ -936,7 +1060,7 @@ def build_rider_stage_history(
 
     eligible_stage_numbers = [stage.number for stage in eligible_stages]
     scores_by_stage_id = {
-        stage.id: build_official_stage_scores(stage)
+        stage.id: build_official_stage_scores(stage, include_final_classification=False)
         for stage in eligible_stages
     }
 

@@ -4,7 +4,7 @@
     const budget = Number(form.dataset.budget || 0);
     const boxes = Array.from(form.querySelectorAll('input[name="riders"]'));
     const checked = boxes.filter((box) => box.checked);
-    const total = checked.reduce((sum, box) => sum + Number(box.dataset.price || 0), 0);
+    const total = roundPrice(checked.reduce((sum, box) => sum + Number(box.dataset.price || 0), 0));
 
     form.querySelectorAll(".rider-card").forEach((card) => {
       const box = card.querySelector('input[name="riders"]');
@@ -19,7 +19,7 @@
       node.textContent = checked.length;
     });
     document.querySelectorAll("[data-budget-total]").forEach((node) => {
-      node.textContent = total;
+      node.textContent = formatPrice(total);
       node.style.color = total > budget ? "var(--danger)" : "";
     });
     updateTeamStatus(checked.length, total, maxCount, budget);
@@ -116,7 +116,7 @@
 
     const price = document.createElement("span");
     price.className = "my-team-price";
-    price.textContent = card.dataset.price || "0";
+    price.textContent = formatPrice(card.dataset.price || 0);
 
     button.append(photo, main, price);
     return button;
@@ -124,7 +124,7 @@
 
   function updateTeamStatus(count, total, maxCount, budget) {
     const remainingRiders = Math.max(maxCount - count, 0);
-    const remainingBudget = budget - total;
+    const remainingBudget = roundPrice(budget - total);
     const completionPercent = maxCount ? Math.min(Math.round((count / maxCount) * 100), 100) : 0;
     const budgetPercentRaw = budget ? Math.round((total / budget) * 100) : 0;
     const budgetPercent = Math.max(Math.min(budgetPercentRaw, 100), 0);
@@ -142,7 +142,7 @@
       card.classList.toggle("over-budget", overBudget);
     });
     setStatusText("[data-status-count]", count);
-    setStatusText("[data-status-total]", total);
+    setStatusText("[data-status-total]", formatPrice(total));
     setStatusText("[data-status-completion]", `${completionPercent}%`);
     setStatusText("[data-status-budget-percent]", `${budgetPercentRaw}%`);
     setStatusText("[data-status-label]", overBudget ? "Boven budget" : complete ? "Compleet" : "Concept");
@@ -152,7 +152,9 @@
     );
     setStatusText(
       "[data-status-budget-note]",
-      overBudget ? `${Math.abs(remainingBudget)} boven budget` : `${remainingBudget} over`,
+      overBudget
+        ? `${formatPrice(Math.abs(remainingBudget))} boven budget`
+        : `${formatPrice(remainingBudget)} over`,
     );
     setStatusWidth("[data-status-complete-bar]", completionPercent);
     setStatusWidth("[data-status-budget-bar]", budgetPercent);
@@ -361,6 +363,16 @@
     return Number.isFinite(parsed) ? parsed : fallback;
   }
 
+  function roundPrice(value) {
+    return Math.round((value + Number.EPSILON) * 100) / 100;
+  }
+
+  function formatPrice(value) {
+    return new Intl.NumberFormat(document.documentElement.lang || "nl", {
+      maximumFractionDigits: 2,
+    }).format(numberOrFallback(value, 0));
+  }
+
   function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
   }
@@ -405,7 +417,7 @@
       }
     });
     if (controls.label) {
-      controls.label.textContent = `${min} - ${max}`;
+      controls.label.textContent = `${formatPrice(min)} - ${formatPrice(max)}`;
     }
     if (controls.fill) {
       const span = Math.max(bounds.max - bounds.min, 1);
@@ -468,9 +480,11 @@
       return;
     }
     const budget = Number(form.dataset.budget || 0);
-    const currentTotal = Array.from(form.querySelectorAll('input[name="riders"]'))
-      .filter((candidate) => candidate.checked)
-      .reduce((sum, candidate) => sum + Number(candidate.dataset.price || 0), 0);
+    const currentTotal = roundPrice(
+      Array.from(form.querySelectorAll('input[name="riders"]'))
+        .filter((candidate) => candidate.checked)
+        .reduce((sum, candidate) => sum + Number(candidate.dataset.price || 0), 0),
+    );
     const price = Number(box.dataset.price || 0);
     if (!box.checked && currentTotal + price > budget) {
       updateTeamForm(form);
@@ -558,7 +572,7 @@
       }
       if (typeof payload.total_price === "number") {
         document.querySelectorAll("[data-budget-total]").forEach((node) => {
-          node.textContent = payload.total_price;
+          node.textContent = formatPrice(payload.total_price);
         });
       }
       setTeamAutosaveStatus(form, payload.complete ? "Team opgeslagen" : "Concept opgeslagen", "saved", true);

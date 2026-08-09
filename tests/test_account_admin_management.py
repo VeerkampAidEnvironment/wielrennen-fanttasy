@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -219,6 +220,64 @@ def test_admin_users_page_deletes_user_and_keeps_event():
         assert StageLineup.query.count() == 0
         assert UserStageScore.query.count() == 0
         assert Award.query.count() == 0
+
+
+def test_admin_rider_price_allows_dot_and_comma_decimals():
+    app, _user_id, _other_id, event_id = make_management_app()
+    with app.app_context():
+        event_rider = EventRider.query.filter_by(event_id=event_id).one()
+        event_rider_id = event_rider.id
+
+    client = app.test_client()
+    login_admin(client)
+
+    page = client.get(f"/admin/events/{event_id}/prices")
+    assert page.status_code == 200
+    assert (
+        f'name="price_{event_rider_id}" type="number" min="0" step="0.01" inputmode="decimal"'
+        in page.get_data(as_text=True)
+    )
+
+    comma_response = client.post(
+        f"/admin/events/{event_id}/prices",
+        data={"csrf_token": "token", f"price_{event_rider_id}": "0,75"},
+    )
+    assert comma_response.status_code == 302
+    with app.app_context():
+        assert db.session.get(EventRider, event_rider_id).price == Decimal("0.75")
+
+    dot_response = client.post(
+        f"/admin/events/{event_id}/prices",
+        data={"csrf_token": "token", f"price_{event_rider_id}": "2.5"},
+    )
+    assert dot_response.status_code == 302
+    with app.app_context():
+        assert db.session.get(EventRider, event_rider_id).price == Decimal("2.50")
+
+
+def test_fractional_rider_price_is_preserved_in_team_total():
+    app, user_id, _other_id, event_id = make_management_app()
+    with app.app_context():
+        event = db.session.get(Event, event_id)
+        event.stages[0].starts_at = datetime.now(timezone.utc) + timedelta(hours=4)
+        event_rider = EventRider.query.filter_by(event_id=event_id).one()
+        event_rider.price = Decimal("0.75")
+        event_rider_id = event_rider.id
+        db.session.commit()
+
+    client = app.test_client()
+    login_user(client, user_id)
+    response = client.post(
+        f"/events/{event_id}/team",
+        data={"csrf_token": "token", "riders": str(event_rider_id)},
+        headers={"Accept": "application/json", "X-Requested-With": "fetch"},
+    )
+
+    assert response.status_code == 200
+    assert response.get_json()["total_price"] == 0.75
+    with app.app_context():
+        selection = TeamSelection.query.filter_by(user_id=user_id, event_id=event_id).one()
+        assert selection.total_price == Decimal("0.75")
 
 
 def test_admin_can_complete_an_incomplete_stage_lineup_after_deadline():

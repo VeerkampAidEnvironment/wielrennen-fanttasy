@@ -28,6 +28,7 @@ from tour_femmes.scoring import (
     scoring_rules,
 )
 from tour_femmes.services.game import (
+    build_final_classification_leaderboard,
     build_leaderboard,
     build_official_stage_scores,
     build_rider_stage_history,
@@ -35,6 +36,7 @@ from tour_femmes.services.game import (
     build_team_selection_overview,
     can_edit_team,
     event_selection_progress,
+    final_classification_stage,
     get_or_create_entry,
     get_team_selection,
     lineup_status,
@@ -136,7 +138,7 @@ def team(event_id: int):
                             "ok": False,
                             "message": validation.message,
                             "count": len(validation.selected_riders),
-                            "total_price": validation.total_price,
+                            "total_price": float(validation.total_price),
                             "complete": False,
                         }
                     ),
@@ -152,7 +154,7 @@ def team(event_id: int):
                         "ok": True,
                         "message": validation.message,
                         "count": len(validation.selected_riders),
-                        "total_price": validation.total_price,
+                        "total_price": float(validation.total_price),
                         "complete": len(validation.selected_riders) == event.team_size,
                     }
                 )
@@ -279,7 +281,42 @@ def stage(event_id: int, stage_id: int):
     stage_results_by_rider_id = {
         result.event_rider_id: result for result in stage_results
     }
-    official_rider_scores = build_official_stage_scores(stage_obj) if show_results else {}
+    official_rider_scores = (
+        build_official_stage_scores(stage_obj, include_final_classification=False)
+        if show_results
+        else {}
+    )
+    personal_final_rider_scores = tuple(sorted(
+        (
+            rider_score
+            for rider_score in user_result.rider_scores
+            if rider_score.final_classification_points or rider_score.final_teammate_points
+        ),
+        key=lambda rider_score: -(
+            rider_score.final_classification_points + rider_score.final_teammate_points
+        ),
+    )) if user_result else ()
+    personal_stage_rider_scores = tuple(sorted(
+        (
+            rider_score
+            for rider_score in user_result.rider_scores
+            if rider_score.event_rider_id in selected_ids
+        ),
+        key=lambda rider_score: -(
+            rider_score.total_points
+            - rider_score.final_classification_points
+            - rider_score.final_teammate_points
+        ),
+    )) if user_result else ()
+    personal_final_score = sum(
+        rider_score.final_classification_points + rider_score.final_teammate_points
+        for rider_score in personal_final_rider_scores
+    )
+    personal_stage_score = (
+        user_result.score - personal_final_score
+        if user_result
+        else 0
+    )
 
     return render_template(
         "events/stage.html",
@@ -296,6 +333,10 @@ def stage(event_id: int, stage_id: int):
         team_rider_ids=team_rider_ids,
         official_rider_scores=official_rider_scores,
         user_result=user_result,
+        personal_stage_rider_scores=personal_stage_rider_scores,
+        personal_stage_score=personal_stage_score,
+        personal_final_score=personal_final_score,
+        personal_final_rider_scores=personal_final_rider_scores,
         rider_history=rider_history,
         unavailable_statuses=unavailable_statuses,
         speciality_filters=RIDER_SPECIALITY_FILTERS,
@@ -326,7 +367,9 @@ def leaderboard(event_id: int):
             abort(404)
 
     selected_stage = None
-    selected_stage_number = request.args.get("stage", type=int)
+    selected_stage_value = request.args.get("stage", "")
+    selected_final = selected_stage_value == "final"
+    selected_stage_number = request.args.get("stage", type=int) if not selected_final else None
     if selected_stage_number is not None:
         selected_stage = next(
             (stage for stage in event.stages if stage.number == selected_stage_number),
@@ -336,12 +379,20 @@ def leaderboard(event_id: int):
             abort(404)
 
     member_ids = selected_subleague.member_ids() if selected_subleague else None
-    rows = build_leaderboard(event, member_ids) if selected_stage is None else []
-    stage_rows = (
-        build_stage_leaderboard(event, selected_stage, member_ids)
-        if selected_stage
+    final_stage = final_classification_stage(event)
+    if selected_final and final_stage is None:
+        abort(404)
+    rows = (
+        build_leaderboard(event, member_ids)
+        if selected_stage is None and not selected_final
         else []
     )
+    if selected_final:
+        stage_rows = build_final_classification_leaderboard(event, member_ids)
+    elif selected_stage:
+        stage_rows = build_stage_leaderboard(event, selected_stage, member_ids)
+    else:
+        stage_rows = []
     return render_template(
         "events/leaderboard.html",
         event=event,
@@ -349,8 +400,10 @@ def leaderboard(event_id: int):
         joined_subleagues=joined_subleagues,
         selected_subleague=selected_subleague,
         selected_stage=selected_stage,
+        selected_final=selected_final,
+        final_stage=final_stage,
         stage_rows=stage_rows,
-        lineups_visible=selected_stage.is_locked() if selected_stage else False,
+        lineups_visible=True if selected_final else selected_stage.is_locked() if selected_stage else False,
     )
 
 

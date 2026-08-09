@@ -25,7 +25,7 @@
       <strong>{{ item.selected_count }} / {{ overview.participant_count }}</strong>
       <small>{{ item.percentage }}%</small>
     </span>
-    <span class="popularity-price">{{ event_rider.price or 0 }}</span>
+    <span class="popularity-price">{{ price_label(event_rider.price or 0) }}</span>
   </article>
 {% endmacro %}
 {% include "events/_event_nav.html" with context %}
@@ -99,7 +99,7 @@
 
           <div class="participant-team-budget">
             <span>Budget</span>
-            <strong>{{ team.total_price }} <small>/ {{ event.budget }}</small></strong>
+            <strong>{{ price_label(team.total_price) }} <small>/ {{ event.budget }}</small></strong>
           </div>
 
           {% if team.riders %}
@@ -118,7 +118,7 @@
                     <strong>{{ rider.name }}</strong>
                     <small>{{ event_rider.team.name if event_rider.team else 'Geen ploeg' }}</small>
                   </span>
-                  <strong class="participant-rider-price">{{ event_rider.price or 0 }}</strong>
+                  <strong class="participant-rider-price">{{ price_label(event_rider.price or 0) }}</strong>
                 </div>
               {% endfor %}
             </div>

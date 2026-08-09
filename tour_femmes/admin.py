@@ -22,6 +22,7 @@ from tour_femmes.models import (
     TeamSelection,
     User,
 )
+from tour_femmes.pricing import parse_rider_price
 from tour_femmes.services.deletion import delete_event_game, delete_user_account
 from tour_femmes.services.game import recalculate_stage_scores, save_stage_lineup
 from tour_femmes.services.pcs import (
@@ -515,7 +516,7 @@ def prices(event_id: int):
                 event_rider.price = None
                 continue
             try:
-                event_rider.price = max(0, int(price_raw))
+                event_rider.price = parse_rider_price(price_raw)
             except ValueError:
                 flash(f"Ongeldige prijs voor {event_rider.rider.name}.", "danger")
                 return redirect(url_for("admin.prices", event_id=event.id))

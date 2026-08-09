@@ -330,21 +330,22 @@
               <h2 id="personal-stage-result-title">Etappe {{ stage.number }}</h2>
             </div>
             <div class="stage-score-total">
-              <strong>{{ user_result.score }}</strong>
+              <strong>{{ personal_stage_score }}</strong>
               <span>punten</span>
             </div>
           </header>
           <div class="stage-personal-meta">
-            <span>{{ user_result.rider_scores|length }} opgestelde renners</span>
+            <span>{{ personal_stage_rider_scores|length }} opgestelde renners</span>
             <span>{{ user_result.captain_bonus }} ptn kopvrouwbonus</span>
           </div>
 
-          {% if user_result.rider_scores %}
+          {% if personal_stage_rider_scores %}
             <div class="stage-score-list">
-              {% for rider_score in user_result.rider_scores %}
+              {% for rider_score in personal_stage_rider_scores %}
                 {% set rider = rider_score.event_rider.rider %}
-                {% set classification_total = rider_score.classification_points + rider_score.final_classification_points %}
-                {% set teammate_total = rider_score.teammate_points + rider_score.final_teammate_points %}
+                {% set classification_total = rider_score.classification_points %}
+                {% set teammate_total = rider_score.teammate_points %}
+                {% set stage_total = rider_score.total_points - rider_score.final_classification_points - rider_score.final_teammate_points %}
                 <article class="stage-score-row">
                   <span class="stage-score-photo">
                     {% if rider.photo_mime or rider.photo_url %}
@@ -365,11 +366,50 @@
                       {% if teammate_total %}&middot; {{ teammate_total }} ploeg{% endif %}
                     </small>
                   </span>
-                  <strong class="stage-score-points">{{ rider_score.total_points }} <small>ptn</small></strong>
+                  <strong class="stage-score-points">{{ stage_total }} <small>ptn</small></strong>
                 </article>
               {% endfor %}
             </div>
           {% endif %}
+        </section>
+      {% endif %}
+
+      {% if personal_final_rider_scores %}
+        <section class="stage-personal-result final-classification-result" aria-labelledby="personal-final-result-title">
+          <header class="stage-personal-result-head">
+            <div>
+              <p class="eyebrow">Extra scoreonderdeel</p>
+              <h2 id="personal-final-result-title">Jouw eindklassement</h2>
+            </div>
+            <div class="stage-score-total">
+              <strong>{{ personal_final_score }}</strong>
+              <span>punten</span>
+            </div>
+          </header>
+          <p class="stage-bench-result-note">Eindklassementsbonussen tellen als een aparte, extra etappe voor je volledige team.</p>
+          <div class="stage-score-list">
+            {% for rider_score in personal_final_rider_scores %}
+              {% set rider = rider_score.event_rider.rider %}
+              {% set final_total = rider_score.final_classification_points + rider_score.final_teammate_points %}
+              <article class="stage-score-row">
+                <span class="stage-score-photo">
+                  {% if rider.photo_mime or rider.photo_url %}
+                    <img src="{{ rider_photo_url(rider) }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+                  {% else %}
+                    <span>{{ rider.name[:2] }}</span>
+                  {% endif %}
+                </span>
+                <span class="stage-score-rider">
+                  <strong>{{ rider.name }}</strong>
+                  <small>
+                    {{ rider_score.final_classification_points }} klassement
+                    {% if rider_score.final_teammate_points %}&middot; {{ rider_score.final_teammate_points }} ploegbonus{% endif %}
+                  </small>
+                </span>
+                <strong class="stage-score-points">{{ final_total }} <small>ptn</small></strong>
+              </article>
+            {% endfor %}
+          </div>
         </section>
       {% endif %}
 

@@ -27,7 +27,7 @@
           <td>{{ link.team.name if link.team else 'Geen ploeg' }}</td>
           <td>{{ 'Bevroren' if link.frozen else 'Actief' }}</td>
           <td>
-            <input name="price_{{ link.id }}" type="number" min="0" value="{{ link.price if link.price is not none else '' }}">
+            <input name="price_{{ link.id }}" type="number" min="0" step="0.01" inputmode="decimal" value="{{ price_value(link.price) }}">
           </td>
         </tr>
       {% endfor %}

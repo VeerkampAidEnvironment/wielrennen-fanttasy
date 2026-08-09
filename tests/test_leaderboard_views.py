@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash
 
 from tour_femmes import create_app, db
 from tour_femmes.models import (
+    ClassificationResult,
     Event,
     EventEntry,
     EventRider,
@@ -182,6 +183,58 @@ def test_leaderboard_total_and_stage_tabs_render_expected_details():
     assert "Leider na etappe" in stage_html
     assert "Opstelling verborgen tot de deadline" in future_html
     assert "Alpha Rider" not in future_html
+
+
+def test_final_classification_is_shown_as_an_extra_stage_and_total_column():
+    app, user_id, event_id = make_leaderboard_app()
+    with app.app_context():
+        event = db.session.get(Event, event_id)
+        event.team_size = 2
+        final_stage = event.stages[0]
+        riders = EventRider.query.order_by(EventRider.id).all()
+        users = User.query.order_by(User.id).all()
+        for user in users:
+            selection = TeamSelection(user=user, event=event, total_price=2)
+            for event_rider in riders:
+                selection.riders.append(TeamSelectionRider(event_rider=event_rider))
+            db.session.add(selection)
+        db.session.add(
+            ClassificationResult(
+                stage=final_stage,
+                event_rider=riders[0],
+                classification="gc",
+                rank=1,
+                is_final=True,
+            )
+        )
+        db.session.flush()
+        recalculate_stage_scores(final_stage)
+        db.session.commit()
+
+        rows = build_leaderboard(event)
+        alpha_row = next(row for row in rows if row.user.username == "alpha")
+        assert alpha_row.total_score == 456
+        assert alpha_row.stage_scores[1] == 216
+        assert alpha_row.final_classification_score == 240
+
+    client = app.test_client()
+    login(client, user_id)
+    total_html = client.get(f"/events/{event_id}/leaderboard").get_data(as_text=True)
+    final_html = client.get(
+        f"/events/{event_id}/leaderboard?stage=final"
+    ).get_data(as_text=True)
+    personal_html = client.get(
+        f"/events/{event_id}/stages/{final_stage.id}"
+    ).get_data(as_text=True)
+
+    assert "<th>Eind</th>" in total_html
+    assert "final-score-cell" in total_html
+    assert "Eindklassementsbonussen per renner en per deelnemer" in final_html
+    assert "Alpha Rider" in final_html
+    assert "Beta Rider" in final_html
+    assert "200 klassement" in final_html
+    assert "40 ploegbonus" in final_html
+    assert "Jouw eindklassement" in personal_html
 
 
 def test_finished_stage_leaderboard_shows_each_users_bench():
