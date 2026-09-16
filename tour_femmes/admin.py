@@ -3,9 +3,11 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from functools import wraps
 from pathlib import Path
+import re
 from tempfile import NamedTemporaryFile
 from threading import Lock, Thread
 from time import monotonic
+import unicodedata
 from uuid import uuid4
 
 import requests
@@ -23,8 +25,13 @@ from tour_femmes.models import (
     User,
 )
 from tour_femmes.pricing import parse_rider_price
+from tour_femmes.scoring import SCORING_RANKS, points_table_for_event, points_table_for_stage
 from tour_femmes.services.deletion import delete_event_game, delete_user_account
-from tour_femmes.services.game import recalculate_stage_scores, save_stage_lineup
+from tour_femmes.services.game import (
+    recalculate_stage_scores,
+    save_stage_lineup,
+    unavailable_rider_statuses,
+)
 from tour_femmes.services.pcs import (
     IncompleteStageResultsError,
     PcsClient,
@@ -32,6 +39,7 @@ from tour_femmes.services.pcs import (
     import_stage_results,
     initialize_event_from_pcs,
     normalize_event_reference,
+    stage_results_url,
     sync_event_images,
     sync_startlist,
 )
@@ -94,21 +102,63 @@ def logout():
 def dashboard():
     if request.method == "POST":
         name = request.form.get("name", "").strip()
-        reference = request.form.get("pcs_reference", "").strip()
         year_raw = request.form.get("year", "").strip()
         budget = _int_or_default(request.form.get("budget"), 65)
         team_size = _int_or_default(request.form.get("team_size"), 11)
-        lineup_size = 6
+        lineup_size = _int_or_default(request.form.get("lineup_size"), 6)
+        event_type = request.form.get("event_type", "stage_race").strip()
 
         if not name:
             flash("Koersnaam is verplicht.", "danger")
             return redirect(url_for("admin.dashboard"))
-
-        try:
-            slug, year, pcs_url = normalize_event_reference(reference, int(year_raw) if year_raw else None)
-        except ValueError as exc:
-            flash(str(exc), "danger")
+        if event_type not in {"stage_race", "custom"}:
+            flash("Kies een geldig speltype.", "danger")
             return redirect(url_for("admin.dashboard"))
+        try:
+            year = int(year_raw)
+        except ValueError:
+            flash("Vul een geldig jaar in.", "danger")
+            return redirect(url_for("admin.dashboard"))
+        if budget < 0 or team_size < 1 or lineup_size < 1 or lineup_size > team_size:
+            flash("Controleer budget, teamgrootte en opstellingsgrootte.", "danger")
+            return redirect(url_for("admin.dashboard"))
+
+        custom_stages: list[tuple[str, str]] = []
+        if event_type == "custom":
+            stage_names = request.form.getlist("stage_name")
+            stage_references = request.form.getlist("stage_pcs_reference")
+            if len(stage_names) != len(stage_references):
+                flash("De onderdelen van de eigen ronde zijn ongeldig.", "danger")
+                return redirect(url_for("admin.dashboard"))
+            for stage_name, stage_reference in zip(stage_names, stage_references):
+                stage_name = " ".join(stage_name.split())
+                stage_reference = stage_reference.strip()
+                if not stage_name and not stage_reference:
+                    continue
+                if not stage_name or not stage_reference:
+                    flash("Geef ieder onderdeel zowel een naam als een PCS-koers.", "danger")
+                    return redirect(url_for("admin.dashboard"))
+                try:
+                    _, _, stage_url = normalize_event_reference(stage_reference, year)
+                except ValueError as exc:
+                    flash(f"{stage_name or 'Onderdeel'}: {exc}", "danger")
+                    return redirect(url_for("admin.dashboard"))
+                custom_stages.append((stage_name, stage_url))
+            if len(custom_stages) < 2:
+                flash("Voeg minstens twee koersen toe aan je eigen ronde.", "danger")
+                return redirect(url_for("admin.dashboard"))
+            if len({stage_url for _, stage_url in custom_stages}) != len(custom_stages):
+                flash("Elke PCS-koers kan maar eenmaal in de eigen ronde staan.", "danger")
+                return redirect(url_for("admin.dashboard"))
+            slug = _custom_event_slug(name)
+            pcs_url = custom_stages[0][1]
+        else:
+            reference = request.form.get("pcs_reference", "").strip()
+            try:
+                slug, year, pcs_url = normalize_event_reference(reference, year)
+            except ValueError as exc:
+                flash(str(exc), "danger")
+                return redirect(url_for("admin.dashboard"))
 
         event = Event.query.filter_by(slug=slug, year=year).first()
         if event:
@@ -123,10 +173,26 @@ def dashboard():
             budget=budget,
             team_size=team_size,
             lineup_size=lineup_size,
+            event_type=event_type,
         )
         db.session.add(event)
+        for number, (stage_name, stage_url) in enumerate(custom_stages, start=1):
+            event.stages.append(
+                Stage(
+                    number=number,
+                    name=stage_name,
+                    pcs_url=stage_url,
+                    live_url=f"{stage_url}/live",
+                )
+            )
         db.session.commit()
-        flash("Koers aangemaakt. Laad nu de etappes.", "success")
+        if event.is_custom:
+            flash(
+                "Eigen ronde aangemaakt. Laad nu de koersgegevens en synchroniseer de gecombineerde startlijst.",
+                "success",
+            )
+        else:
+            flash("Koers aangemaakt. Laad nu de etappes.", "success")
         return redirect(url_for("admin.event_detail", event_id=event.id))
 
     events = Event.query.order_by(Event.created_at.desc()).all()
@@ -275,7 +341,34 @@ def event_detail(event_id: int):
         active_count=active_count,
         frozen_count=frozen_count,
         stage_lineup_progress=stage_lineup_progress,
+        scoring_ranks=SCORING_RANKS,
+        event_points=points_table_for_event(event),
+        stage_points={stage.id: points_table_for_stage(stage) for stage in event.stages},
     )
+
+
+@admin_bp.route("/events/<int:event_id>/points", methods=["POST"])
+@admin_required
+def update_event_points(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    try:
+        event.points_by_rank = _points_table_from_form("event_points")
+        for stage in event.stages:
+            if request.form.get(f"stage_override_{stage.id}") == "1":
+                stage.points_by_rank = _points_table_from_form(f"stage_{stage.id}_points")
+            else:
+                stage.points_by_rank = None
+    except ValueError as exc:
+        db.session.rollback()
+        flash(str(exc), "danger")
+        return redirect(url_for("admin.event_detail", event_id=event.id))
+
+    for stage in event.stages:
+        if stage.results:
+            recalculate_stage_scores(stage)
+    db.session.commit()
+    flash("Puntentabellen opgeslagen en bestaande scores herberekend.", "success")
+    return redirect(url_for("admin.event_detail", event_id=event.id))
 
 
 @admin_bp.route("/stages/<int:stage_id>/lineups")
@@ -300,6 +393,7 @@ def stage_lineups(stage_id: int):
         lineup.user_id: lineup
         for lineup in StageLineup.query.filter_by(stage_id=stage.id).all()
     }
+    unavailable_statuses = unavailable_rider_statuses(stage)
     rows = []
     for entry in entries:
         selection = selections.get(entry.user_id)
@@ -327,6 +421,7 @@ def stage_lineups(stage_id: int):
         rows=rows,
         incomplete_rows=[row for row in rows if not row["complete"]],
         complete_count=sum(1 for row in rows if row["complete"]),
+        unavailable_statuses=unavailable_statuses,
     )
 
 
@@ -446,11 +541,13 @@ def enrich_event_profiles(event_id: int):
     try:
         summary = enrich_missing_profiles(event, client=interactive_pcs_client())
         db.session.commit()
-        flash(
+        message = (
             f"{summary.rider_details_loaded} profielen en {summary.team_details_loaded} ploegafbeeldingen bijgewerkt. "
-            f"{summary.remaining_riders} profielen resterend.",
-            "success",
+            f"{summary.remaining_riders} profielen resterend."
         )
+        if summary.remaining_riders:
+            message += " Start opnieuw om de volgende batch te laden."
+        flash(message, "success")
     except requests.RequestException as exc:
         db.session.rollback()
         flash(f"PCS-profielimport mislukt: {exc}", "danger")
@@ -554,11 +651,37 @@ def _int_or_default(value: str | None, default: int) -> int:
         return default
 
 
+def _points_table_from_form(prefix: str) -> dict[str, int]:
+    points_by_rank: dict[str, int] = {}
+    for rank in SCORING_RANKS:
+        raw_value = request.form.get(f"{prefix}_{rank}", "").strip()
+        try:
+            points = int(raw_value)
+        except ValueError as exc:
+            raise ValueError(f"Vul geldige punten in voor plaats {rank}.") from exc
+        if points < 0 or points > 1_000_000:
+            raise ValueError(f"Punten voor plaats {rank} moeten tussen 0 en 1.000.000 liggen.")
+        points_by_rank[str(rank)] = points
+    return points_by_rank
+
+
+def _custom_event_slug(name: str) -> str:
+    ascii_name = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^a-z0-9]+", "-", ascii_name.casefold()).strip("-")
+    return slug[:150] or "eigen-ronde"
+
+
 def run_pcs_diagnostics(event: Event) -> list[dict[str, object]]:
-    urls = [
-        ("Koerspagina", event.pcs_url),
-        ("Startlijst", f"{event.pcs_url}/startlist"),
-    ]
+    if event.is_custom:
+        urls = [
+            (f"{stage.navigation_name} uitslag", stage_results_url(stage))
+            for stage in event.stages
+        ]
+    else:
+        urls = [
+            ("Koerspagina", event.pcs_url),
+            ("Startlijst", f"{event.pcs_url}/startlist"),
+        ]
     first_stage = event.first_stage()
     if first_stage and first_stage.profile_image_url:
         urls.append(("Afbeelding", first_stage.profile_image_url))
@@ -668,7 +791,8 @@ def initialize_event_job(event_id: int, progress) -> str:
     if not event:
         raise ValueError("Koers niet gevonden.")
     count = initialize_event_from_pcs(event, client=interactive_pcs_client(), progress=progress)
-    return f"{count} etappes geladen uit PCS."
+    label = "losse koersen" if event.is_custom else "etappes"
+    return f"{count} {label} geladen uit PCS."
 
 
 def sync_startlist_job(event_id: int, progress) -> str:
@@ -702,6 +826,8 @@ def enrich_profiles_job(event_id: int, progress) -> str:
         f"{summary.team_details_loaded} ploegafbeeldingen bijgewerkt. "
         f"{summary.remaining_riders} profielen resterend."
     )
+    if summary.remaining_riders:
+        message += " Start opnieuw om de volgende batch te laden."
     if summary.rate_limited:
         message += " PCS gaf een rate-limit; probeer later opnieuw."
     return message

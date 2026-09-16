@@ -84,6 +84,41 @@ class PartiallyAvailableClassificationClient:
         raise requests.HTTPError("classification unavailable", response=response)
 
 
+class EmbeddedClassificationClient:
+    def __init__(self):
+        self.requested_urls = []
+
+    def get_soup(self, url):
+        self.requested_urls.append(url)
+        if not url.endswith("/stage-1"):
+            raise AssertionError(f"Unexpected fallback request: {url}")
+        return BeautifulSoup(
+            """
+            <a class="selectResultTab" data-id="gc-tab" href="race/example/2026/gc">GC</a>
+            <a class="selectResultTab" data-id="points-tab" href="race/example/2026/points">POINTS</a>
+            <a class="selectResultTab" data-id="qom-tab" href="race/example/2026/kom">QOM</a>
+            <a class="selectResultTab" data-id="youth-tab" href="race/example/2026/youth">YOUTH</a>
+            <div class="resTab" data-id="gc-tab"><table>
+              <tr><th>Rnk</th><th>Prev</th><th>Rider</th><th>Time</th></tr>
+              <tr><td>1</td><td>1</td><td><a href="rider/demi-vollering">Demi</a></td><td>0:00</td></tr>
+            </table></div>
+            <div class="resTab" data-id="points-tab"><table>
+              <tr><th>Rnk</th><th>Prev</th><th>Rider</th><th>Pnt</th></tr>
+              <tr><td>1</td><td>1</td><td><a href="rider/demi-vollering">Demi</a></td><td>100</td></tr>
+            </table></div>
+            <div class="resTab" data-id="qom-tab"><table>
+              <tr><th>Rnk</th><th>Prev</th><th>Rider</th><th>Pnt</th></tr>
+              <tr><td>1</td><td>1</td><td><a href="rider/demi-vollering">Demi</a></td><td>50</td></tr>
+            </table></div>
+            <div class="resTab" data-id="youth-tab"><table>
+              <tr><th>Rnk</th><th>Prev</th><th>Rider</th><th>Time</th></tr>
+              <tr><td>1</td><td>1</td><td><a href="rider/demi-vollering">Demi</a></td><td>0:00</td></tr>
+            </table></div>
+            """,
+            "html.parser",
+        )
+
+
 class ImageOnlyClient:
     rate_limited = False
     base_url = "https://www.procyclingstats.com"
@@ -196,3 +231,46 @@ def test_missing_classification_tabs_do_not_rollback_available_gc():
         result = ClassificationResult.query.filter_by(stage_id=stage.id).one()
         assert result.classification == "gc"
         assert result.rank == 1
+
+
+def test_final_stage_imports_all_classifications_embedded_on_main_page():
+    app = create_app(__name__ + ".TestConfig")
+    client = EmbeddedClassificationClient()
+
+    with app.app_context():
+        event = Event(
+            name="Tour de France Femmes",
+            slug="tour-de-france-femmes",
+            year=2026,
+            pcs_url="https://www.procyclingstats.com/race/tour-de-france-femmes/2026",
+        )
+        stage = Stage(
+            event=event,
+            number=1,
+            name="Final stage",
+            pcs_url=f"{event.pcs_url}/stage-1",
+        )
+        team = Team(event=event, name="FDJ United - SUEZ")
+        rider = Rider(
+            name="Demi Vollering",
+            pcs_slug="demi-vollering",
+            pcs_url="https://www.procyclingstats.com/rider/demi-vollering",
+        )
+        db.session.add_all(
+            [event, stage, team, rider, EventRider(event=event, rider=rider, team=team, price=11)]
+        )
+        db.session.flush()
+
+        imported = import_stage_classifications(stage, client)
+        db.session.flush()
+
+        results = ClassificationResult.query.filter_by(stage_id=stage.id).all()
+        assert imported == 4
+        assert {result.classification for result in results} == {
+            "gc",
+            "points",
+            "mountains",
+            "youth",
+        }
+        assert all(result.is_final for result in results)
+        assert client.requested_urls == [stage.pcs_url]

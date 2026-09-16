@@ -12,7 +12,9 @@ from tour_femmes.models import (
     Stage,
     StageLineup,
     StageLineupRider,
+    StageRider,
     StageResult,
+    StageVisual,
     Subleague,
     SubleagueMember,
     Team,
@@ -66,6 +68,12 @@ def delete_event_game(event: Event) -> dict[str, int]:
                 | _in(TeamSelectionRider.event_rider_id, event_rider_ids)
             )
         ),
+        "stage_riders": _delete(
+            StageRider.query.filter(
+                _in(StageRider.stage_id, stage_ids)
+                | _in(StageRider.event_rider_id, event_rider_ids)
+            )
+        ),
         "selections": _delete(TeamSelection.query.filter(_in(TeamSelection.id, selection_ids))),
         "stage_results": _delete(
             StageResult.query.filter(
@@ -79,6 +87,7 @@ def delete_event_game(event: Event) -> dict[str, int]:
                 | _in(ClassificationResult.event_rider_id, event_rider_ids)
             )
         ),
+        "stage_visuals": _delete(StageVisual.query.filter(_in(StageVisual.stage_id, stage_ids))),
         "subleague_members": _delete(
             SubleagueMember.query.filter(_in(SubleagueMember.subleague_id, subleague_ids))
         ),

@@ -8,7 +8,7 @@ import requests
 from flask import Blueprint, Response, abort, current_app, send_file
 
 from tour_femmes import db
-from tour_femmes.models import Rider, Stage, Team
+from tour_femmes.models import Rider, Stage, StageVisual, Team
 from tour_femmes.pcs_image_cache import (
     IMAGE_EXTENSIONS,
     pcs_image_cache_path,
@@ -37,6 +37,19 @@ def stage_profile(stage_id: int):
     return Response(
         stage.profile_image_data,
         mimetype=stage.profile_image_mime or "image/jpeg",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
+@media_bp.route("/stage-visual/<int:visual_id>")
+def stage_visual(visual_id: int):
+    visual = db.session.get(StageVisual, visual_id)
+    if not visual or not visual.image_data:
+        abort(404)
+
+    return Response(
+        visual.image_data,
+        mimetype=visual.image_mime or "image/jpeg",
         headers={"Cache-Control": "public, max-age=86400"},
     )
 

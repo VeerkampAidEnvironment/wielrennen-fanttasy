@@ -15,10 +15,14 @@
 {% if not entry %}
   <div class="notice subleague-entry-notice">
     <strong>Je doet nog niet mee aan deze koers.</strong>
-    <form method="post" action="{{ url_for('events.join', event_id=event.id) }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit" class="primary-button compact-button">Meedoen</button>
-    </form>
+    {% if join_open %}
+      <form method="post" action="{{ url_for('events.join', event_id=event.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="primary-button compact-button">Meedoen</button>
+      </form>
+    {% else %}
+      <span>De teamselectiedeadline is verstreken; inschrijven kan niet meer.</span>
+    {% endif %}
   </div>
 {% else %}
   <section class="subleague-action-grid" aria-label="Subcompetitie beheren">

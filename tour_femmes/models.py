@@ -49,6 +49,8 @@ class Event(db.Model):
     slug = db.Column(db.String(160), nullable=False)
     year = db.Column(db.Integer, nullable=False)
     pcs_url = db.Column(db.String(500), nullable=False)
+    event_type = db.Column(db.String(30), default="stage_race", nullable=False)
+    points_by_rank = db.Column(db.JSON, nullable=True)
     budget = db.Column(db.Integer, default=65, nullable=False)
     team_size = db.Column(db.Integer, default=11, nullable=False)
     lineup_size = db.Column(db.Integer, default=6, nullable=False)
@@ -73,13 +75,23 @@ class Event(db.Model):
     def first_stage(self) -> Stage | None:
         return self.stages[0] if self.stages else None
 
+    def team_deadline_stage(self) -> Stage | None:
+        if not self.is_custom:
+            return self.first_stage()
+        dated_stages = [stage for stage in self.stages if stage.starts_at]
+        return min(dated_stages, key=lambda stage: _coerce_aware(stage.starts_at)) if dated_stages else self.first_stage()
+
+    @property
+    def is_custom(self) -> bool:
+        return self.event_type == "custom"
+
     @hybrid_property
     def starts_at(self) -> datetime | None:
-        first = self.first_stage()
+        first = self.team_deadline_stage()
         return first.starts_at if first else None
 
     def has_started(self, now: datetime | None = None) -> bool:
-        first = self.first_stage()
+        first = self.team_deadline_stage()
         if not first or not first.starts_at:
             return False
         now = now or utcnow()
@@ -139,6 +151,7 @@ class Stage(db.Model):
     event_id = db.Column(db.Integer, db.ForeignKey("event.id"), nullable=False, index=True)
     number = db.Column(db.Integer, nullable=False)
     name = db.Column(db.String(220), nullable=False)
+    points_by_rank = db.Column(db.JSON, nullable=True)
     starts_at = db.Column(db.DateTime(timezone=True), nullable=True)
     pcs_url = db.Column(db.String(500), nullable=False)
     live_url = db.Column(db.String(500), nullable=True)
@@ -174,6 +187,17 @@ class Stage(db.Model):
         back_populates="stage",
         cascade="all, delete-orphan",
     )
+    rider_links = db.relationship(
+        "StageRider",
+        back_populates="stage",
+        cascade="all, delete-orphan",
+    )
+    visuals = db.relationship(
+        "StageVisual",
+        back_populates="stage",
+        order_by="StageVisual.position",
+        cascade="all, delete-orphan",
+    )
 
     __table_args__ = (UniqueConstraint("event_id", "number", name="uq_stage_event_number"),)
 
@@ -190,6 +214,47 @@ class Stage(db.Model):
         if not self.starts_at:
             return None
         return round(_coerce_aware(self.starts_at).timestamp() * 1000)
+
+    @property
+    def navigation_name(self) -> str:
+        return self.name if self.event.is_custom else f"Etappe {self.number}"
+
+    @property
+    def display_title(self) -> str:
+        return self.name if self.event.is_custom else f"Etappe {self.number}: {self.name}"
+
+    @property
+    def participant_gender(self) -> str | None:
+        """Best-effort gender hint for explicitly named custom-race stages."""
+        tokens = set(re.findall(r"[a-z]+", f"{self.name} {self.pcs_url}".casefold()))
+        women_markers = {
+            "woman", "women", "womens", "female", "vrouw", "vrouwen", "dame", "dames",
+            "femmes", "femenina", "we",
+        }
+        if tokens & women_markers:
+            return "women"
+        if tokens & {"man", "men", "mens", "male", "mannen", "heer", "heren", "hommes"}:
+            return "men"
+        return None
+
+
+class StageVisual(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    stage_id = db.Column(db.Integer, db.ForeignKey("stage.id"), nullable=False, index=True)
+    position = db.Column(db.Integer, nullable=False)
+    label = db.Column(db.String(80), nullable=False)
+    image_url = db.Column(db.String(500), nullable=False)
+    image_data = deferred(
+        db.Column(
+            db.LargeBinary().with_variant(MEDIUMBLOB(), "mysql"),
+            nullable=True,
+        )
+    )
+    image_mime = db.Column(db.String(80), nullable=True)
+
+    stage = db.relationship("Stage", back_populates="visuals")
+
+    __table_args__ = (UniqueConstraint("stage_id", "position", name="uq_stage_visual_position"),)
 
 
 class Team(db.Model):
@@ -233,6 +298,7 @@ class Rider(db.Model):
     specialties = db.Column(db.JSON, default=dict, nullable=False)
     best_results = db.Column(db.JSON, default=list, nullable=False)
     grand_tour_results = db.Column(db.JSON, default=dict, nullable=False)
+    profile_checked_at = db.Column(db.DateTime(timezone=True), nullable=True)
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
     updated_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
 
@@ -260,6 +326,11 @@ class EventRider(db.Model):
     selection_links = db.relationship("TeamSelectionRider", back_populates="event_rider")
     lineup_links = db.relationship("StageLineupRider", back_populates="event_rider")
     stage_results = db.relationship("StageResult", back_populates="event_rider")
+    stage_links = db.relationship(
+        "StageRider",
+        back_populates="event_rider",
+        cascade="all, delete-orphan",
+    )
     user_stage_rider_scores = db.relationship("UserStageRiderScore", back_populates="event_rider")
 
     __table_args__ = (UniqueConstraint("event_id", "rider_id", name="uq_event_rider"),)
@@ -267,6 +338,19 @@ class EventRider(db.Model):
     @property
     def selectable(self) -> bool:
         return self.active and not self.frozen and self.price is not None
+
+
+class StageRider(db.Model):
+    """Membership of a rider in one race of a custom multi-race game."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    stage_id = db.Column(db.Integer, db.ForeignKey("stage.id"), nullable=False, index=True)
+    event_rider_id = db.Column(db.Integer, db.ForeignKey("event_rider.id"), nullable=False, index=True)
+
+    stage = db.relationship("Stage", back_populates="rider_links")
+    event_rider = db.relationship("EventRider", back_populates="stage_links")
+
+    __table_args__ = (UniqueConstraint("stage_id", "event_rider_id", name="uq_stage_rider"),)
 
 
 class EventEntry(db.Model):

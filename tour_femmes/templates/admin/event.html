@@ -10,7 +10,7 @@
 </section>
 
 <section class="stat-strip">
-  <div><strong>{{ event.stages|length }}</strong><span>Etappes</span></div>
+  <div><strong>{{ event.stages|length }}</strong><span>{{ 'Onderdelen' if event.is_custom else 'Etappes' }}</span></div>
   <div><strong>{{ active_count }}</strong><span>Actieve renners</span></div>
   <div><strong>{{ missing_prices|length }}</strong><span>Ontbrekende prijzen</span></div>
   <div><strong>{{ frozen_count }}</strong><span>Bevroren renners</span></div>
@@ -19,7 +19,7 @@
 <section class="admin-management-item event-admin-management">
   <header>
     <strong>Koers beheren</strong>
-    <span>{{ event.year }} &middot; {{ event.slug }}</span>
+    <span>{{ event.year }} &middot; {{ 'Eigen ronde' if event.is_custom else event.slug }}</span>
   </header>
   <form class="inline-edit-form" method="post" action="{{ url_for('admin.rename_event', event_id=event.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -40,9 +40,9 @@
 </section>
 
 <section class="admin-actions">
-  <form method="post" action="{{ url_for('admin.initialize_event', event_id=event.id) }}" data-admin-job-form data-job-title="Etappes laden uit PCS">
+  <form method="post" action="{{ url_for('admin.initialize_event', event_id=event.id) }}" data-admin-job-form data-job-title="{{ 'Koersgegevens laden uit PCS' if event.is_custom else 'Etappes laden uit PCS' }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button type="submit" class="primary-button">Etappes laden uit PCS</button>
+    <button type="submit" class="primary-button">{{ 'Koersgegevens laden uit PCS' if event.is_custom else 'Etappes laden uit PCS' }}</button>
   </form>
   <form method="post" action="{{ url_for('admin.sync_event_startlist', event_id=event.id) }}" data-admin-job-form data-job-title="Startlijst synchroniseren">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -82,13 +82,86 @@
   <button type="button" class="secondary-button hidden" data-admin-job-refresh>Pagina vernieuwen</button>
 </section>
 
+<section class="admin-points-panel">
+  <header>
+    <div>
+      <p class="eyebrow">Puntentelling</p>
+      <h2>Punten per uitslag instellen</h2>
+      <p class="muted">
+        De standaard van dit spel geldt voor alle {{ 'onderdelen' if event.is_custom else 'etappes' }}.
+        Vink bij een afzonderlijke {{ 'koers' if event.is_custom else 'etappe' }} een afwijkende tabel aan om bijvoorbeeld tijdritten anders te waarderen.
+      </p>
+    </div>
+    <a class="secondary-button" href="{{ url_for('events.scoring', event_id=event.id) }}">Bekijk uitlegpagina</a>
+  </header>
+  <form method="post" action="{{ url_for('admin.update_event_points', event_id=event.id) }}" data-points-form>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="table-scroll points-editor-scroll">
+      <table class="data-table points-editor-table">
+        <thead>
+          <tr>
+            <th>Plaats</th>
+            <th>
+              <strong>Standaard van dit spel</strong>
+              <small>{{ event.name }}</small>
+            </th>
+            {% for stage in event.stages %}
+              <th class="{{ 'points-override-active' if stage.points_by_rank is not none else '' }}" data-stage-points-column="{{ stage.id }}">
+                <strong>{{ stage.navigation_name }}</strong>
+                <label class="points-override-toggle">
+                  <input
+                    type="checkbox"
+                    name="stage_override_{{ stage.id }}"
+                    value="1"
+                    data-stage-points-toggle="{{ stage.id }}"
+                    {% if stage.points_by_rank is not none %}checked{% endif %}
+                  >
+                  Afwijkend
+                </label>
+              </th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for rank in scoring_ranks %}
+            <tr>
+              <th>#{{ rank }}</th>
+              <td>
+                <input class="points-value-input" type="number" min="0" max="1000000" name="event_points_{{ rank }}" value="{{ event_points[rank] }}" required aria-label="Standaardpunten van dit spel voor plaats {{ rank }}">
+              </td>
+              {% for stage in event.stages %}
+                <td class="{{ 'points-override-active' if stage.points_by_rank is not none else '' }}" data-stage-points-column="{{ stage.id }}">
+                  <input
+                    class="points-value-input"
+                    type="number"
+                    min="0"
+                    max="1000000"
+                    name="stage_{{ stage.id }}_points_{{ rank }}"
+                    value="{{ stage_points[stage.id][rank] }}"
+                    required
+                    aria-label="{{ stage.navigation_name }} punten voor plaats {{ rank }}"
+                  >
+                </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="points-editor-actions">
+      <p class="muted">Niet-finishers en plaatsen zonder punten scoren 0. Opslaan herberekent reeds geïmporteerde uitslagen.</p>
+      <button type="submit" class="primary-button">Puntentabellen opslaan</button>
+    </div>
+  </form>
+</section>
+
 <section class="split-layout">
   <div>
-    <h2>Etappes</h2>
+    <h2>{{ 'Onderdelen' if event.is_custom else 'Etappes' }}</h2>
     <table class="data-table">
       <thead>
         <tr>
-          <th>#</th>
+            <th>{{ 'Volgorde' if event.is_custom else '#' }}</th>
           <th>Naam</th>
           <th>Start</th>
           <th>Status</th>
@@ -115,7 +188,7 @@
                 <a class="secondary-button compact-button" href="{{ url_for('events.stage', event_id=event.id, stage_id=stage.id) }}">Open</a>
                 <form method="post" action="{{ url_for('admin.import_results', stage_id=stage.id) }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="secondary-button compact-button" {% if not stage.is_locked() %}disabled title="Kan pas nadat de etappe is gestart"{% endif %}>
+                  <button type="submit" class="secondary-button compact-button" {% if not stage.is_locked() %}disabled title="Kan pas nadat {{ 'het onderdeel' if event.is_custom else 'de etappe' }} is gestart"{% endif %}>
                     Uitslag laden
                   </button>
                 </form>

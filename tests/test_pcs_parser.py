@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, time
 
 from bs4 import BeautifulSoup
 
@@ -16,6 +16,7 @@ from tour_femmes.services.pcs import (
     parse_specialties,
     parse_stage_page,
     parse_stage_name,
+    parse_time,
     parse_startlist,
     parse_team_image_url,
     parse_top_results,
@@ -37,6 +38,17 @@ class StagePageClient:
     def get_image(self, url):
         self.image_urls.append(url)
         return b"profile-bytes", "image/jpeg"
+
+
+class MultiVisualStagePageClient(StagePageClient):
+    def __init__(self, result_html: str, profiles_html: str):
+        super().__init__(result_html)
+        self.profiles_soup = BeautifulSoup(profiles_html, "html.parser")
+        self.requested_urls = []
+
+    def get_soup(self, url):
+        self.requested_urls.append(url)
+        return self.profiles_soup if url.endswith("/info/profiles") else self.soup
 
 
 def test_parse_startlist_groups_riders_under_current_team():
@@ -222,6 +234,25 @@ def test_parse_stage_race_info_keeps_august_intact():
     assert parse_date(values["Date"]) == date(2026, 8, 1)
 
 
+def test_parse_stage_race_info_does_not_use_the_next_label_as_an_empty_value():
+    values = parse_label_values(
+        """
+        Parcours type
+        Gradient final km
+        2.4%
+        Departure
+        Montreal
+        """
+    )
+
+    assert "Parcours type" not in values
+    assert values["Departure"] == "Montreal"
+
+
+def test_parse_time_prefers_the_central_european_time_shown_by_pcs():
+    assert parse_time("09:00 (15:00 CET)") == time(15, 0)
+
+
 def test_parse_stage_page_downloads_profile_image_into_database_payload():
     from tour_femmes import create_app
 
@@ -251,6 +282,51 @@ def test_parse_stage_page_downloads_profile_image_into_database_payload():
     assert parsed.profile_image_data == b"profile-bytes"
     assert parsed.profile_image_mime == "image/jpeg"
     assert client.image_urls == [parsed.profile_image_url]
+
+
+def test_parse_stage_page_loads_profile_map_and_finish_visuals():
+    from tour_femmes import create_app
+
+    app = create_app("tests.test_pcs_urls.TestConfig")
+    client = MultiVisualStagePageClient(
+        """
+        <main>
+          <dl>
+            <dt>Date:</dt><dd>20 September 2026</dd>
+            <dt>Start time:</dt><dd>09:00 (15:00 CET)</dd>
+          </dl>
+        </main>
+        """,
+        """
+        <main>
+          <img src="images/profiles/example-profile-n2.jpg">
+          <img src="images/profiles/example-map.jpg">
+          <img src="images/profiles/example-finish.png">
+          <img src="images/flags/nl.png">
+        </main>
+        """,
+    )
+
+    with app.app_context():
+        parsed = parse_stage_page(
+            client,
+            "https://www.procyclingstats.com/race/example/2026",
+            1,
+            details_url="https://www.procyclingstats.com/race/example/2026/result",
+        )
+
+    assert client.requested_urls == [
+        "https://www.procyclingstats.com/race/example/2026/result",
+        "https://www.procyclingstats.com/race/example/2026/result/info/profiles",
+    ]
+    assert parsed.starts_at.time() == time(15, 0)
+    assert [visual.label for visual in parsed.visuals] == [
+        "Parcoursprofiel",
+        "Overzichtskaart",
+        "Finishprofiel",
+    ]
+    assert len(client.image_urls) == 3
+    assert parsed.profile_image_url == parsed.visuals[0].image_url
 
 
 def test_parse_structured_top_results_and_grand_tours():

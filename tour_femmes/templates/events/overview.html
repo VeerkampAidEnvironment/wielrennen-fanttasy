@@ -48,7 +48,7 @@
                 {% if event_state == 'pending' %}
                   Teamselectie sluit
                 {% else %}
-                  Etappe {{ card.next_stage.number }} sluit
+                  {{ card.next_stage.navigation_name }} sluit
                 {% endif %}
               </span>
               <time>{{ card.next_stage.starts_at.strftime('%d-%m-%Y om %H:%M') }}</time>
@@ -81,11 +81,13 @@
 
         <div class="button-row">
           <a class="primary-button" href="{{ url_for('events.event_home', event_id=event.id) }}">Open koers</a>
-          {% if not card.entry %}
+          {% if not card.entry and card.join_open %}
             <form method="post" action="{{ url_for('events.join', event_id=event.id) }}">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="secondary-button">Meedoen</button>
             </form>
+          {% elif not card.entry %}
+            <span class="muted">Inschrijving gesloten</span>
           {% endif %}
         </div>
       </article>

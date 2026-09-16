@@ -41,21 +41,69 @@
 </section>
 
 <section class="admin-grid">
-  <form class="admin-form" method="post">
+  <form class="admin-form" method="post" data-game-create-form>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <h2>Koers toevoegen</h2>
+    <h2>Spel toevoegen</h2>
+    <fieldset class="game-type-picker">
+      <legend>Type spel</legend>
+      <label>
+        <input type="radio" name="event_type" value="stage_race" checked>
+        <span><strong>Bestaande ronde</strong><small>Laad alle etappes uit één PCS-ronde.</small></span>
+      </label>
+      <label>
+        <input type="radio" name="event_type" value="custom">
+        <span><strong>Eigen ronde</strong><small>Combineer losse koersen onder zelfgekozen namen.</small></span>
+      </label>
+    </fieldset>
     <label>
-      Koersnaam
-      <input name="name" placeholder="Tour de France Femmes" required>
-    </label>
-    <label>
-      PCS-slug of URL
-      <input name="pcs_reference" placeholder="tour-de-france-femmes" required>
+      Naam van het spel
+      <input name="name" placeholder="Wereldkampioenschappen" required>
     </label>
     <label>
       Jaar
       <input name="year" type="number" value="2026" required>
     </label>
+    <div data-event-type-panel="stage_race">
+      <label>
+        PCS-slug of URL van de ronde
+        <input name="pcs_reference" placeholder="tour-de-france-femmes" data-required-for="stage_race" required>
+      </label>
+    </div>
+    <div class="custom-race-builder hidden" data-event-type-panel="custom">
+      <div>
+        <strong>Koersen als onderdelen</strong>
+        <p class="muted">De namen hieronder verschijnen in plaats van Etappe 1, 2, 3… De startlijsten worden samengevoegd tot één rennerselectie en de uitslagscores tellen samen in één spelrangschikking.</p>
+      </div>
+      <div class="custom-race-list" data-custom-race-list>
+        {% for _ in range(2) %}
+          <div class="custom-race-row" data-custom-race-row>
+            <label>
+              Naam onderdeel
+              <input name="stage_name" placeholder="Wegwedstrijd vrouwen" data-required-for="custom">
+            </label>
+            <label>
+              PCS-slug of URL
+              <input name="stage_pcs_reference" placeholder="world-championship-we" data-required-for="custom">
+            </label>
+            <button type="button" class="secondary-button compact-button" data-remove-custom-race>Verwijderen</button>
+          </div>
+        {% endfor %}
+      </div>
+      <button type="button" class="secondary-button" data-add-custom-race>Koers toevoegen</button>
+      <template data-custom-race-template>
+        <div class="custom-race-row" data-custom-race-row>
+          <label>
+            Naam onderdeel
+            <input name="stage_name" placeholder="Tijdrit mannen" data-required-for="custom">
+          </label>
+          <label>
+            PCS-slug of URL
+            <input name="stage_pcs_reference" placeholder="world-championship-itt" data-required-for="custom">
+          </label>
+          <button type="button" class="secondary-button compact-button" data-remove-custom-race>Verwijderen</button>
+        </div>
+      </template>
+    </div>
     <div class="form-row">
       <label>
         Budget
@@ -66,11 +114,12 @@
         <input name="team_size" type="number" value="11" min="1">
       </label>
       <label>
-        Etappeselectie
+        <span data-event-type-copy="stage_race">Etappeselectie</span>
+        <span class="hidden" data-event-type-copy="custom">Opstelling per onderdeel</span>
         <input name="lineup_size" type="number" value="6" min="3" max="15">
       </label>
     </div>
-    <button type="submit" class="primary-button">Koers toevoegen</button>
+    <button type="submit" class="primary-button">Spel toevoegen</button>
   </form>
 
   <div>
@@ -87,7 +136,10 @@
           <header>
             <a href="{{ url_for('admin.event_detail', event_id=event.id) }}">
               <strong>{{ event.name }}</strong>
-              <span>{{ event.year }} &middot; {{ event.slug }}</span>
+              <span>
+                {{ event.year }} &middot;
+                {% if event.is_custom %}Eigen ronde met {{ event.stages|length }} onderdelen{% else %}{{ event.slug }}{% endif %}
+              </span>
             </a>
           </header>
           <form class="inline-edit-form" method="post" action="{{ url_for('admin.rename_event', event_id=event.id) }}">

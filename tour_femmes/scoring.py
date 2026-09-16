@@ -56,6 +56,7 @@ FINAL_WINNER_TEAMMATE_POINTS = {
     "mountains": 14,
     "youth": 14,
 }
+SCORING_RANKS = tuple(sorted(POINTS_BY_RANK))
 
 
 @dataclass(frozen=True)
@@ -81,15 +82,47 @@ class RiderScore:
         return self.base_points if self.is_captain else 0
 
 
-def points_for_result(rank: int | None, status: str | None) -> int:
+def normalize_points_by_rank(points_by_rank: dict | None) -> dict[int, int]:
+    source = POINTS_BY_RANK if points_by_rank is None else points_by_rank
+    normalized: dict[int, int] = {}
+    for rank, points in source.items():
+        try:
+            normalized_rank = int(rank)
+            normalized_points = int(points)
+        except (TypeError, ValueError):
+            continue
+        if normalized_rank > 0 and normalized_points >= 0:
+            normalized[normalized_rank] = normalized_points
+    return normalized
+
+
+def points_table_for_event(event) -> dict[int, int]:
+    return normalize_points_by_rank(event.points_by_rank)
+
+
+def points_table_for_stage(stage) -> dict[int, int]:
+    configured = stage.points_by_rank
+    if configured is None:
+        configured = stage.event.points_by_rank
+    return normalize_points_by_rank(configured)
+
+
+def points_for_result(
+    rank: int | None,
+    status: str | None,
+    points_by_rank: dict | None = None,
+) -> int:
     status = (status or "FIN").upper()
     if status in NON_FINISH_STATUSES or not rank:
         return 0
-    return POINTS_BY_RANK.get(rank, 0)
+    return normalize_points_by_rank(points_by_rank).get(rank, 0)
 
 
-def scoring_rules() -> list[ScoringRule]:
-    return [ScoringRule(rank=rank, points=points) for rank, points in sorted(POINTS_BY_RANK.items())]
+def scoring_rules(points_by_rank: dict | None = None) -> list[ScoringRule]:
+    return [
+        ScoringRule(rank=rank, points=points)
+        for rank, points in sorted(normalize_points_by_rank(points_by_rank).items())
+    ]
 
 
 def classification_points(classification: str, rank: int, final: bool = False) -> int:
@@ -120,6 +153,7 @@ def score_lineup_from_results(
     lineup_event_rider_ids: set[int],
     captain_event_rider_id: int,
     stage_results: dict[int, object],
+    points_by_rank: dict | None = None,
 ) -> tuple[int, int, list[RiderScore]]:
     rider_scores: list[RiderScore] = []
     for event_rider_id in lineup_event_rider_ids:
@@ -129,7 +163,7 @@ def score_lineup_from_results(
         rider_scores.append(
             RiderScore(
                 event_rider_id=event_rider_id,
-                base_points=points_for_result(rank, status),
+                base_points=points_for_result(rank, status, points_by_rank),
                 is_captain=event_rider_id == captain_event_rider_id,
                 rank=rank,
                 status=status,

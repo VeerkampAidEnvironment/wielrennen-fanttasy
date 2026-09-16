@@ -33,6 +33,7 @@ from tour_femmes.scoring import (
     STAGE_WINNER_TEAMMATE_POINTS,
     classification_points,
     points_for_result,
+    points_table_for_stage,
     score_lineup_from_results,
 )
 
@@ -421,13 +422,17 @@ def save_stage_lineup(
 
     selection_ids = selection.rider_ids()
     if require_exact and len(unique_ids) != event.lineup_size:
-        return False, f"Kies precies {event.lineup_size} renners voor deze etappe."
+        target = "dit onderdeel" if event.is_custom else "deze etappe"
+        return False, f"Kies precies {event.lineup_size} renners voor {target}."
     if not require_exact and len(unique_ids) > event.lineup_size:
-        return False, f"Kies maximaal {event.lineup_size} renners voor deze etappe."
+        target = "dit onderdeel" if event.is_custom else "deze etappe"
+        return False, f"Kies maximaal {event.lineup_size} renners voor {target}."
     if not set(unique_ids).issubset(selection_ids):
         return False, "Etapperenners moeten uit je koersselectie komen."
     unavailable_ids = set(unavailable_rider_statuses(stage))
     if set(unique_ids) & unavailable_ids:
+        if event.is_custom:
+            return False, "Een of meer gekozen renners staan niet op de startlijst van dit onderdeel."
         return False, "Een uitgevallen renner kan niet meer worden opgesteld."
 
     lineup = StageLineup.query.filter_by(user_id=user.id, stage_id=stage.id).first()
@@ -438,6 +443,8 @@ def save_stage_lineup(
 
     if captain_id not in unique_ids:
         if require_exact:
+            if event.is_custom:
+                return False, "De koprenner moet in je opstelling zitten."
             return False, "De kopvrouw moet in je etappeselectie zitten."
         captain_id = unique_ids[0]
 
@@ -452,11 +459,24 @@ def save_stage_lineup(
     for event_rider_id in unique_ids:
         lineup.riders.append(StageLineupRider(event_rider_id=event_rider_id))
     if len(unique_ids) == event.lineup_size:
-        return True, "Etappeselectie opgeslagen."
+        return True, "Opstelling opgeslagen." if event.is_custom else "Etappeselectie opgeslagen."
     return True, f"Concept opgeslagen: {len(unique_ids)} / {event.lineup_size} renners."
 
 
 def unavailable_rider_statuses(stage: Stage) -> dict[int, str]:
+    if stage.event.is_custom:
+        eligible_ids = {stage_link.event_rider_id for stage_link in stage.rider_links}
+        event_rider_ids = {
+            row[0]
+            for row in db.session.query(EventRider.id)
+            .filter(EventRider.event_id == stage.event_id)
+            .all()
+        }
+        return {
+            event_rider_id: "Niet op startlijst"
+            for event_rider_id in event_rider_ids - eligible_ids
+        }
+
     rows = (
         db.session.query(StageResult.event_rider_id, StageResult.status)
         .join(Stage, Stage.id == StageResult.stage_id)
@@ -475,14 +495,18 @@ def unavailable_rider_statuses(stage: Stage) -> dict[int, str]:
 
 
 def recalculate_stage_scores(stage: Stage) -> None:
+    stage_points = points_table_for_stage(stage)
     results_by_rider = {result.event_rider_id: result for result in stage.results}
     for result in stage.results:
-        result.base_points = points_for_result(result.rank, result.status)
+        result.base_points = points_for_result(result.rank, result.status, stage_points)
 
     lineup_by_user = {lineup.user_id: lineup for lineup in stage.lineups}
     selections = TeamSelection.query.filter_by(event_id=stage.event_id).all()
     selection_by_user = {selection.user_id: selection for selection in selections}
-    final_results_present = any(result.is_final for result in stage.classification_results)
+    final_results_present = (
+        not stage.event.is_custom
+        and any(result.is_final for result in stage.classification_results)
+    )
     user_ids = set(lineup_by_user)
     if final_results_present:
         user_ids.update(selection_by_user)
@@ -495,6 +519,7 @@ def recalculate_stage_scores(stage: Stage) -> None:
                 lineup_ids,
                 lineup.captain_event_rider_id,
                 results_by_rider,
+                stage_points,
             )
         else:
             total = 0
@@ -573,8 +598,9 @@ def calculate_classification_bonuses(
         for link in EventRider.query.filter_by(event_id=stage.event_id).all()
     }
     by_classification: dict[str, list[ClassificationResult]] = defaultdict(list)
-    for result in stage.classification_results:
-        by_classification[result.classification].append(result)
+    if not stage.event.is_custom:
+        for result in stage.classification_results:
+            by_classification[result.classification].append(result)
 
     for classification, results in by_classification.items():
         ordered = sorted(results, key=lambda result: result.rank)
@@ -661,12 +687,17 @@ def build_official_stage_scores(
         final_eligible_ids=event_rider_ids,
     )
     results_by_rider = {result.event_rider_id: result for result in stage.results}
+    stage_points_by_rank = points_table_for_stage(stage)
     scored_rider_ids = set(results_by_rider) | set(bonuses)
 
     scores: dict[int, OfficialRiderStageScore] = {}
     for event_rider_id in scored_rider_ids:
         result = results_by_rider.get(event_rider_id)
-        stage_points = points_for_result(result.rank, result.status) if result else 0
+        stage_points = (
+            points_for_result(result.rank, result.status, stage_points_by_rank)
+            if result
+            else 0
+        )
         daily, teammate, final, final_teammate = bonuses.get(
             event_rider_id,
             (0, 0, 0, 0),
@@ -922,6 +953,8 @@ def build_stage_leaderboard(
 
 def final_classification_stage(event: Event) -> Stage | None:
     """Return the stage carrying final-classification results, if imported."""
+    if event.is_custom:
+        return None
     return next(
         (
             stage
@@ -1047,18 +1080,28 @@ def build_rider_stage_history(
     if not event_rider_ids:
         return {}
 
-    eligible_stages = [
-        stage
-        for stage in event.stages
-        if stage.number < current_stage.number or (stage.id == current_stage.id and stage.has_ranked_result())
-    ]
+    if event.is_custom:
+        eligible_stages = sorted(
+            (stage for stage in event.stages if stage.has_ranked_result()),
+            key=lambda stage: (
+                stage.deadline_timestamp_ms() is None,
+                stage.deadline_timestamp_ms() or 0,
+                stage.number,
+            ),
+        )
+    else:
+        eligible_stages = [
+            stage
+            for stage in event.stages
+            if stage.number < current_stage.number or (stage.id == current_stage.id and stage.has_ranked_result())
+        ]
     if not eligible_stages:
         return {
             event_rider_id: RiderStageHistory(event_rider_id=event_rider_id, total_points=0, results=[])
             for event_rider_id in event_rider_ids
         }
 
-    eligible_stage_numbers = [stage.number for stage in eligible_stages]
+    eligible_stage_ids = [stage.id for stage in eligible_stages]
     scores_by_stage_id = {
         stage.id: build_official_stage_scores(stage, include_final_classification=False)
         for stage in eligible_stages
@@ -1068,12 +1111,15 @@ def build_rider_stage_history(
         StageResult.query.join(Stage)
         .filter(
             Stage.event_id == event.id,
-            Stage.number.in_(eligible_stage_numbers),
+            Stage.id.in_(eligible_stage_ids),
             StageResult.event_rider_id.in_(event_rider_ids),
         )
         .order_by(Stage.number)
         .all()
     )
+    if event.is_custom:
+        stage_order = {stage.id: index for index, stage in enumerate(eligible_stages)}
+        results.sort(key=lambda result: stage_order[result.stage_id])
 
     by_rider: dict[int, list[RiderStageHistoryItem]] = defaultdict(list)
     for result in results:

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ event.name }} Etappe {{ stage.number }}{% endblock %}
+{% block title %}{{ event.name }} {{ stage.navigation_name }}{% endblock %}
 {% block body %}
 {% set active = 'stage-' ~ stage.id %}
 {% include "events/_event_nav.html" with context %}
@@ -7,15 +7,16 @@
 {% macro rider_card(event_rider) %}
   {% set rider = event_rider.rider %}
   {% set history = rider_history.get(event_rider.id) %}
-  {% set historical_scores = historical_rider_scores(rider) %}
+  {% set historical_scores = historical_rider_scores(rider) if not event.is_custom else [] %}
+  {% set rider_stages = stage_participation.get(event_rider.id, []) if event.is_custom else [] %}
   {% set selected = event_rider.id in selected_ids %}
   {% set is_captain = captain_id == event_rider.id %}
   {% set unavailable_status = unavailable_statuses.get(event_rider.id) %}
   <article
-    class="lineup-builder-card {{ 'selected' if selected else '' }} {{ 'captain' if is_captain else '' }} {{ 'locked' if locked else '' }} {{ 'rider-unavailable' if unavailable_status and not locked else '' }}"
+    class="lineup-builder-card {{ 'custom-event-lineup-card' if event.is_custom else '' }} {{ 'selected' if selected else '' }} {{ 'captain' if is_captain else '' }} {{ 'locked' if locked else '' }} {{ 'rider-unavailable' if unavailable_status and not locked else '' }}"
     data-lineup-card
     data-event-rider-id="{{ event_rider.id }}"
-    {% if not locked and not unavailable_status %}role="button" tabindex="0" aria-label="{{ rider.name }} in etappeselectie wisselen"{% endif %}
+    {% if not locked and not unavailable_status %}role="button" tabindex="0" aria-label="{{ rider.name }} in {{ 'opstelling' if event.is_custom else 'etappeselectie' }} wisselen"{% endif %}
   >
     <input
       class="lineup-hidden-input"
@@ -48,23 +49,35 @@
       <strong>{{ rider.name }}</strong>
       <small>{{ event_rider.team.name if event_rider.team else 'Geen ploeg' }}</small>
     </span>
+    {% if event.is_custom %}
+      <span class="lineup-card-participation">
+        <span class="lineup-participation-label">Startlijsten</span>
+        <span class="rider-race-badges">
+          {% for rider_stage in rider_stages %}
+            <span class="rider-race-badge {{ 'current' if rider_stage.id == stage.id else '' }}">{{ rider_stage.navigation_name }}</span>
+          {% else %}
+            <span class="rider-race-badge rider-race-badge-empty">Geen onderdeel gekoppeld</span>
+          {% endfor %}
+        </span>
+      </span>
+    {% endif %}
     <span class="stage-history">
       <span class="history-total">
-        <small>Koersscore</small>
+        <small>{{ 'Punten onderdelen' if event.is_custom else 'Koersscore' }}</small>
         <strong>{{ history.total_points if history else 0 }} <small>ptn</small></strong>
       </span>
       <span class="history-stages">
       {% if history and history.results %}
-        {% set visible_history = history.results[-2:] if not locked else history.results[-4:] %}
+        {% set visible_history = history.results[-4:] if event.is_custom or locked else history.results[-2:] %}
         {% for item in visible_history %}
           <span class="history-chip {{ 'scored' if item.points else '' }}" title="{{ item.stage_name }}">
-            <span>Etappe {{ item.stage_number }}</span>
+            <span>{{ item.stage_name if event.is_custom else 'Etappe ' ~ item.stage_number }}</span>
             <strong>{{ item.rank_label }}</strong>
             <small>{{ item.points }} ptn</small>
           </span>
         {% endfor %}
       {% else %}
-        <span class="history-empty">Nog geen uitslagen in deze koers</span>
+        <span class="history-empty">{{ 'Nog geen uitslagen in onderdelen' if event.is_custom else 'Nog geen uitslagen in deze koers' }}</span>
       {% endif %}
       </span>
     </span>
@@ -129,12 +142,12 @@
     <span class="lineup-card-actions">
       <button type="button" class="mini-action profile-action" data-toggle-lineup-profile aria-expanded="false">Profiel</button>
     {% if unavailable_status and not locked %}
-      <span class="lineup-unavailable-status">{{ unavailable_status }} &middot; uit koers</span>
+      <span class="lineup-unavailable-status">{{ unavailable_status }}{% if not event.is_custom %} &middot; uit koers{% endif %}</span>
     {% elif not locked %}
       <button type="button" class="mini-action" data-toggle-lineup>{{ 'Verwijderen' if selected else 'Toevoegen' }}</button>
-      <button type="button" class="mini-action captain-action" data-toggle-captain>{{ 'Kopvrouw gekozen' if is_captain else 'Kopvrouw' }}</button>
+      <button type="button" class="mini-action captain-action" data-toggle-captain>{{ ('Koprenner' if event.is_custom else 'Kopvrouw') ~ (' gekozen' if is_captain else '') }}</button>
     {% else %}
-      <span class="lineup-card-status">{{ 'Kopvrouw' if is_captain else 'Geselecteerd' if selected else 'Bank' }}</span>
+      <span class="lineup-card-status">{{ ('Koprenner' if event.is_custom else 'Kopvrouw') if is_captain else 'Geselecteerd' if selected else 'Bank' }}</span>
     {% endif %}
     </span>
   </article>
@@ -173,7 +186,7 @@
     <span class="stage-result-points">
       <strong>{{ official_score.total_points if official_score else result.base_points }}</strong>
       <small class="stage-result-components">
-        <span>{{ official_score.stage_points if official_score else result.base_points }} rit</span>
+        <span>{{ official_score.stage_points if official_score else result.base_points }} {{ 'onderdeel' if event.is_custom else 'rit' }}</span>
         {% if official_score and official_score.classification_points %}
           <span>{{ official_score.classification_points }} klassement</span>
         {% endif %}
@@ -203,7 +216,7 @@
       <small class="bench-score-components">
         <span>{{ '#' ~ result.rank if result and result.rank else result.status if result else 'Geen uitslag' }}</span>
         {% if official_score %}
-          <span>{{ official_score.stage_points }} rit</span>
+          <span>{{ official_score.stage_points }} {{ 'onderdeel' if event.is_custom else 'rit' }}</span>
           {% if official_score.classification_points %}
             <span>{{ official_score.classification_points }} klassement</span>
           {% endif %}
@@ -222,21 +235,38 @@
 
 {% macro stage_profile_panel(stage, finished=false) %}
   <section class="stage-profile-panel {{ 'finished-stage-profile' if finished else '' }}">
-    <h2>Etappeprofiel</h2>
-    <img
-      class="stage-profile"
-      src="{{ url_for('media.stage_profile', stage_id=stage.id) if stage.profile_image_mime else pcs_image_url(stage.profile_image_url) }}"
-      alt="Profiel van etappe {{ stage.number }}"
-      decoding="async"
-      referrerpolicy="no-referrer"
-    >
+    <h2>{{ 'Parcours' if stage.visuals|length > 1 else 'Koersprofiel' if stage.event.is_custom else 'Etappeprofiel' }}</h2>
+    <div class="stage-visual-gallery">
+      {% if stage.visuals %}
+        {% for visual in stage.visuals %}
+          <figure class="stage-visual-item">
+            <img
+              class="stage-profile"
+              src="{{ url_for('media.stage_visual', visual_id=visual.id) if visual.image_mime else pcs_image_url(visual.image_url) }}"
+              alt="{{ visual.label }} van {{ stage.navigation_name }}"
+              decoding="async"
+              referrerpolicy="no-referrer"
+            >
+            {% if stage.visuals|length > 1 %}<figcaption>{{ visual.label }}</figcaption>{% endif %}
+          </figure>
+        {% endfor %}
+      {% else %}
+        <img
+          class="stage-profile"
+          src="{{ url_for('media.stage_profile', stage_id=stage.id) if stage.profile_image_mime else pcs_image_url(stage.profile_image_url) }}"
+          alt="Profiel van {{ stage.navigation_name }}"
+          decoding="async"
+          referrerpolicy="no-referrer"
+        >
+      {% endif %}
+    </div>
   </section>
 {% endmacro %}
 
 <section class="section-head">
   <div>
     <p class="eyebrow">{{ event.name }}</p>
-    <h1>Etappe {{ stage.number }}: {{ stage.name }}</h1>
+    <h1>{{ stage.display_title }}</h1>
   </div>
   <div
     class="meter deadline-meter"
@@ -256,16 +286,12 @@
   </div>
 </section>
 
-{% if (stage.profile_image_mime or stage.profile_image_url) and not show_results %}
-  {{ stage_profile_panel(stage) }}
-{% endif %}
-
 {% if not show_results %}
 <section class="split-layout stage-selection-only">
   <div class="stage-selection-panel">
-    <h2>Etappeselectie</h2>
+    <h2>{{ 'Opstelling voor dit onderdeel' if event.is_custom else 'Etappeselectie' }}</h2>
     {% if locked %}
-      <div class="notice">De selectie is gesloten voor deze etappe.</div>
+      <div class="notice">De selectie is gesloten voor {{ 'dit onderdeel' if event.is_custom else 'deze etappe' }}.</div>
     {% endif %}
     <form
       class="{{ 'upcoming-stage-lineup' if not locked else '' }}"
@@ -273,6 +299,7 @@
       data-lineup-form
       data-team-size="{{ event.lineup_size }}"
       data-stage-id="{{ stage.id }}"
+      data-captain-label="{{ 'Koprenner' if event.is_custom else 'Kopvrouw' }}"
     >
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="lineup-builder">
@@ -282,7 +309,7 @@
               <h3>Opgestelde renners</h3>
               <p class="muted"><strong data-count>{{ selected_ids|length }}</strong> / {{ event.lineup_size }} renners</p>
             </div>
-            <div class="captain-meter" data-captain-meter>{{ 'Kopvrouw gekozen' if captain_id else 'Geen Kopvrouw' }}</div>
+            <div class="captain-meter" data-captain-meter>{{ ('Koprenner gekozen' if event.is_custom else 'Kopvrouw gekozen') if captain_id else ('Geen koprenner' if event.is_custom else 'Geen kopvrouw') }}</div>
           </div>
           <div class="lineup-selected-grid" data-selected-lineup>
             {% for event_rider in team_riders if event_rider.id in selected_ids %}
@@ -318,6 +345,10 @@
 </section>
 {% endif %}
 
+{% if (stage.visuals or stage.profile_image_mime or stage.profile_image_url) and not show_results %}
+  {{ stage_profile_panel(stage) }}
+{% endif %}
+
 {% if show_results %}
   <section class="split-layout has-stage-results">
     <aside class="stage-results-column">
@@ -326,8 +357,8 @@
         <section class="stage-personal-result" aria-labelledby="personal-stage-result-title">
           <header class="stage-personal-result-head">
             <div>
-              <p class="eyebrow">Jouw etapperesultaat</p>
-              <h2 id="personal-stage-result-title">Etappe {{ stage.number }}</h2>
+              <p class="eyebrow">Jouw {{ 'resultaat' if event.is_custom else 'etapperesultaat' }}</p>
+              <h2 id="personal-stage-result-title">{{ stage.navigation_name }}</h2>
             </div>
             <div class="stage-score-total">
               <strong>{{ personal_stage_score }}</strong>
@@ -336,7 +367,7 @@
           </header>
           <div class="stage-personal-meta">
             <span>{{ personal_stage_rider_scores|length }} opgestelde renners</span>
-            <span>{{ user_result.captain_bonus }} ptn kopvrouwbonus</span>
+            <span>{{ user_result.captain_bonus }} ptn {{ 'koprennerbonus' if event.is_custom else 'kopvrouwbonus' }}</span>
           </div>
 
           {% if personal_stage_rider_scores %}
@@ -357,7 +388,7 @@
                   <span class="stage-score-rider">
                     <strong>
                       {{ rider.name }}
-                      {% if rider_score.captain_bonus %}<span class="captain-pill">Kopvrouw</span>{% endif %}
+                      {% if rider_score.captain_bonus %}<span class="captain-pill">{{ 'Koprenner' if event.is_custom else 'Kopvrouw' }}</span>{% endif %}
                     </strong>
                     <small>
                       {{ '#' ~ rider_score.rank if rider_score.rank else rider_score.status }}
@@ -421,7 +452,7 @@
             </div>
             <span>{{ team_riders|length - selected_ids|length }} renners</span>
           </header>
-          <p class="stage-bench-result-note">Niet opgesteld en niet meegerekend in jouw etappescore.</p>
+          <p class="stage-bench-result-note">Niet opgesteld en niet meegerekend in jouw {{ 'score voor dit onderdeel' if event.is_custom else 'etappescore' }}.</p>
           <div class="stage-score-list">
             {% for event_rider in team_riders if event_rider.id not in selected_ids %}
               {{ bench_result_row(event_rider) }}
@@ -434,7 +465,7 @@
         <header class="stage-results-head">
           <div>
             <p class="eyebrow">Officiële uitslag</p>
-            <h2 id="stage-results-title">Etappe {{ stage.number }}</h2>
+            <h2 id="stage-results-title">{{ stage.navigation_name }}</h2>
           </div>
           <span class="stage-results-status">
             <span aria-hidden="true"></span>
@@ -467,7 +498,7 @@
   </section>
 {% endif %}
 
-{% if (stage.profile_image_mime or stage.profile_image_url) and show_results %}
+{% if (stage.visuals or stage.profile_image_mime or stage.profile_image_url) and show_results %}
   {{ stage_profile_panel(stage, finished=true) }}
 {% endif %}
 {% endblock %}

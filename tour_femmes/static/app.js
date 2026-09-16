@@ -23,6 +23,7 @@
       node.style.color = total > budget ? "var(--danger)" : "";
     });
     updateTeamStatus(checked.length, total, maxCount, budget);
+    updateStageCoverage(checked);
     renderSelectedTeam(form, checked);
 
     boxes.forEach((box) => {
@@ -60,6 +61,27 @@
       }
     });
     applyTeamFiltersAndSort(form);
+  }
+
+  function updateStageCoverage(checked) {
+    const countsByStage = new Map();
+    checked.forEach((box) => {
+      const stageIds = (box.closest("[data-rider-card]")?.dataset.stageIds || "")
+        .split(",")
+        .filter(Boolean);
+      stageIds.forEach((stageId) => {
+        countsByStage.set(stageId, (countsByStage.get(stageId) || 0) + 1);
+      });
+    });
+
+    document.querySelectorAll("[data-stage-coverage]").forEach((item) => {
+      const stageId = item.dataset.stageCoverage || "";
+      const count = countsByStage.get(stageId) || 0;
+      const countNode = item.querySelector("[data-stage-coverage-count]");
+      if (countNode) {
+        countNode.textContent = count;
+      }
+    });
   }
 
   function renderSelectedTeam(form, checked) {
@@ -234,7 +256,8 @@
     }
 
     const search = (form.querySelector("[data-rider-search]")?.value || "").trim().toLowerCase();
-    const team = form.querySelector("[data-team-filter]")?.value || "";
+    const team = form.querySelector("[data-team-chip][aria-pressed='true']")?.value || "";
+    const raceFilter = form.querySelector("[data-race-filter][aria-pressed='true']");
     const priceRange = syncPriceControls(form);
     const sort = form.querySelector("[data-sort-filter]")?.value || "price-desc";
     const cards = Array.from(grid.querySelectorAll("[data-rider-card]"));
@@ -245,8 +268,9 @@
       const selected = Boolean(card.querySelector('input[name="riders"]')?.checked);
       const matchesSearch = !search || (card.dataset.riderName || "").includes(search);
       const matchesTeam = !team || card.dataset.team === team;
+      const matchesRace = matchesRaceFilter(card, raceFilter);
       const matchesPrice = price >= priceRange.min && price <= priceRange.max;
-      const visible = matchesSearch && matchesTeam && matchesPrice;
+      const visible = matchesSearch && matchesTeam && matchesRace && matchesPrice;
       card.classList.toggle("filtered-out", !visible);
       if (visible && !selected) {
         visibleCount += 1;
@@ -260,7 +284,40 @@
     form.querySelectorAll("[data-visible-count]").forEach((node) => {
       node.textContent = visibleCount;
     });
-    syncTeamFilterChips(form);
+  }
+
+  function matchesRaceFilter(card, filter) {
+    if (!filter) {
+      return true;
+    }
+    const gender = filter.dataset.filterGender || "";
+    if (gender && !(card.dataset.genders || "").split(",").includes(gender)) {
+      return false;
+    }
+    const wantedStages = (filter.dataset.filterStageIds || "").split(",").filter(Boolean);
+    if (!wantedStages.length) {
+      return true;
+    }
+    const riderStages = (card.dataset.stageIds || "").split(",");
+    return filter.dataset.filterMatch === "all"
+      ? wantedStages.every((stageId) => riderStages.includes(stageId))
+      : wantedStages.some((stageId) => riderStages.includes(stageId));
+  }
+
+  function setActiveRaceFilter(form, selected) {
+    form.querySelectorAll("[data-race-filter]").forEach((button) => {
+      const active = button === selected;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+  }
+
+  function setActiveTeamChip(form, selected) {
+    form.querySelectorAll("[data-team-chip]").forEach((chip) => {
+      const active = chip === selected;
+      chip.classList.toggle("active", active);
+      chip.setAttribute("aria-pressed", active ? "true" : "false");
+    });
   }
 
   function compareRiderCards(a, b, sort) {
@@ -307,16 +364,14 @@
 
   function resetTeamFilters(form) {
     const search = form.querySelector("[data-rider-search]");
-    const team = form.querySelector("[data-team-filter]");
     const sort = form.querySelector("[data-sort-filter]");
     const controls = priceControls(form);
     const bounds = priceBounds(form);
     if (search) {
       search.value = "";
     }
-    if (team) {
-      team.value = "";
-    }
+    setActiveTeamChip(form, form.querySelector("[data-team-chip]"));
+    setActiveRaceFilter(form, form.querySelector("[data-race-filter]"));
     if (sort) {
       sort.value = "price-desc";
     }
@@ -332,13 +387,6 @@
     });
     syncPriceControls(form);
     applyTeamFiltersAndSort(form);
-  }
-
-  function syncTeamFilterChips(form) {
-    const selectedTeam = form.querySelector("[data-team-filter]")?.value || "";
-    form.querySelectorAll("[data-team-chip]").forEach((chip) => {
-      chip.classList.toggle("active", chip.value === selectedTeam);
-    });
   }
 
   function priceControls(form) {
@@ -616,6 +664,7 @@
 
   function updateLineupForm(form) {
     const maxCount = Number(form.dataset.teamSize || 0);
+    const captainLabel = form.dataset.captainLabel || "Kopvrouw";
     const selectedZone = form.querySelector("[data-selected-lineup]");
     const benchZone = form.querySelector("[data-bench-lineup]");
     const boxes = Array.from(form.querySelectorAll("[data-lineup-checkbox]"));
@@ -694,7 +743,7 @@
       }
       if (captainButton) {
         captainButton.disabled = !selected || Boolean(radio && radio.disabled);
-        captainButton.textContent = radio && radio.checked && selected ? "Kopvrouw gekozen" : "Kopvrouw";
+        captainButton.textContent = radio && radio.checked && selected ? `${captainLabel} gekozen` : captainLabel;
       }
     });
 
@@ -704,10 +753,10 @@
     if (captainMeter) {
       if (captain && checkedIds.has(captain.value)) {
         const captainCard = captain.closest("[data-lineup-card]");
-        const captainName = captainCard?.querySelector(".lineup-card-main strong")?.textContent || "Kopvrouw gekozen";
+        const captainName = captainCard?.querySelector(".lineup-card-main strong")?.textContent || `${captainLabel} gekozen`;
         captainMeter.textContent = captainName;
       } else {
-        captainMeter.textContent = "Geen kopvrouw";
+        captainMeter.textContent = `Geen ${captainLabel.toLowerCase()}`;
       }
     }
   }
@@ -966,16 +1015,19 @@
     form.querySelectorAll("[data-rider-search]").forEach((control) => {
       control.addEventListener("input", () => applyTeamFiltersAndSort(form));
     });
-    form.querySelectorAll("[data-team-filter], [data-sort-filter]").forEach((control) => {
+    form.querySelectorAll("[data-sort-filter]").forEach((control) => {
       control.addEventListener("input", () => applyTeamFiltersAndSort(form));
       control.addEventListener("change", () => applyTeamFiltersAndSort(form));
     });
+    form.querySelectorAll("[data-race-filter]").forEach((button) => {
+      button.addEventListener("click", () => {
+        setActiveRaceFilter(form, button);
+        applyTeamFiltersAndSort(form);
+      });
+    });
     form.querySelectorAll("[data-team-chip]").forEach((chip) => {
       chip.addEventListener("click", () => {
-        const teamSelect = form.querySelector("[data-team-filter]");
-        if (teamSelect) {
-          teamSelect.value = chip.value;
-        }
+        setActiveTeamChip(form, chip);
         applyTeamFiltersAndSort(form);
       });
     });
@@ -1070,6 +1122,65 @@
       event.preventDefault();
       startAdminJob(form);
     });
+  });
+
+  document.querySelectorAll("[data-points-form]").forEach((form) => {
+    const updateStagePointsColumn = (toggle) => {
+      const stageId = toggle.dataset.stagePointsToggle;
+      const active = toggle.checked;
+      form.querySelectorAll(`[data-stage-points-column="${stageId}"]`).forEach((cell) => {
+        cell.classList.toggle("points-override-active", active);
+        cell.querySelectorAll(".points-value-input").forEach((input) => {
+          input.disabled = !active;
+        });
+      });
+    };
+
+    form.querySelectorAll("[data-stage-points-toggle]").forEach((toggle) => {
+      toggle.addEventListener("change", () => updateStagePointsColumn(toggle));
+      updateStagePointsColumn(toggle);
+    });
+  });
+
+  document.querySelectorAll("[data-game-create-form]").forEach((form) => {
+    const updateGameType = () => {
+      const selectedType = form.querySelector('input[name="event_type"]:checked')?.value || "stage_race";
+      form.querySelectorAll("[data-event-type-panel]").forEach((panel) => {
+        panel.classList.toggle("hidden", panel.dataset.eventTypePanel !== selectedType);
+      });
+      form.querySelectorAll("[data-required-for]").forEach((input) => {
+        input.required = input.dataset.requiredFor === selectedType;
+      });
+      form.querySelectorAll("[data-event-type-copy]").forEach((copy) => {
+        copy.classList.toggle("hidden", copy.dataset.eventTypeCopy !== selectedType);
+      });
+    };
+
+    form.addEventListener("change", (event) => {
+      if (event.target.matches('input[name="event_type"]')) {
+        updateGameType();
+      }
+    });
+    form.addEventListener("click", (event) => {
+      const addButton = event.target.closest("[data-add-custom-race]");
+      if (addButton) {
+        const template = form.querySelector("[data-custom-race-template]");
+        const list = form.querySelector("[data-custom-race-list]");
+        if (template && list) {
+          list.appendChild(template.content.cloneNode(true));
+        }
+        return;
+      }
+
+      const removeButton = event.target.closest("[data-remove-custom-race]");
+      if (removeButton) {
+        const rows = form.querySelectorAll("[data-custom-race-row]");
+        if (rows.length > 2) {
+          removeButton.closest("[data-custom-race-row]")?.remove();
+        }
+      }
+    });
+    updateGameType();
   });
 
   const deadlineMeters = Array.from(document.querySelectorAll("[data-deadline-at]"));

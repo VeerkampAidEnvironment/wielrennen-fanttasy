@@ -6,7 +6,7 @@
   <a class="{{ 'active' if active == 'scoring' else '' }}" href="{{ url_for('events.scoring', event_id=event.id) }}">Puntentelling</a>
 </div>
 
-<div class="event-nav event-stage-nav" aria-label="Etappes">
+<div class="event-nav event-stage-nav" aria-label="{{ 'Onderdelen' if event.is_custom else 'Etappes' }}">
   {% if not event.has_started() %}
     {% set team_progress = selection_progress.team %}
     <a
@@ -31,10 +31,10 @@
       data-stage-selection-tab="{{ nav_stage.id }}"
       data-stage-lifecycle-state="{{ stage_progress.state if stage_progress.state in ['ongoing', 'finished'] else 'upcoming' }}"
       {% if nav_stage.starts_at %}data-stage-start-at="{{ nav_stage.deadline_timestamp_ms() }}"{% endif %}
-      data-selection-label="Etappe {{ nav_stage.number }}"
-      aria-label="Etappe {{ nav_stage.number }}, {{ 'status' if stage_progress.state in ['ongoing', 'finished'] else 'selectie' }} {{ stage_progress.label }}"
+      data-selection-label="{{ nav_stage.navigation_name }}"
+      aria-label="{{ nav_stage.navigation_name }}, {{ 'status' if stage_progress.state in ['ongoing', 'finished'] else 'selectie' }} {{ stage_progress.label }}"
     >
-      <span>Etappe {{ nav_stage.number }}</span>
+      <span>{{ nav_stage.navigation_name }}</span>
       <small class="event-tab-status">{{ stage_progress.label }}</small>
     </a>
   {% endfor %}

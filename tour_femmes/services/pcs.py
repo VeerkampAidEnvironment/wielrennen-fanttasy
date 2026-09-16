@@ -18,13 +18,15 @@ from tour_femmes.models import (
     EventRider,
     Rider,
     Stage,
+    StageRider,
     StageResult,
+    StageVisual,
     Team,
     utcnow,
 )
 from tour_femmes.pcs_image_cache import load_cached_pcs_image, store_cached_pcs_image
 from tour_femmes.pcs_urls import canonicalize_pcs_url
-from tour_femmes.scoring import points_for_result
+from tour_femmes.scoring import points_for_result, points_table_for_stage
 from tour_femmes.services.game import recalculate_stage_scores
 from tour_femmes.services.sporza_prices import load_sporza_price_catalog, sporza_edition_for_event
 from tour_femmes.timezones import app_timezone
@@ -127,6 +129,15 @@ class ImageSyncSummary:
 
 
 @dataclass(frozen=True)
+class ParsedStageVisual:
+    position: int
+    label: str
+    image_url: str
+    image_data: bytes | None = None
+    image_mime: str | None = None
+
+
+@dataclass(frozen=True)
 class ParsedStage:
     number: int
     name: str
@@ -142,6 +153,7 @@ class ParsedStage:
     profile_image_url: str | None = None
     profile_image_data: bytes | None = None
     profile_image_mime: str | None = None
+    visuals: tuple[ParsedStageVisual, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -316,29 +328,78 @@ def initialize_event_from_pcs(
     progress: ProgressCallback | None = None,
 ) -> int:
     client = client or PcsClient()
+    if event.is_custom:
+        total = len(event.stages)
+        if progress:
+            progress(0, total, "Koersgegevens", f"{total} losse koersen gevonden.")
+        for index, stage in enumerate(event.stages, start=1):
+            if progress:
+                progress(index - 1, total, "Koersgegevens", f"{stage.name} ophalen.")
+            parsed = parse_stage_page(
+                client,
+                stage.pcs_url,
+                stage.number,
+                details_url=stage_results_url(stage),
+            )
+            _apply_parsed_stage(stage, parsed, preserve_name=True)
+            if progress:
+                progress(index, total, "Koersgegevens", f"{stage.name} geladen.")
+        return total
+
     parsed_stages = parse_event_stages(client, event, progress=progress)
     for parsed in parsed_stages:
         stage = Stage.query.filter_by(event_id=event.id, number=parsed.number).first()
         if not stage:
             stage = Stage(event=event, number=parsed.number, name=parsed.name, pcs_url=parsed.pcs_url)
             db.session.add(stage)
-        stage.name = parsed.name
-        stage.pcs_url = parsed.pcs_url
-        stage.live_url = parsed.live_url
-        stage.starts_at = parsed.starts_at
-        stage.distance_km = parsed.distance_km
-        stage.profile_score = parsed.profile_score
-        stage.vertical_meters = parsed.vertical_meters
-        stage.parcours_type = parsed.parcours_type
-        stage.departure = parsed.departure
-        stage.arrival = parsed.arrival
-        stage.profile_image_url = parsed.profile_image_url
-        if parsed.profile_image_data:
-            stage.profile_image_data = parsed.profile_image_data
-            stage.profile_image_mime = parsed.profile_image_mime
+        _apply_parsed_stage(stage, parsed)
     if progress:
         progress(len(parsed_stages), len(parsed_stages), "Etappes", "Etappes opgeslagen in de database.")
     return len(parsed_stages)
+
+
+def _apply_parsed_stage(stage: Stage, parsed: ParsedStage, preserve_name: bool = False) -> None:
+    if not preserve_name:
+        stage.name = parsed.name
+    stage.pcs_url = parsed.pcs_url
+    stage.live_url = parsed.live_url
+    stage.starts_at = parsed.starts_at
+    stage.distance_km = parsed.distance_km
+    stage.profile_score = parsed.profile_score
+    stage.vertical_meters = parsed.vertical_meters
+    stage.parcours_type = parsed.parcours_type
+    stage.departure = parsed.departure
+    stage.arrival = parsed.arrival
+    stage.profile_image_url = parsed.profile_image_url
+    if parsed.profile_image_data:
+        stage.profile_image_data = parsed.profile_image_data
+        stage.profile_image_mime = parsed.profile_image_mime
+    if parsed.visuals:
+        existing_by_position = {visual.position: visual for visual in stage.visuals}
+        for visual in parsed.visuals:
+            target = existing_by_position.pop(visual.position, None)
+            if target is None:
+                stage.visuals.append(
+                    StageVisual(
+                        position=visual.position,
+                        label=visual.label,
+                        image_url=visual.image_url,
+                        image_data=visual.image_data,
+                        image_mime=visual.image_mime,
+                    )
+                )
+                continue
+            previous_url = target.image_url
+            target.label = visual.label
+            target.image_url = visual.image_url
+            if visual.image_data is not None:
+                target.image_data = visual.image_data
+                target.image_mime = visual.image_mime
+            elif previous_url != visual.image_url:
+                target.image_data = None
+                target.image_mime = None
+        for obsolete in existing_by_position.values():
+            stage.visuals.remove(obsolete)
 
 
 def sync_startlist(
@@ -350,8 +411,20 @@ def sync_startlist(
     client = client or PcsClient()
     if progress:
         progress(0, 0, "Startlijst", "PCS startlijst ophalen.")
-    soup = client.get_soup(f"{event.pcs_url}/startlist")
-    parsed_riders = parse_startlist(soup, client.base_url)
+    parsed_by_slug: dict[str, ParsedRider] = {}
+    stage_rider_slugs: dict[int, set[str]] = {}
+    if event.is_custom:
+        for stage in event.stages:
+            soup = client.get_soup(f"{stage.pcs_url}/startlist")
+            stage_riders = parse_startlist(soup, client.base_url)
+            stage_rider_slugs[stage.id] = {rider.pcs_slug for rider in stage_riders}
+            for rider in stage_riders:
+                parsed_by_slug.setdefault(rider.pcs_slug, rider)
+    else:
+        soup = client.get_soup(f"{event.pcs_url}/startlist")
+        for rider in parse_startlist(soup, client.base_url):
+            parsed_by_slug.setdefault(rider.pcs_slug, rider)
+    parsed_riders = list(parsed_by_slug.values())
     if progress:
         progress(0, len(parsed_riders), "Startlijst", f"{len(parsed_riders)} renners gevonden.")
     price_source = sporza_edition_for_event(event)
@@ -434,6 +507,24 @@ def sync_startlist(
             link.frozen = True
             link.startlist_status = "removed"
             frozen_names.append(link.rider.name)
+
+    if event.is_custom:
+        db.session.flush()
+        for stage in event.stages:
+            desired_ids = {
+                existing_by_slug[slug].id
+                for slug in stage_rider_slugs.get(stage.id, set())
+                if slug in existing_by_slug
+            }
+            existing_links = {
+                stage_link.event_rider_id: stage_link
+                for stage_link in StageRider.query.filter_by(stage_id=stage.id).all()
+            }
+            for event_rider_id in desired_ids - set(existing_links):
+                db.session.add(StageRider(stage=stage, event_rider_id=event_rider_id))
+            for event_rider_id, stage_link in existing_links.items():
+                if event_rider_id not in desired_ids:
+                    db.session.delete(stage_link)
     if progress:
         progress(len(parsed_riders), len(parsed_riders), "Startlijst", "Startlijst opgeslagen in de database.")
 
@@ -452,7 +543,7 @@ def sync_startlist(
 def enrich_missing_profiles(
     event: Event,
     client: PcsClient | None = None,
-    rider_limit: int = 10,
+    rider_limit: int = 20,
     team_limit: int = 5,
     progress: ProgressCallback | None = None,
 ) -> ProfileEnrichmentSummary:
@@ -461,7 +552,7 @@ def enrich_missing_profiles(
     links = (
         EventRider.query.filter_by(event_id=event.id, active=True)
         .join(EventRider.rider)
-        .order_by(EventRider.id)
+        .order_by(Rider.updated_at, EventRider.id)
         .all()
     )
     missing_links = [link for link in links if rider_profile_is_missing(link.rider)]
@@ -478,6 +569,9 @@ def enrich_missing_profiles(
             progress(index - 1, total, "Rennerprofielen", f"{link.rider.name} ophalen.")
         if update_rider_details(client, link.rider):
             loaded += 1
+        else:
+            # Keep one failing PCS profile from blocking all later batches.
+            link.rider.updated_at = utcnow()
         if progress:
             progress(index, total, "Rennerprofielen", f"{link.rider.name} verwerkt.")
 
@@ -495,7 +589,7 @@ def enrich_missing_profiles(
         if update_team_details(client, team):
             team_loaded += 1
 
-    remaining = max(0, len(missing_links) - loaded)
+    remaining = sum(rider_profile_is_missing(link.rider) for link in links)
     return ProfileEnrichmentSummary(
         rider_details_loaded=loaded,
         team_details_loaded=team_loaded,
@@ -505,6 +599,8 @@ def enrich_missing_profiles(
 
 
 def rider_profile_is_missing(rider: Rider) -> bool:
+    if rider.profile_checked_at is not None:
+        return False
     return not (
         rider.photo_url
         and rider.date_of_birth
@@ -605,7 +701,7 @@ def sync_event_images(
     links = (
         EventRider.query.filter_by(event_id=event.id, active=True)
         .join(EventRider.rider)
-        .order_by(EventRider.id)
+        .order_by(Rider.updated_at, EventRider.id)
         .all()
     )
     riders = list(
@@ -730,8 +826,14 @@ def minimal_parsed_stage(number: int, stage_url: str) -> ParsedStage:
     )
 
 
-def parse_stage_page(client: PcsClient, stage_url: str, number: int) -> ParsedStage:
-    soup = client.get_soup(stage_url)
+def parse_stage_page(
+    client: PcsClient,
+    stage_url: str,
+    number: int,
+    details_url: str | None = None,
+) -> ParsedStage:
+    details_url = details_url or stage_url
+    soup = client.get_soup(details_url)
     text = soup.get_text("\n", strip=True)
     name = parse_stage_name(text, number)
     race_info = parse_label_values(text)
@@ -745,22 +847,8 @@ def parse_stage_page(client: PcsClient, stage_url: str, number: int) -> ParsedSt
             tzinfo=app_timezone(current_app.config["APP_TIMEZONE"]),
         )
 
-    profile_image_url = None
-    profile_image_data = None
-    profile_image_mime = None
-    profile_heading = soup.find(string=re.compile(r"Race profile", re.I))
-    if profile_heading:
-        image = next((node for node in profile_heading.parent.next_elements if isinstance(node, Tag) and node.name == "img"), None)
-        if image and image.get("src"):
-            profile_image_url = client.absolute_url(image["src"])
-            try:
-                profile_image_data, profile_image_mime = client.get_image(profile_image_url)
-            except (requests.RequestException, ValueError) as exc:
-                current_app.logger.warning(
-                    "PCS stage profile download failed for stage %s: %s",
-                    number,
-                    exc,
-                )
+    visuals = parse_stage_visuals(client, details_url, soup, number)
+    primary_visual = visuals[0] if visuals else None
 
     return ParsedStage(
         number=number,
@@ -774,10 +862,86 @@ def parse_stage_page(client: PcsClient, stage_url: str, number: int) -> ParsedSt
         parcours_type=race_info.get("Parcours type"),
         departure=race_info.get("Departure"),
         arrival=race_info.get("Arrival"),
-        profile_image_url=profile_image_url,
-        profile_image_data=profile_image_data,
-        profile_image_mime=profile_image_mime,
+        profile_image_url=primary_visual.image_url if primary_visual else None,
+        profile_image_data=primary_visual.image_data if primary_visual else None,
+        profile_image_mime=primary_visual.image_mime if primary_visual else None,
+        visuals=visuals,
     )
+
+
+def parse_stage_visuals(
+    client: PcsClient,
+    details_url: str,
+    details_soup: BeautifulSoup,
+    stage_number: int,
+) -> tuple[ParsedStageVisual, ...]:
+    """Load every PCS course visual, with the result page as a fallback."""
+    profile_sources: list[str] = []
+    profiles_url = f"{details_url.rstrip('/')}/info/profiles"
+    try:
+        profiles_soup = client.get_soup(profiles_url)
+        profile_sources = [
+            image["src"]
+            for image in profiles_soup.find_all("img", src=True)
+            if "images/profiles/" in image["src"]
+        ]
+    except requests.RequestException as exc:
+        current_app.logger.warning(
+            "PCS course visuals page failed for stage %s: %s",
+            stage_number,
+            exc,
+        )
+
+    if not profile_sources:
+        profile_heading = details_soup.find(string=re.compile(r"Race profile", re.I))
+        if profile_heading:
+            image = next(
+                (
+                    node
+                    for node in profile_heading.parent.next_elements
+                    if isinstance(node, Tag) and node.name == "img" and node.get("src")
+                ),
+                None,
+            )
+            if image:
+                profile_sources = [image["src"]]
+
+    visuals: list[ParsedStageVisual] = []
+    seen_urls: set[str] = set()
+    for source in profile_sources:
+        image_url = client.absolute_url(source)
+        if image_url in seen_urls:
+            continue
+        seen_urls.add(image_url)
+        image_data = None
+        image_mime = None
+        try:
+            image_data, image_mime = client.get_image(image_url)
+        except (requests.RequestException, ValueError) as exc:
+            current_app.logger.warning(
+                "PCS course visual download failed for stage %s: %s",
+                stage_number,
+                exc,
+            )
+        visuals.append(
+            ParsedStageVisual(
+                position=len(visuals) + 1,
+                label=stage_visual_label(image_url),
+                image_url=image_url,
+                image_data=image_data,
+                image_mime=image_mime,
+            )
+        )
+    return tuple(visuals)
+
+
+def stage_visual_label(image_url: str) -> str:
+    filename = urlparse(image_url).path.rsplit("/", 1)[-1].casefold()
+    if "-map" in filename or "overview-map" in filename:
+        return "Overzichtskaart"
+    if "-finish" in filename:
+        return "Finishprofiel"
+    return "Parcoursprofiel"
 
 
 def parse_startlist(soup: BeautifulSoup, base_url: str) -> list[ParsedRider]:
@@ -852,28 +1016,44 @@ def update_rider_details(client: PcsClient, rider: Rider) -> bool:
     rider.best_results = top_results
     profile_grand_tours = parse_grand_tour_results(text_lines, top_results)
     rider.grand_tour_results = fetch_rider_grand_tour_results(client, rider, profile_grand_tours)
+    rider.profile_checked_at = utcnow()
     rider.updated_at = utcnow()
     return True
 
 
-def import_stage_results(stage: Stage) -> int:
-    client = PcsClient()
-    soup = client.get_soup(stage.pcs_url)
+def stage_results_url(stage: Stage) -> str:
+    if stage.event.is_custom:
+        base_url = stage.pcs_url.rstrip("/")
+        return base_url if base_url.endswith("/result") else f"{base_url}/result"
+    return stage.pcs_url
+
+
+def import_stage_results(stage: Stage, client: PcsClient | None = None) -> int:
+    client = client or PcsClient()
+    soup = client.get_soup(stage_results_url(stage))
     parsed_results = parse_stage_results(soup, stage)
     if not parsed_results:
-        raise IncompleteStageResultsError("PCS toont nog geen etappe-uitslag.")
-    expected_count = EventRider.query.filter_by(
-        event_id=stage.event_id,
-        active=True,
-        frozen=False,
-    ).count()
+        result_label = "uitslag" if stage.event.is_custom else "etappe-uitslag"
+        raise IncompleteStageResultsError(f"PCS toont nog geen {result_label}.")
+    if stage.event.is_custom:
+        expected_count = StageRider.query.filter_by(stage_id=stage.id).count()
+    else:
+        expected_count = EventRider.query.filter_by(
+            event_id=stage.event_id,
+            active=True,
+            frozen=False,
+        ).count()
     minimum_count = min(10, max(1, (expected_count + 1) // 2))
     if len(parsed_results) < minimum_count:
         raise IncompleteStageResultsError(
             f"PCS toont pas {len(parsed_results)} van circa {expected_count} renners. "
             "De uitslag is nog onvolledig; bestaande data is niet gewijzigd."
         )
-    parsed_classifications = fetch_stage_classifications(stage, client, stage_soup=soup)
+    if stage.event.is_custom:
+        parsed_classifications = {}
+        ClassificationResult.query.filter_by(stage_id=stage.id).delete()
+    else:
+        parsed_classifications = fetch_stage_classifications(stage, client, stage_soup=soup)
     existing_results = {
         result.event_rider_id: result
         for result in StageResult.query.filter_by(stage_id=stage.id).all()
@@ -892,7 +1072,11 @@ def import_stage_results(stage: Stage) -> int:
         result.status = parsed.status
         result.time_gap = parsed.time_gap
         result.raw_result = parsed.raw_result
-        result.base_points = points_for_result(parsed.rank, parsed.status)
+        result.base_points = points_for_result(
+            parsed.rank,
+            parsed.status,
+            points_table_for_stage(stage),
+        )
         result.imported_at = utcnow()
     db.session.flush()
     store_stage_classifications(stage, parsed_classifications)
@@ -912,17 +1096,31 @@ def fetch_stage_classifications(
     client: PcsClient,
     stage_soup: BeautifulSoup | None = None,
 ) -> dict[str, list[tuple[int, int]]]:
+    if stage.event.is_custom:
+        return {}
     links_by_slug = {
         link.rider.pcs_slug: link.id
         for link in EventRider.query.join(Rider).filter(EventRider.event_id == stage.event_id).all()
     }
-    parsed_classifications = {
-        "gc": parse_gc_results_from_stage_page(stage_soup, links_by_slug)
-        if stage_soup
-        else [],
-    }
+    if stage_soup is None:
+        try:
+            stage_soup = client.get_soup(stage.pcs_url)
+        except requests.HTTPError as exc:
+            if exc.response is None or exc.response.status_code not in {404, 410, 500}:
+                raise
+
+    parsed_classifications: dict[str, list[tuple[int, int]]] = {}
+    if stage_soup is not None:
+        parsed_classifications.update(
+            parse_classification_tab_results(stage_soup, links_by_slug)
+        )
+        if not parsed_classifications.get("gc"):
+            parsed_gc = parse_gc_results_from_stage_page(stage_soup, links_by_slug)
+            if parsed_gc:
+                parsed_classifications["gc"] = parsed_gc
+
     for classification, suffix in CLASSIFICATION_URL_SUFFIXES.items():
-        if classification == "gc":
+        if parsed_classifications.get(classification):
             continue
         url = f"{stage.pcs_url}-{suffix}"
         try:
@@ -936,14 +1134,16 @@ def fetch_stage_classifications(
             raise
         tab_results = parse_classification_tab_results(soup, links_by_slug)
         for parsed_classification, parsed in tab_results.items():
-            if parsed_classification != "gc" or not parsed_classifications["gc"]:
+            if parsed and not parsed_classifications.get(parsed_classification):
                 parsed_classifications[parsed_classification] = parsed
-        if classification not in parsed_classifications:
-            parsed_classifications[classification] = parse_classification_results(
+        if not parsed_classifications.get(classification):
+            parsed = parse_classification_results(
                 soup,
                 links_by_slug,
             )
-        if all(key in parsed_classifications for key in CLASSIFICATION_URL_SUFFIXES):
+            if parsed:
+                parsed_classifications[classification] = parsed
+        if all(parsed_classifications.get(key) for key in CLASSIFICATION_URL_SUFFIXES):
             break
     return parsed_classifications
 
@@ -952,6 +1152,9 @@ def store_stage_classifications(
     stage: Stage,
     parsed_classifications: dict[str, list[tuple[int, int]]],
 ) -> int:
+    if stage.event.is_custom:
+        ClassificationResult.query.filter_by(stage_id=stage.id).delete()
+        return 0
     is_final = bool(stage.event.stages and stage.id == stage.event.stages[-1].id)
     imported = 0
     for classification, parsed in parsed_classifications.items():
@@ -1000,7 +1203,8 @@ def parse_classification_tab_results(
     }
     for anchor in soup.select("a.selectResultTab[data-id]"):
         href = urlparse(anchor.get("href", "")).path.rstrip("/")
-        suffix = href.rsplit("-", 1)[-1].casefold()
+        final_path_part = href.rsplit("/", 1)[-1].casefold()
+        suffix = final_path_part.rsplit("-", 1)[-1]
         classification = suffix_to_classification.get(suffix)
         if classification:
             classification_by_tab_id[str(anchor.get("data-id"))] = classification
@@ -1347,9 +1551,23 @@ def parse_label_values(text: str) -> dict[str, str]:
         "Departure",
         "Arrival",
     }
+    all_labels = labels | {
+        "Avg. speed winner",
+        "Race category",
+        "Race ranking",
+        "Won how",
+        "Gradient final km",
+        "Startlist quality score",
+    }
     for index, line in enumerate(lines[:-1]):
         if line in labels:
-            value = next((candidate for candidate in lines[index + 1 : index + 5] if candidate and candidate not in labels), "")
+            value = ""
+            for candidate in lines[index + 1 : index + 5]:
+                if candidate in all_labels:
+                    break
+                if candidate:
+                    value = candidate
+                    break
             if value:
                 values[line] = value
     return values
@@ -1570,7 +1788,9 @@ def parse_date(value: str | None) -> date | None:
 def parse_time(value: str | None) -> time | None:
     if not value or value == "-":
         return None
-    match = re.search(r"(\d{1,2}):(\d{2})", value)
+    match = re.search(r"\((\d{1,2}):(\d{2})\s+CE(?:S)?T\)", value, re.I)
+    if not match:
+        match = re.search(r"(\d{1,2}):(\d{2})", value)
     if not match:
         return None
     return time(int(match.group(1)), int(match.group(2)))

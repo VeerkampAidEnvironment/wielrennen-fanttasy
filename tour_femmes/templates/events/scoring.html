@@ -14,12 +14,12 @@
 <section class="scoring-page">
   <div class="scoring-summary">
     <article>
-      <span>Etappeselectie</span>
+      <span>{{ 'Opstelling' if event.is_custom else 'Etappeselectie' }}</span>
       <strong>{{ event.lineup_size }}</strong>
-      <small>renners per etappe</small>
+      <small>renners per {{ 'onderdeel' if event.is_custom else 'etappe' }}</small>
     </article>
     <article>
-      <span>Kopvrouw</span>
+      <span>{{ 'Koprenner' if event.is_custom else 'Kopvrouw' }}</span>
       <strong>x2</strong>
       <small>verdubbelt eigen basispunten</small>
     </article>
@@ -30,23 +30,50 @@
     </article>
   </div>
 
-  <table class="data-table scoring-table">
-    <thead>
-      <tr>
-        <th>Plaats</th>
-        <th>Punten</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for rule in scoring_rules %}
-        <tr>
-          <td>#{{ rule.rank }}</td>
-          <td>{{ rule.points }}</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="scoring-points-groups">
+    {% for group in scoring_groups %}
+      <section class="scoring-points-group">
+        <header>
+          <div>
+            <p class="eyebrow">Puntentabel {{ loop.index }}</p>
+            <h2>Geldt voor</h2>
+          </div>
+          <div class="scoring-stage-tags">
+            {% for stage in group.stages %}
+              <span>{{ stage.navigation_name }}</span>
+            {% else %}
+              <span>{{ event.name }}</span>
+            {% endfor %}
+          </div>
+        </header>
+        <table class="data-table scoring-table">
+          <thead>
+            <tr>
+              <th>Plaats</th>
+              <th>Punten</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rule in group.rules %}
+              <tr>
+                <td>#{{ rule.rank }}</td>
+                <td>{{ rule.points }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+    {% endfor %}
+  </div>
 
+  {% if event.is_custom %}
+  <h2>Ploeggenootbonus</h2>
+  <p>
+    <strong>{{ stage_winner_teammate_points }} punten</strong> voor iedere opgestelde
+    ploeggenoot van de winnaar van het onderdeel. De winnaar zelf ontvangt deze bonus niet.
+  </p>
+  <p class="muted">Losse koersen hebben geen dagelijkse of eindklassementsbonussen.</p>
+  {% else %}
   <h2>Dagelijkse klassementsbonussen</h2>
   <p class="muted">
     Alleen renners in de opstelling van die etappe scoren deze punten.
@@ -102,5 +129,6 @@
       </tbody>
     </table>
   </div>
+  {% endif %}
 </section>
 {% endblock %}

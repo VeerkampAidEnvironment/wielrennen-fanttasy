@@ -25,6 +25,8 @@ from tour_femmes.scoring import (
     FINAL_CLASSIFICATION_POINTS,
     FINAL_WINNER_TEAMMATE_POINTS,
     STAGE_WINNER_TEAMMATE_POINTS,
+    points_table_for_event,
+    points_table_for_stage,
     scoring_rules,
 )
 from tour_femmes.services.game import (
@@ -84,6 +86,7 @@ def overview():
                 "entry": entries.get(event.id),
                 "selection": selections.get(event.id),
                 "selection_finished": _selection_finished(event, selections.get(event.id)),
+                "join_open": can_edit_team(event, now),
                 "next_stage": next_stage,
                 "next_lineup_status": lineup_status(current_user, next_stage) if next_stage else "Klaar",
             }
@@ -107,6 +110,9 @@ def event_home(event_id: int):
 @login_required
 def join(event_id: int):
     event = Event.query.get_or_404(event_id)
+    if not can_edit_team(event):
+        flash("De inschrijving is gesloten omdat de teamselectiedeadline is verstreken.", "warning")
+        return redirect(url_for("events.overview"))
     get_or_create_entry(current_user, event)
     db.session.commit()
     flash("Je doet mee aan deze koers.", "success")
@@ -187,6 +193,46 @@ def team(event_id: int):
         "complete": len(selected_ids) == event.team_size and selected_total <= event.budget,
         "over_budget": selected_total > event.budget,
     }
+    stage_participation: dict[int, list[Stage]] = {}
+    selected_stage_counts: dict[int, int] = {}
+    rider_genders: dict[int, list[str]] = {}
+    event_genders: set[str] = set()
+    if event.is_custom:
+        for stage_obj in event.stages:
+            selected_stage_counts[stage_obj.id] = 0
+            stage_gender = stage_obj.participant_gender
+            if stage_gender:
+                event_genders.add(stage_gender)
+            for stage_rider in stage_obj.rider_links:
+                stage_participation.setdefault(stage_rider.event_rider_id, []).append(stage_obj)
+                if stage_gender:
+                    genders = rider_genders.setdefault(stage_rider.event_rider_id, [])
+                    if stage_gender not in genders:
+                        genders.append(stage_gender)
+                if stage_rider.event_rider_id in selected_ids:
+                    selected_stage_counts[stage_obj.id] += 1
+    show_gender_filter = {"men", "women"}.issubset(event_genders)
+    race_filter_groups: list[dict] = []
+    if event.is_custom:
+        if show_gender_filter:
+            for gender, label, all_label in (
+                ("women", "Vrouwen", "Alle vrouwen"),
+                ("men", "Mannen", "Alle mannen"),
+            ):
+                stages = [stage_obj for stage_obj in event.stages if stage_obj.participant_gender == gender]
+                if stages:
+                    race_filter_groups.append(
+                        {"label": label, "gender": gender, "all_label": all_label, "stages": stages}
+                    )
+            other_stages = [stage_obj for stage_obj in event.stages if not stage_obj.participant_gender]
+            if other_stages:
+                race_filter_groups.append(
+                    {"label": "Overige onderdelen", "gender": "", "all_label": "", "stages": other_stages}
+                )
+        else:
+            race_filter_groups.append(
+                {"label": "Onderdelen", "gender": "", "all_label": "", "stages": event.stages}
+            )
     return render_template(
         "events/team.html",
         event=event,
@@ -199,6 +245,11 @@ def team(event_id: int):
         speciality_filters=speciality_filters,
         price_min=min(prices, default=0),
         price_max=max(prices, default=0),
+        stage_participation=stage_participation,
+        selected_stage_counts=selected_stage_counts,
+        rider_genders=rider_genders,
+        show_gender_filter=show_gender_filter,
+        race_filter_groups=race_filter_groups,
     )
 
 
@@ -211,17 +262,23 @@ def stage(event_id: int, stage_id: int):
     entry = EventEntry.query.filter_by(user_id=current_user.id, event_id=event.id, status="active").first()
 
     if not entry:
-        flash("Schrijf je eerst in voor de koers voordat je een etappeselectie maakt.", "warning")
+        selection_label = "opstelling" if event.is_custom else "etappeselectie"
+        flash(f"Schrijf je eerst in voor de koers voordat je een {selection_label} maakt.", "warning")
         return redirect(url_for("events.team", event_id=event.id))
     if not selection or len(selection.riders) != event.team_size:
-        flash("Maak eerst je teamselectie compleet voordat je een etappeselectie maakt.", "warning")
+        selection_label = "opstelling" if event.is_custom else "etappeselectie"
+        flash(f"Maak eerst je teamselectie compleet voordat je een {selection_label} maakt.", "warning")
         return redirect(url_for("events.team", event_id=event.id))
 
     locked = stage_obj.is_locked()
     if request.method == "POST":
         wants_json = _wants_json()
         if locked:
-            message = "Deze etappeselectie is gesloten omdat de etappe is gestart."
+            message = (
+                "Deze opstelling is gesloten omdat het onderdeel is gestart."
+                if event.is_custom
+                else "Deze etappeselectie is gesloten omdat de etappe is gestart."
+            )
             if wants_json:
                 return jsonify({"ok": False, "message": message}), 423
             flash(message, "danger")
@@ -269,6 +326,11 @@ def stage(event_id: int, stage_id: int):
     team_riders = [link.event_rider for link in selection.riders]
     team_rider_ids = {event_rider.id for event_rider in team_riders}
     rider_history = build_rider_stage_history(event, stage_obj, team_riders)
+    stage_participation: dict[int, list[Stage]] = {}
+    if event.is_custom:
+        for event_stage in event.stages:
+            for stage_rider in event_stage.rider_links:
+                stage_participation.setdefault(stage_rider.event_rider_id, []).append(event_stage)
     show_results = stage_obj.has_ranked_result()
     stage_results = sorted(
         stage_obj.results,
@@ -338,6 +400,7 @@ def stage(event_id: int, stage_id: int):
         personal_final_score=personal_final_score,
         personal_final_rider_scores=personal_final_rider_scores,
         rider_history=rider_history,
+        stage_participation=stage_participation,
         unavailable_statuses=unavailable_statuses,
         speciality_filters=RIDER_SPECIALITY_FILTERS,
     )
@@ -440,6 +503,7 @@ def subleagues(event_id: int):
         "events/subleagues.html",
         event=event,
         entry=entry,
+        join_open=can_edit_team(event),
         joined_subleagues=joined_subleagues,
     )
 
@@ -553,10 +617,26 @@ def delete_subleague(event_id: int, subleague_id: int):
 @login_required
 def scoring(event_id: int):
     event = Event.query.get_or_404(event_id)
+    scoring_groups_by_table: dict[tuple[tuple[int, int], ...], dict[str, object]] = {}
+    for stage in event.stages:
+        points_by_rank = points_table_for_stage(stage)
+        key = tuple(sorted(points_by_rank.items()))
+        group = scoring_groups_by_table.setdefault(
+            key,
+            {
+                "rules": scoring_rules(points_by_rank),
+                "stages": [],
+            },
+        )
+        group["stages"].append(stage)
+    scoring_groups = list(scoring_groups_by_table.values())
+    if not scoring_groups:
+        event_points = points_table_for_event(event)
+        scoring_groups.append({"rules": scoring_rules(event_points), "stages": []})
     return render_template(
         "events/scoring.html",
         event=event,
-        scoring_rules=scoring_rules(),
+        scoring_groups=scoring_groups,
         classification_labels=CLASSIFICATION_LABELS,
         daily_classification_points=DAILY_CLASSIFICATION_POINTS,
         daily_teammate_points=DAILY_LEADER_TEAMMATE_POINTS,

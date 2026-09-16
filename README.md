@@ -14,6 +14,7 @@ A Flask fantasy cycling app for private games around ProCyclingStats-backed cycl
 - Event leaderboard with total scores, latest-stage scores, per-stage columns, a CSS yellow jersey marker for the current leader, and stage-win badges.
 - Event-specific private subleagues with shareable join codes and dedicated total and stage classifications.
 - Admin pages protected by a simple password for creating events, managing users, loading PCS data locally, and safely merging local race data into production.
+- Custom multi-race games that combine independently named PCS races into one rider selection and overall leaderboard, while keeping each race's lineup start-list specific.
 - A database model covering users, events, stages, teams, riders, selections, lineups, results, scores, live updates, and awards.
 
 ## Setup
@@ -63,6 +64,7 @@ For the production MySQL setup, WSGI configuration, and update procedure, see
 
 1. Visit `/admin/login` and use `ADMIN_PASSWORD`.
 2. Add an event with a PCS slug such as `tour-de-france-femmes` and year `2026`.
+   Alternatively, choose `Eigen ronde` and add two or more named PCS races, such as the women's and men's road races and time trials at the World Championships.
 3. Open the event in admin and click `Initialize stages from PCS`.
 4. Click `Sync current startlist`.
 5. Open `Assign rider prices`, price every active rider, and save.

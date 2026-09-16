@@ -14,7 +14,9 @@ from tour_femmes.models import (
     EventRider,
     Rider,
     Stage,
+    StageRider,
     StageResult,
+    StageVisual,
     Team,
 )
 from tour_femmes.services.game import recalculate_stage_scores
@@ -36,6 +38,8 @@ class PcsDatabaseImportReport:
     riders_updated: int = 0
     event_riders_created: int = 0
     event_riders_updated: int = 0
+    stage_riders_imported: int = 0
+    stage_visuals_imported: int = 0
     stage_results_imported: int = 0
     classification_results_imported: int = 0
     results_removed: int = 0
@@ -47,6 +51,8 @@ class PcsDatabaseImportReport:
             f"{self.stages_created + self.stages_updated} etappes, "
             f"{self.riders_created + self.riders_updated} renners, "
             f"{self.event_riders_created + self.event_riders_updated} startlijstregels, "
+            f"{self.stage_riders_imported} onderdeel-startplekken, "
+            f"{self.stage_visuals_imported} parcoursvisuals, "
             f"{self.stage_results_imported} uitslagen en "
             f"{self.classification_results_imported} klassementsregels verwerkt. "
             f"Scores voor {self.scores_recalculated} etappes herberekend."
@@ -60,13 +66,16 @@ PCS_SOURCE_MODELS = (
     Team,
     Rider,
     EventRider,
+    StageRider,
     StageResult,
     ClassificationResult,
 )
+PCS_OPTIONAL_SOURCE_MODELS = (StageVisual,)
 
-EVENT_PCS_FIELDS = ("pcs_url",)
+EVENT_PCS_FIELDS = ("pcs_url", "event_type", "points_by_rank")
 STAGE_PCS_FIELDS = (
     "name",
+    "points_by_rank",
     "starts_at",
     "pcs_url",
     "live_url",
@@ -96,6 +105,7 @@ RIDER_PCS_FIELDS = (
     "specialties",
     "best_results",
     "grand_tour_results",
+    "profile_checked_at",
 )
 EVENT_RIDER_PCS_FIELDS = (
     "price",
@@ -121,6 +131,10 @@ def import_pcs_database(source_path: str | Path) -> PcsDatabaseImportReport:
                 model.__tablename__: _read_rows(source, model)
                 for model in PCS_SOURCE_MODELS
             }
+            available_tables = set(inspect(source_engine).get_table_names())
+            for model in PCS_OPTIONAL_SOURCE_MODELS:
+                if model.__tablename__ in available_tables:
+                    source_rows[model.__tablename__] = _read_rows(source, model)
         return _merge_source_rows(source_rows)
     finally:
         source_engine.dispose()
@@ -138,6 +152,8 @@ def _merge_source_rows(source_rows: dict[str, list[dict]]) -> PcsDatabaseImportR
         "riders_updated": 0,
         "event_riders_created": 0,
         "event_riders_updated": 0,
+        "stage_riders_imported": 0,
+        "stage_visuals_imported": 0,
         "stage_results_imported": 0,
         "classification_results_imported": 0,
         "results_removed": 0,
@@ -155,6 +171,14 @@ def _merge_source_rows(source_rows: dict[str, list[dict]]) -> PcsDatabaseImportR
     event_rider_rows = sorted(
         source_rows["event_rider"],
         key=lambda row: (row["event_id"], row["id"]),
+    )
+    stage_rider_rows = sorted(
+        source_rows["stage_rider"],
+        key=lambda row: (row["stage_id"], row["event_rider_id"]),
+    )
+    stage_visual_rows = sorted(
+        source_rows.get("stage_visual", []),
+        key=lambda row: (row["stage_id"], row["position"]),
     )
     referenced_rider_ids = {row["rider_id"] for row in event_rider_rows}
     rider_rows = [
@@ -176,6 +200,8 @@ def _merge_source_rows(source_rows: dict[str, list[dict]]) -> PcsDatabaseImportR
                 team_size=row["team_size"],
                 lineup_size=row["lineup_size"],
                 status=row["status"],
+                event_type=row["event_type"],
+                points_by_rank=row["points_by_rank"],
             )
             db.session.add(target)
             counts["events_created"] += 1
@@ -243,6 +269,52 @@ def _merge_source_rows(source_rows: dict[str, list[dict]]) -> PcsDatabaseImportR
         event_rider_map[row["id"]] = target
     db.session.flush()
 
+    if "stage_visual" in source_rows:
+        visual_rows_by_stage = _group_by(stage_visual_rows, "stage_id")
+        for source_stage_id, stage in stage_map.items():
+            StageVisual.query.filter_by(stage_id=stage.id).delete(synchronize_session=False)
+            for row in visual_rows_by_stage.get(source_stage_id, []):
+                db.session.add(
+                    StageVisual(
+                        stage=stage,
+                        position=row["position"],
+                        label=row["label"],
+                        image_url=row["image_url"],
+                        image_data=row["image_data"],
+                        image_mime=row["image_mime"],
+                    )
+                )
+                counts["stage_visuals_imported"] += 1
+
+    source_stage_rider_keys: set[tuple[int, int]] = set()
+    custom_stage_ids = {
+        stage.id
+        for event in event_map.values()
+        if event.is_custom
+        for stage in event.stages
+    }
+    existing_stage_riders = {
+        (link.stage_id, link.event_rider_id): link
+        for link in StageRider.query.filter(StageRider.stage_id.in_(custom_stage_ids)).all()
+    } if custom_stage_ids else {}
+    for row in stage_rider_rows:
+        stage = _mapped(stage_map, row["stage_id"], "onderdeel-startplek", row["id"])
+        event_rider = _mapped(
+            event_rider_map,
+            row["event_rider_id"],
+            "onderdeel-startplek",
+            row["id"],
+        )
+        _validate_same_event(stage, event_rider, "onderdeel-startplek", row["id"])
+        key = (stage.id, event_rider.id)
+        source_stage_rider_keys.add(key)
+        if key not in existing_stage_riders:
+            db.session.add(StageRider(stage=stage, event_rider=event_rider))
+        counts["stage_riders_imported"] += 1
+    for key, target in existing_stage_riders.items():
+        if key not in source_stage_rider_keys:
+            db.session.delete(target)
+
     result_rows_by_stage = _group_by(source_rows["stage_result"], "stage_id")
     classification_rows_by_stage = _group_by(source_rows["classification_result"], "stage_id")
     touched_source_stage_ids = set(result_rows_by_stage) | set(classification_rows_by_stage)
@@ -275,12 +347,15 @@ def _merge_source_rows(source_rows: dict[str, list[dict]]) -> PcsDatabaseImportR
                 db.session.delete(target)
                 counts["results_removed"] += 1
 
+        stage_classification_rows = (
+            [] if stage.event.is_custom else classification_rows_by_stage.get(source_stage_id, [])
+        )
         source_classification_keys: set[tuple[int, str]] = set()
         existing_classifications = {
             (result.event_rider_id, result.classification): result
             for result in ClassificationResult.query.filter_by(stage_id=stage.id).all()
         }
-        for row in classification_rows_by_stage.get(source_stage_id, []):
+        for row in stage_classification_rows:
             event_rider = _mapped(
                 event_rider_map,
                 row["event_rider_id"],
@@ -337,9 +412,11 @@ def _read_only_sqlite_engine(source_path: Path):
 def _validate_source_schema(source_engine) -> None:
     source_inspector = inspect(source_engine)
     available_tables = set(source_inspector.get_table_names())
-    for model in PCS_SOURCE_MODELS:
+    for model in PCS_SOURCE_MODELS + PCS_OPTIONAL_SOURCE_MODELS:
         table_name = model.__tablename__
         if table_name not in available_tables:
+            if model in PCS_OPTIONAL_SOURCE_MODELS:
+                continue
             raise PcsDatabaseImportError(
                 f"De brondatabase mist de vereiste tabel '{table_name}'."
             )

@@ -17,6 +17,7 @@ from tour_femmes.models import (
     StageLineup,
     StageLineupRider,
     StageResult,
+    StageVisual,
     Team,
     TeamSelection,
     TeamSelectionRider,
@@ -64,6 +65,9 @@ def test_pcs_database_merge_preserves_online_game_data(tmp_path):
         assert stage.name == "Lokale PCS-etappe"
         assert stage.profile_image_data == b"stage-profile-image"
         assert stage.profile_image_mime == "image/jpeg"
+        assert [(visual.label, visual.image_data) for visual in stage.visuals] == [
+            ("Overzichtskaart", b"stage-map-image")
+        ]
         assert event_rider.team.image_data == b"team-image"
         assert event_rider.team.image_mime == "image/png"
         assert rider.name == "Bijgewerkte Renner"
@@ -96,6 +100,7 @@ def test_pcs_database_merge_preserves_online_game_data(tmp_path):
         assert classification.rank == 1
         assert score.score > 0
         assert report.stage_results_imported == 1
+        assert report.stage_visuals_imported == 1
         assert report.classification_results_imported == 1
         assert report.scores_recalculated == 1
 
@@ -267,12 +272,23 @@ def _create_source_database(source_path) -> None:
             classification="gc",
             rank=1,
         )
+        stage_visual = StageVisual(
+            id=115,
+            stage=stage,
+            position=1,
+            label="Overzichtskaart",
+            image_url="https://www.procyclingstats.com/images/profiles/stage-map.jpg",
+            image_data=b"stage-map-image",
+            image_mime="image/jpeg",
+        )
         local_only_user = User(
             id=120,
             username="alleen-lokaal",
             password_hash="niet-importeren",
         )
-        source.add_all([event, stage, team, rider, event_rider, result, classification, local_only_user])
+        source.add_all(
+            [event, stage, team, rider, event_rider, result, classification, stage_visual, local_only_user]
+        )
         source.commit()
     source_engine.dispose()
 

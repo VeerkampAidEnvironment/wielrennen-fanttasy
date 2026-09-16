@@ -31,7 +31,7 @@ def create_app(config_object: str | None = None) -> Flask:
     if app.config.get("AUTO_CREATE_SCHEMA", True):
         _ensure_schema(app)
     else:
-        _ensure_subleague_schema(app)
+        _ensure_required_schema(app)
 
     from tour_femmes.models import User
     from tour_femmes.pricing import price_label, price_value
@@ -114,6 +114,19 @@ def _ensure_schema(app: Flask) -> None:
 
         db.create_all()
         inspector = inspect(db.engine)
+        if inspector.has_table("event"):
+            event_columns = {column["name"] for column in inspector.get_columns("event")}
+            if "event_type" not in event_columns:
+                db.session.execute(
+                    text(
+                        "ALTER TABLE event ADD COLUMN event_type "
+                        "VARCHAR(30) NOT NULL DEFAULT 'stage_race'"
+                    )
+                )
+                db.session.commit()
+            if "points_by_rank" not in event_columns:
+                db.session.execute(text("ALTER TABLE event ADD COLUMN points_by_rank JSON"))
+                db.session.commit()
         if inspector.has_table("team"):
             team_columns = {column["name"] for column in inspector.get_columns("team")}
             if "image_url" not in team_columns:
@@ -126,6 +139,8 @@ def _ensure_schema(app: Flask) -> None:
             db.session.commit()
         if inspector.has_table("rider"):
             rider_columns = {column["name"] for column in inspector.get_columns("rider")}
+            if "profile_checked_at" not in rider_columns:
+                db.session.execute(text("ALTER TABLE rider ADD COLUMN profile_checked_at DATETIME"))
             if "photo_data" not in rider_columns:
                 binary_type = "MEDIUMBLOB" if db.engine.dialect.name == "mysql" else "BLOB"
                 db.session.execute(text(f"ALTER TABLE rider ADD COLUMN photo_data {binary_type}"))
@@ -134,6 +149,8 @@ def _ensure_schema(app: Flask) -> None:
             db.session.commit()
         if inspector.has_table("stage"):
             stage_columns = {column["name"] for column in inspector.get_columns("stage")}
+            if "points_by_rank" not in stage_columns:
+                db.session.execute(text("ALTER TABLE stage ADD COLUMN points_by_rank JSON"))
             if "profile_image_data" not in stage_columns:
                 binary_type = "MEDIUMBLOB" if db.engine.dialect.name == "mysql" else "BLOB"
                 db.session.execute(
@@ -195,13 +212,39 @@ def _ensure_schema(app: Flask) -> None:
             db.engine.dispose()
 
 
-def _ensure_subleague_schema(app: Flask) -> None:
-    """Create user-managed group tables without altering imported race tables."""
+def _ensure_required_schema(app: Flask) -> None:
+    """Apply the small additive schema changes required by newer app versions."""
     with app.app_context():
-        from tour_femmes.models import Subleague, SubleagueMember
+        from tour_femmes.models import StageRider, StageVisual, Subleague, SubleagueMember
 
         Subleague.__table__.create(bind=db.engine, checkfirst=True)
         SubleagueMember.__table__.create(bind=db.engine, checkfirst=True)
+        StageRider.__table__.create(bind=db.engine, checkfirst=True)
+        StageVisual.__table__.create(bind=db.engine, checkfirst=True)
+        inspector = inspect(db.engine)
+        if inspector.has_table("event"):
+            event_columns = {column["name"] for column in inspector.get_columns("event")}
+            if "event_type" not in event_columns:
+                db.session.execute(
+                    text(
+                        "ALTER TABLE event ADD COLUMN event_type "
+                        "VARCHAR(30) NOT NULL DEFAULT 'stage_race'"
+                    )
+                )
+                db.session.commit()
+            if "points_by_rank" not in event_columns:
+                db.session.execute(text("ALTER TABLE event ADD COLUMN points_by_rank JSON"))
+                db.session.commit()
+        if inspector.has_table("stage"):
+            stage_columns = {column["name"] for column in inspector.get_columns("stage")}
+            if "points_by_rank" not in stage_columns:
+                db.session.execute(text("ALTER TABLE stage ADD COLUMN points_by_rank JSON"))
+                db.session.commit()
+        if inspector.has_table("rider"):
+            rider_columns = {column["name"] for column in inspector.get_columns("rider")}
+            if "profile_checked_at" not in rider_columns:
+                db.session.execute(text("ALTER TABLE rider ADD COLUMN profile_checked_at DATETIME"))
+                db.session.commit()
         db.session.remove()
         if db.engine.dialect.name != "sqlite":
             db.engine.dispose()

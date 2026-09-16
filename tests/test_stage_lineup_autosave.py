@@ -355,7 +355,7 @@ def test_scoring_rules_are_on_separate_tab_and_images_use_database_routes():
 
     assert stage_response.status_code == 200
     assert "Etappeprofiel" in stage_html
-    assert stage_html.index("Etappeprofiel") < stage_html.index("Etappeselectie")
+    assert stage_html.index("<h2>Etappeselectie</h2>") < stage_html.index("Etappeprofiel")
     assert "upcoming-stage-lineup" in stage_html
     assert "Puntentelling</h2>" not in stage_html
     assert f"/media/stage-profile/{stage_id}" in stage_html

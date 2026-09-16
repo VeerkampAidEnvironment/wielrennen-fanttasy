@@ -1011,6 +1011,23 @@ select:focus {
   margin-bottom: 0;
 }
 
+.stage-visual-gallery {
+  display: grid;
+  gap: 16px;
+}
+
+.stage-visual-item {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.stage-visual-item figcaption {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 .stage-profile {
   width: 100%;
   max-height: 320px;
@@ -1155,6 +1172,34 @@ select:focus {
   transform: translateY(-1px);
 }
 
+.custom-event-lineup-card {
+  grid-template-areas:
+    "photo main"
+    "participation participation"
+    "history history"
+    "profile profile"
+    "actions actions";
+}
+
+.lineup-card-participation {
+  grid-area: participation;
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.lineup-participation-label {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.lineup-card-participation .rider-race-badge.current {
+  background: #d8f0e3;
+  color: var(--green);
+}
+
 .lineup-builder-card:focus-visible {
   outline: 3px solid rgba(181, 31, 49, 0.18);
   outline-offset: 2px;
@@ -1183,6 +1228,10 @@ select:focus {
   font-size: 0.66rem;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.custom-event-lineup-card.captain::before {
+  content: "Koprenner";
 }
 
 .lineup-builder-card.capacity-disabled:not(.selected) {
@@ -2626,6 +2675,56 @@ select:focus {
   max-width: 520px;
 }
 
+.scoring-points-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.scoring-points-group {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.scoring-points-group > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.scoring-points-group h2,
+.scoring-points-group .eyebrow {
+  margin: 0;
+}
+
+.scoring-points-group .scoring-table {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.scoring-stage-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.scoring-stage-tags span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(193, 39, 61, 0.1);
+  color: var(--accent-dark);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
 .score-breakdown h3,
 .scoring-rules h2 {
   margin: 0;
@@ -2779,6 +2878,165 @@ select:focus {
 
 .admin-form {
   width: 100%;
+}
+
+.game-type-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+}
+
+.game-type-picker legend {
+  margin-bottom: 8px;
+  font-weight: 750;
+}
+
+.game-type-picker label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.game-type-picker input {
+  margin-top: 3px;
+}
+
+.game-type-picker span,
+.game-type-picker small {
+  display: block;
+}
+
+.game-type-picker small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.custom-race-builder,
+.custom-race-list {
+  display: grid;
+  gap: 12px;
+}
+
+.custom-race-builder {
+  margin: 4px 0 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--blue);
+  border-radius: 8px;
+  background: #f8fbf6;
+}
+
+.custom-race-builder p {
+  margin: 4px 0 0;
+}
+
+.custom-race-row {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.custom-race-row label {
+  margin: 0;
+}
+
+.admin-points-panel {
+  margin: 24px 0;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--blue);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.admin-points-panel > header,
+.points-editor-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.admin-points-panel h2,
+.admin-points-panel header p,
+.points-editor-actions p {
+  margin-top: 0;
+}
+
+.points-editor-scroll {
+  margin-top: 16px;
+}
+
+.points-editor-table {
+  min-width: max-content;
+}
+
+.points-editor-table th,
+.points-editor-table td {
+  min-width: 112px;
+  text-align: center;
+}
+
+.points-editor-table th:first-child,
+.points-editor-table td:first-child {
+  min-width: 64px;
+}
+
+.points-editor-table thead th {
+  vertical-align: top;
+}
+
+.points-editor-table thead strong,
+.points-editor-table thead small {
+  display: block;
+}
+
+.points-editor-table thead small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.points-override-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: 0.72rem;
+}
+
+.points-editor-table [data-stage-points-column]:not(.points-override-active) {
+  background: #f2f4f1;
+  color: var(--muted);
+}
+
+.points-value-input {
+  width: 86px;
+  min-width: 0;
+  padding: 7px 8px;
+  text-align: center;
+}
+
+.points-editor-actions {
+  align-items: center;
+  margin-top: 14px;
+}
+
+.points-editor-actions p {
+  margin-bottom: 0;
 }
 
 .admin-database-import {
@@ -3415,6 +3673,52 @@ select:focus {
   background: var(--danger);
 }
 
+.team-stage-coverage {
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.team-stage-coverage-heading strong,
+.team-stage-coverage-heading small {
+  display: block;
+}
+
+.team-stage-coverage-heading small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.team-stage-coverage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.team-stage-coverage-item {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--blue);
+  border-radius: 8px;
+  background: #fbfcfa;
+}
+
+.team-stage-coverage-item > span,
+.team-stage-coverage-item small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.team-stage-coverage-item strong {
+  font-size: 1.25rem;
+  line-height: 1.1;
+}
+
 .my-team-panel {
   display: grid;
   gap: 14px;
@@ -3530,7 +3834,7 @@ select:focus {
 
 .team-filter-panel {
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) minmax(170px, 0.8fr) minmax(210px, 0.95fr) minmax(260px, 1.2fr) auto auto;
+  grid-template-columns: minmax(200px, 1fr) minmax(170px, 0.8fr) minmax(260px, 1.2fr) auto auto;
   gap: 12px;
   align-items: end;
   margin-bottom: 18px;
@@ -3543,6 +3847,111 @@ select:focus {
 
 .team-filter-panel label {
   margin: 0;
+}
+
+.race-filter-panel {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 7px;
+  padding: 10px;
+  border: 1px solid #cbd9e0;
+  border-radius: 10px;
+  background: #f5f9fb;
+}
+
+.race-filter-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 10px;
+}
+
+.race-filter-heading strong {
+  font-size: 0.92rem;
+}
+
+.race-filter-heading small {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.race-filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 9px;
+  padding-top: 7px;
+  border-top: 1px solid #dce6e9;
+}
+
+.race-filter-group h3 {
+  margin: 0;
+  min-width: 56px;
+  color: var(--blue);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.race-filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.race-filter-option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  width: auto;
+  padding: 5px 28px 5px 9px;
+  border: 1px solid #cedbe0;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 120ms ease, background 120ms ease, transform 120ms ease;
+}
+
+.race-filter-option:hover {
+  border-color: var(--blue);
+  transform: translateY(-1px);
+}
+
+.race-filter-option:focus-visible {
+  outline: 3px solid rgba(33, 104, 143, 0.22);
+  outline-offset: 2px;
+}
+
+.race-filter-option strong {
+  font-size: 0.76rem;
+  line-height: 1.2;
+}
+
+.race-filter-option.active {
+  border-color: var(--green);
+  background: #edf8f2;
+  box-shadow: 0 0 0 2px rgba(29, 111, 81, 0.1);
+}
+
+.race-filter-option.active::after {
+  content: "✓";
+  position: absolute;
+  top: 6px;
+  right: 9px;
+  color: var(--green);
+  font-weight: 900;
+}
+
+.race-filter-both {
+  border-color: #a9c3d0;
+  background: #eaf3f8;
+}
+
+.race-filter-all {
+  width: fit-content;
 }
 
 .team-filter-chips {
@@ -3767,6 +4176,16 @@ select:focus {
   height: auto;
   min-height: 620px;
   overflow: visible;
+}
+
+.rider-card.custom-event-rider-card {
+  height: 500px;
+  min-height: 500px;
+}
+
+.rider-card.custom-event-rider-card.expanded {
+  height: auto;
+  min-height: 660px;
 }
 
 .rider-card.in-selected-team {
@@ -4116,6 +4535,48 @@ select:focus {
   color: var(--muted);
   font-size: 0.8rem;
   font-weight: 800;
+}
+
+.rider-participation {
+  display: grid;
+  gap: 6px;
+  padding: 9px 10px;
+  border: 1px solid #cbd9e0;
+  border-radius: 8px;
+  background: #f2f8fb;
+}
+
+.rider-participation-label {
+  color: var(--blue);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.rider-race-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.rider-race-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #dcecf4;
+  color: #174f6c;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.rider-race-badge-empty {
+  background: var(--surface-strong);
+  color: var(--muted);
 }
 
 .historical-score-row strong {
@@ -4888,6 +5349,26 @@ select:focus {
 }
 
 @media (max-width: 760px) {
+  .admin-points-panel > header,
+  .points-editor-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .points-editor-actions .primary-button,
+  .admin-points-panel > header .secondary-button {
+    width: 100%;
+  }
+
+  .game-type-picker,
+  .custom-race-row {
+    grid-template-columns: 1fr;
+  }
+
+  .custom-race-row .compact-button {
+    width: 100%;
+  }
+
   .topbar {
     align-items: flex-start;
     flex-direction: column;
