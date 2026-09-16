@@ -5,6 +5,7 @@
     const boxes = Array.from(form.querySelectorAll('input[name="riders"]'));
     const checked = boxes.filter((box) => box.checked);
     const total = roundPrice(checked.reduce((sum, box) => sum + Number(box.dataset.price || 0), 0));
+    const remainingSlotsAfterAddition = maxCount - checked.length - 1;
 
     form.querySelectorAll(".rider-card").forEach((card) => {
       const box = card.querySelector('input[name="riders"]');
@@ -30,7 +31,15 @@
       const card = box.closest(".rider-card");
       const action = card?.querySelector("[data-selection-action]");
       const price = Number(box.dataset.price || 0);
-      const exceedsBudget = !box.checked && total + price > budget;
+      const cheapestCompletion = boxes
+        .filter((candidate) => !candidate.checked && candidate !== box && candidate.dataset.fixedDisabled !== "1")
+        .map((candidate) => Number(candidate.dataset.price || 0))
+        .sort((a, b) => a - b)
+        .slice(0, Math.max(remainingSlotsAfterAddition, 0));
+      const exceedsBudget = !box.checked && (
+        cheapestCompletion.length < remainingSlotsAfterAddition ||
+        roundPrice(total + price + cheapestCompletion.reduce((sum, candidatePrice) => sum + candidatePrice, 0)) > budget
+      );
       if (box.dataset.fixedDisabled === "1") {
         box.disabled = true;
         card?.classList.add("disabled", "fixed-disabled");
@@ -50,7 +59,7 @@
         card?.classList.add("disabled", "budget-disabled");
         card?.classList.remove("fixed-disabled", "capacity-disabled");
         if (action) {
-          action.textContent = "Boven budget";
+          action.textContent = "Niet genoeg budget";
         }
       } else {
         box.disabled = false;

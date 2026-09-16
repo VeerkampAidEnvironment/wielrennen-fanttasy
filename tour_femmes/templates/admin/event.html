@@ -21,11 +21,23 @@
     <strong>Koers beheren</strong>
     <span>{{ event.year }} &middot; {{ 'Eigen ronde' if event.is_custom else event.slug }}</span>
   </header>
-  <form class="inline-edit-form" method="post" action="{{ url_for('admin.rename_event', event_id=event.id) }}">
+  <form class="inline-edit-form" method="post" action="{{ url_for('admin.update_event_settings', event_id=event.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>
-      Naam wijzigen
+      Koersnaam
       <input name="name" value="{{ event.name }}" required>
+    </label>
+    <label>
+      Budget
+      <input type="number" name="budget" min="0" step="1" value="{{ event.budget }}" required>
+    </label>
+    <label>
+      Renners in team
+      <input type="number" name="team_size" min="1" step="1" value="{{ event.team_size }}" required>
+    </label>
+    <label>
+      Renners per opstelling
+      <input type="number" name="lineup_size" min="1" step="1" value="{{ event.lineup_size }}" required>
     </label>
     <button type="submit" class="secondary-button compact-button">Opslaan</button>
   </form>

@@ -197,6 +197,23 @@ def validate_team_selection(event: Event, rider_ids: list[int], require_exact: b
             total,
         )
 
+    missing_count = event.team_size - len(unique_ids)
+    if missing_count > 0 and unique_ids:
+        remaining_prices = sorted(
+            rider.price
+            for rider in EventRider.query.filter_by(event_id=event.id, active=True, frozen=False)
+            .filter(EventRider.price.isnot(None))
+            .all()
+            if rider.id not in unique_ids
+        )
+        if len(remaining_prices) < missing_count or total + sum(remaining_prices[:missing_count], ZERO_PRICE) > event.budget:
+            return SelectionValidation(
+                False,
+                "Niet genoeg budget om je team compleet te maken.",
+                selected,
+                total,
+            )
+
     if len(unique_ids) == event.team_size:
         return SelectionValidation(True, "Teamselectie opgeslagen.", selected, total)
     return SelectionValidation(True, f"Concept opgeslagen: {len(unique_ids)} / {event.team_size} renners.", selected, total)
@@ -213,6 +230,20 @@ def save_team_selection(
     if not selection:
         selection = TeamSelection(user=user, event=event)
         db.session.add(selection)
+
+    selected_ids = {rider.id for rider in selected_riders}
+    removed_ids = selection.rider_ids() - selected_ids
+    if removed_ids:
+        lineups = StageLineup.query.join(Stage).filter(
+            Stage.event_id == event.id,
+            StageLineup.user_id == user.id,
+        ).all()
+        for lineup in lineups:
+            lineup.riders[:] = [link for link in lineup.riders if link.event_rider_id not in removed_ids]
+            if not lineup.riders:
+                db.session.delete(lineup)
+            elif lineup.captain_event_rider_id in removed_ids:
+                lineup.captain_event_rider_id = lineup.riders[0].event_rider_id
 
     selection.submitted_at = utcnow()
     selection.total_price = total_price

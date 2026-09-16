@@ -175,7 +175,14 @@ def team(event_id: int):
         .all()
     )
     teams_by_name = {link.team.name: link.team for link in event_riders if link.team}
-    team_filters = [teams_by_name[name] for name in sorted(teams_by_name, key=str.lower)]
+    team_price_totals = {
+        name: sum(link.price for link in event_riders if link.team and link.team.name == name)
+        for name in teams_by_name
+    }
+    team_filters = [
+        teams_by_name[name]
+        for name in sorted(teams_by_name, key=lambda name: (-team_price_totals[name], name.lower()))
+    ]
     prices = [link.price for link in event_riders if link.price is not None]
     speciality_filters = RIDER_SPECIALITY_FILTERS
     selected_ids = selection.rider_ids() if selection else set()
@@ -474,6 +481,9 @@ def leaderboard(event_id: int):
 @login_required
 def teams(event_id: int):
     event = Event.query.get_or_404(event_id)
+    if not event.has_started():
+        flash("Teams zijn zichtbaar zodra de deadline voor teamselectie voorbij is.", "info")
+        return redirect(url_for("events.event_home", event_id=event.id))
     return render_template(
         "events/teams.html",
         event=event,

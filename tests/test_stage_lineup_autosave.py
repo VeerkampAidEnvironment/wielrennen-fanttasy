@@ -24,7 +24,102 @@ from tour_femmes.services.game import (
     build_official_stage_scores,
     build_rider_stage_history,
     recalculate_stage_scores,
+    save_team_selection,
+    validate_team_selection,
 )
+
+
+def test_removing_team_rider_also_removes_them_from_stage_lineup():
+    app, user_id, event_id, stage_id, rider_ids = make_app_with_lineup_context()
+    with app.app_context():
+        lineup = StageLineup(user_id=user_id, stage_id=stage_id, captain_event_rider_id=rider_ids[0])
+        lineup.riders = [
+            StageLineupRider(event_rider_id=rider_ids[0]),
+            StageLineupRider(event_rider_id=rider_ids[1]),
+        ]
+        db.session.add(lineup)
+        db.session.commit()
+
+        event = db.session.get(Event, event_id)
+        user = db.session.get(User, user_id)
+        validation = validate_team_selection(event, rider_ids[1:], require_exact=False)
+        assert validation.ok
+        save_team_selection(user, event, validation.selected_riders, validation.total_price)
+        db.session.commit()
+
+        lineup = StageLineup.query.filter_by(user_id=user_id, stage_id=stage_id).one()
+        assert lineup.rider_ids() == {rider_ids[1]}
+        assert lineup.captain_event_rider_id == rider_ids[1]
+
+        empty_selection = validate_team_selection(event, [], require_exact=False)
+        assert empty_selection.ok
+        save_team_selection(user, event, empty_selection.selected_riders, empty_selection.total_price)
+        db.session.commit()
+        assert StageLineup.query.filter_by(user_id=user_id, stage_id=stage_id).first() is None
+
+
+def test_selection_rejects_a_pick_that_prevents_affordable_completion():
+    app, _user_id, event_id, _stage_id, rider_ids = make_app_with_lineup_context()
+    with app.app_context():
+        event = db.session.get(Event, event_id)
+        event.team_size = 10
+        event.budget = 10
+        db.session.get(EventRider, rider_ids[0]).price = 2
+        db.session.flush()
+
+        validation = validate_team_selection(event, [rider_ids[0]], require_exact=False)
+        assert not validation.ok
+        assert "Niet genoeg budget" in validation.message
+        assert validate_team_selection(event, [rider_ids[1]], require_exact=False).ok
+
+
+def test_other_teams_are_hidden_until_team_deadline():
+    app, user_id, event_id, stage_id, _rider_ids = make_app_with_lineup_context()
+    client = app.test_client()
+    login(client, user_id)
+    assert client.get(f"/events/{event_id}/teams").status_code == 302
+    assert f'href="/events/{event_id}/teams"' not in client.get(f"/events/{event_id}").get_data(as_text=True)
+
+    with app.app_context():
+        db.session.get(Stage, stage_id).starts_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+        db.session.commit()
+
+    assert client.get(f"/events/{event_id}/teams").status_code == 200
+
+
+def test_admin_can_edit_event_budget_and_lineup_size():
+    app, _user_id, event_id, _stage_id, _rider_ids = make_app_with_lineup_context()
+    client = app.test_client()
+    with client.session_transaction() as session:
+        session["admin_ok"] = True
+        session["_csrf_token"] = "token"
+
+    response = client.post(
+        f"/admin/events/{event_id}/settings",
+        data={"csrf_token": "token", "name": "Nieuwe koers", "budget": "75", "team_size": "16", "lineup_size": "9"},
+    )
+    assert response.status_code == 302
+    with app.app_context():
+        event = db.session.get(Event, event_id)
+        assert (event.name, event.budget, event.team_size, event.lineup_size) == ("Nieuwe koers", 75, 16, 9)
+
+
+def test_team_filter_orders_nations_by_total_rider_prices():
+    app, user_id, event_id, _stage_id, rider_ids = make_app_with_lineup_context()
+    with app.app_context():
+        expensive_nation = Team(event_id=event_id, name="Zulu")
+        db.session.add(expensive_nation)
+        db.session.flush()
+        for rider_id in rider_ids[:2]:
+            rider = db.session.get(EventRider, rider_id)
+            rider.team = expensive_nation
+            rider.price = 10
+        db.session.commit()
+
+    client = app.test_client()
+    login(client, user_id)
+    html = client.get(f"/events/{event_id}/team").get_data(as_text=True)
+    assert html.index('value="Zulu" aria-pressed="false"') < html.index('value="Test Team" aria-pressed="false"')
 from tour_femmes.scoring import (
     DAILY_LEADER_TEAMMATE_POINTS,
     FINAL_WINNER_TEAMMATE_POINTS,

@@ -263,6 +263,31 @@ def rename_event(event_id: int):
     return redirect(request.referrer or url_for("admin.event_detail", event_id=event.id))
 
 
+@admin_bp.route("/events/<int:event_id>/settings", methods=["POST"])
+@admin_required
+def update_event_settings(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    name = request.form.get("name", "").strip()
+    try:
+        budget = int(request.form.get("budget", ""))
+        team_size = int(request.form.get("team_size", ""))
+        lineup_size = int(request.form.get("lineup_size", ""))
+    except ValueError:
+        budget = team_size = lineup_size = -1
+
+    if not name or budget < 0 or team_size < 1 or not 1 <= lineup_size <= team_size:
+        flash("Vul een naam, een geldig budget en geldige team- en opstellingsgroottes in.", "danger")
+        return redirect(url_for("admin.event_detail", event_id=event.id))
+
+    event.name = name
+    event.budget = budget
+    event.team_size = team_size
+    event.lineup_size = lineup_size
+    db.session.commit()
+    flash("Koersinstellingen opgeslagen.", "success")
+    return redirect(url_for("admin.event_detail", event_id=event.id))
+
+
 @admin_bp.route("/events/<int:event_id>/delete", methods=["POST"])
 @admin_required
 def delete_event(event_id: int):
